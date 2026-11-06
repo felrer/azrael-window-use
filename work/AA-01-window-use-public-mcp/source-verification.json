@@ -1,0 +1,23 @@
+{
+  "environment": "Windows 11 Home x64 10.0.26200",
+  "sourceAcceptance": "partial; packaged acceptance pending",
+  "verified": [
+    "standard SDK stdio connection and tool discovery",
+    "automatic approval popup; denial sends no input",
+    "approved real UIA edit and invoke with observed postcondition",
+    "compact custom-chrome UI renders and switches light/dark",
+    "own settings/approval windows blocked from observation and control in full mode",
+    "native desktop capture masks own UI"
+  ],
+  "remaining": [
+    "actual coordinate input under a quiet physical desktop",
+    "exact packaged executable acceptance",
+    "actual third-party MCP host configuration"
+  ],
+  "attempts": 17,
+  "notes": [
+    "Read-field and desktop identity serialization mismatches fixed in vendored adapters.",
+    "Physical input rejection kept enabled.",
+    "Raw diagnostic errors are not proof of underlying physical input source."
+  ]
+}

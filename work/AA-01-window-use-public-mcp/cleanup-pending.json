@@ -1,0 +1,127 @@
+{
+  "blockedGroups": [
+    "aa01-unused-verification-material",
+    "source-verification-attempts"
+  ],
+  "checkBundle": {
+    "logicalBytes": 23882850,
+    "paths": [
+      "artifacts/build/package-20261106T050046680-0236951431-f711e6",
+      "artifacts/logs/package-20261106T050046680-0236951431-f711e6"
+    ],
+    "purpose": "Frozen package inputs and minimal packaging logs for remaining exact-package acceptance and recovery",
+    "releaseCondition": "After remaining acceptance/user normal-operation check, review current references and delete through owner."
+  },
+  "items": [
+    {
+      "blockers": [
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-0",
+      "logicalBytes": 20348,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\launcher-stdio-v1"
+    },
+    {
+      "blockers": [
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-1",
+      "logicalBytes": 16942,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\launcher-stdio-v2"
+    },
+    {
+      "blockers": [
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-10",
+      "logicalBytes": 54,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\playwright-install.log"
+    },
+    {
+      "blockers": [
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-11",
+      "logicalBytes": 1566,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\unit-tests.log"
+    },
+    {
+      "blockers": [
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-12",
+      "logicalBytes": 1872,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\windows-verify.log"
+    },
+    {
+      "blockers": [
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-2",
+      "logicalBytes": 1903,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\package-zip-fix"
+    },
+    {
+      "blockers": [
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-3",
+      "logicalBytes": 95006633,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\npm-cache"
+    },
+    {
+      "blockers": [
+        "overlapping lifecycle member requires its own whole-group decision",
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-4",
+      "logicalBytes": 32257416,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\verification\\windows-1793941386109"
+    },
+    {
+      "blockers": [
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-5",
+      "logicalBytes": 52,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\fuses-install.log"
+    },
+    {
+      "blockers": [
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-6",
+      "logicalBytes": 48,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\lock-update.log"
+    },
+    {
+      "blockers": [
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-7",
+      "logicalBytes": 1108,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\npm-install.log"
+    },
+    {
+      "blockers": [
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-8",
+      "logicalBytes": 6424,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\packaged-verify.log"
+    },
+    {
+      "blockers": [
+        "a lifecycle group member is protected"
+      ],
+      "id": "aa01-unused-9",
+      "logicalBytes": 3140,
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\plan-body.md"
+    }
+  ],
+  "reason": "A new child profile was registered under an already registered verification root. Both whole-group reviews block overlapping lifecycle members. No force deletion or registry editing was used.",
+  "retentionApproval": "not granted; task remains open",
+  "revisitCondition": "Supported owner resolves the nested ownership registration and fresh whole-group review passes.",
+  "status": "cleanup pending; no deletion bypass",
+  "uniqueLogicalBytes": 127317506
+}

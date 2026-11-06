@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "project_id": "azrael-window-use-mcp",
+  "managed_roots": ["artifacts"],
+  "protected_paths": ["src", "native", "vendor", "scripts", "tests", "docs", "work", ".git", "node_modules"],
+  "bundles": [
+    {"id":"permissions","kind":"test","purpose":"retained","phase":"test","cwd":".","argv":["node","--test","tests/permissions.test.cjs"],"inputs":["src/permissions.cjs","tests/permissions.test.cjs","vendor/azrael/use-control-settings.cjs"]}
+  ]
+}

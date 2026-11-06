@@ -1,0 +1,34 @@
+{
+  "scope": "Windows x64 native engines; not live app acceptance",
+  "buildExitCode": 0,
+  "cargo": {
+    "passed": 35,
+    "failed": 0,
+    "ignored": 4,
+    "exitCode": 0
+  },
+  "selftests": {
+    "rawOrigin": 0,
+    "cursorGuard": 0
+  },
+  "integrity": {
+    "windowExecutableTamperRejected": true,
+    "multiPointerExecutableTamperRejected": true
+  },
+  "windowSource": {
+    "directory": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\native\\window-control",
+    "sourceSha256": "2ea88edc0bb7644618f7641565eab48ea2e7bc73537718e04b711b4f9e6c37ce",
+    "executableSha256": "b12a67e23d8495a91f3700861f46ae2bb347ee9931ca40605ca87f3b79c1d5fa",
+    "builder": "cargo --locked --release"
+  },
+  "windowExecutable": {
+    "path": "azrael-window-control.exe",
+    "bytes": 1189376,
+    "sha256": "b12a67e23d8495a91f3700861f46ae2bb347ee9931ca40605ca87f3b79c1d5fa"
+  },
+  "multiPointerExecutable": {
+    "path": "azrael-multi-pointer.exe",
+    "bytes": 488448,
+    "sha256": "bbdf983bba89045c18d8afef49f897fb7f732ca51467b434bc6fc271b594e89f"
+  }
+}

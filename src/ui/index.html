@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Window Use</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="renderer.cjs"></script>
+</head>
+<body>
+  <header class="titlebar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">◈</span> Window Use</div>
+    <div class="window-actions">
+      <button class="icon-button" id="minimize" aria-label="최소화" title="최소화">−</button>
+      <button class="icon-button close-button" id="close" aria-label="닫기" title="닫기">×</button>
+    </div>
+  </header>
+  <main id="main" aria-busy="true"><p class="loading" role="status">설정을 불러오는 중…</p></main>
+  <footer><span id="save-status" role="status" aria-live="polite"></span><span id="version">로컬 권한 관리</span></footer>
+</body>
+</html>

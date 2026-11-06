@@ -1,0 +1,271 @@
+{
+  "schema": 1,
+  "sourceRoot": "C:/Users/felre/Desktop/pi-harness-init",
+  "copiedFiles": [
+    {
+      "path": "native/multi-pointer/broker.hpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/broker.hpp",
+      "sha256": "9dc442f2504f2fca8b07d3ae39c249ea9289e864818c01e46c06ccf5659c628f",
+      "bytes": 73998
+    },
+    {
+      "path": "native/multi-pointer/CMakeLists.txt",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/CMakeLists.txt",
+      "sha256": "55af3b1c3c796d5a43b1d53e081765a81ad70f7b32ac49bf44d6fceaf2cf9f91",
+      "bytes": 1163
+    },
+    {
+      "path": "native/multi-pointer/cursor-assets.hpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/cursor-assets.hpp",
+      "sha256": "8a6140099433cff964723ef5e0ee144f1fea28d610cd289fddc3954da86149e4",
+      "bytes": 7292
+    },
+    {
+      "path": "native/multi-pointer/CURSOR-NOTICES.md",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/CURSOR-NOTICES.md",
+      "sha256": "7dd23e6b526a93c6cedbac114a676ddfe63c8950a62695b48a3d42b6048740b8",
+      "bytes": 3213
+    },
+    {
+      "path": "native/multi-pointer/cursor-presentation.hpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/cursor-presentation.hpp",
+      "sha256": "8189c72103031775fe046045970802aba610e29b343cda7db652d6a9f0e775d1",
+      "bytes": 3492
+    },
+    {
+      "path": "native/multi-pointer/cursor-render-selftest.hpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/cursor-render-selftest.hpp",
+      "sha256": "248b14fbe1924be0e1e0696bcd7584bd10d7e1b5c9c21286f7084fe183e911db",
+      "bytes": 7070
+    },
+    {
+      "path": "native/multi-pointer/cursor-renderer.hpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/cursor-renderer.hpp",
+      "sha256": "0cb5e8b56b6e367d8bd13ca802cc25dd85d3724c664f92783b354e3d035c4460",
+      "bytes": 10516
+    },
+    {
+      "path": "native/multi-pointer/main.cpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/main.cpp",
+      "sha256": "44963af17e9610314989e51581d2c063ed689ab9808194983e9b5bd246de6799",
+      "bytes": 2704
+    },
+    {
+      "path": "native/multi-pointer/mouse-routing.hpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/mouse-routing.hpp",
+      "sha256": "4105001659be56f0928d8525b21ec7a899d71aaf942b6fa7ffeb7cfe566295f0",
+      "bytes": 33611
+    },
+    {
+      "path": "native/multi-pointer/operations.hpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/operations.hpp",
+      "sha256": "e7099a99a4565d996ceb6e77f86afa9c1643e18d53953a17f57036c2bd03e930",
+      "bytes": 3135
+    },
+    {
+      "path": "native/multi-pointer/overlay.hpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/overlay.hpp",
+      "sha256": "17dd796906cf31be5693ea2aa962ac801156c3650dd4ff1ad977958b556082dd",
+      "bytes": 26716
+    },
+    {
+      "path": "native/multi-pointer/platform.hpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/platform.hpp",
+      "sha256": "006a125025fd5d320716db1f1ab9de639c97824f7323ff7b075ee06f596e4567",
+      "bytes": 17322
+    },
+    {
+      "path": "native/multi-pointer/raw-origin-selftest.cpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/raw-origin-selftest.cpp",
+      "sha256": "3ddc0ceb39d07f685faf50687ea2735121cebb1d9be118c323b267ea4747a850",
+      "bytes": 5605
+    },
+    {
+      "path": "native/multi-pointer/raw-origin.hpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/raw-origin.hpp",
+      "sha256": "c268bcc4a094fc16ce091328b846b23465883ab0b3c90b93a7660f6e546b773b",
+      "bytes": 3997
+    },
+    {
+      "path": "native/multi-pointer/README.md",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/README.md",
+      "sha256": "889f627ed97fa8c75bbbce62664da075a6f1fcae59e7acc23afa78a148fc5a1d",
+      "bytes": 34455
+    },
+    {
+      "path": "native/multi-pointer/system-cursor.hpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/multi-pointer/system-cursor.hpp",
+      "sha256": "87a16f5c78ae03ad6df1dd81cd18e2bdfee31ae4322c1306e22d29c2b24571c5",
+      "bytes": 15989
+    },
+    {
+      "path": "native/virtual-input/vendor/json/LICENSE.MIT",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/virtual-input/vendor/json/LICENSE.MIT",
+      "sha256": "86b998c792894ccb911a1cb7994f7a9652894e7a094c0b5e45be2f553f45cf14",
+      "bytes": 1076
+    },
+    {
+      "path": "native/virtual-input/vendor/json/single_include/nlohmann/json.hpp",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/virtual-input/vendor/json/single_include/nlohmann/json.hpp",
+      "sha256": "9bea4c8066ef4a1c206b2be5a36302f8926f7fdc6087af5d20b417d0cf103ea6",
+      "bytes": 919975
+    },
+    {
+      "path": "native/window-control/.gitignore",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/.gitignore",
+      "sha256": "306fd52e74fca6746e12acc750f232de15e71da917756a1270d74c91f5eb7368",
+      "bytes": 9
+    },
+    {
+      "path": "native/window-control/Cargo.lock",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/Cargo.lock",
+      "sha256": "8b3d45d9c368cc8e8566423928bb9a8aaf65ae6636fb40f213be06317d0e5a44",
+      "bytes": 9245
+    },
+    {
+      "path": "native/window-control/Cargo.toml",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/Cargo.toml",
+      "sha256": "d5fbcf72b34052a64a452e9652986b214c8d4c11258ebacd7669234bcaf54421",
+      "bytes": 1034
+    },
+    {
+      "path": "native/window-control/README.md",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/README.md",
+      "sha256": "b83f5596b9ec67e3b5db5e9351a28a305ea2ca01260397f7a99eacb8bd0898c0",
+      "bytes": 10362
+    },
+    {
+      "path": "native/window-control/src/approval_notification.rs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/src/approval_notification.rs",
+      "sha256": "b124297c4de32a98ba96369d535d1862d11dd3cb6cfbc70446fc6e2e5d81cbb4",
+      "bytes": 20785
+    },
+    {
+      "path": "native/window-control/src/capture.rs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/src/capture.rs",
+      "sha256": "8cd8b1ddb2dce5a074065d1147e85789dffe539c2b1f18cab1065a04538456df",
+      "bytes": 9627
+    },
+    {
+      "path": "native/window-control/src/desktop_capture.rs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/src/desktop_capture.rs",
+      "sha256": "9208ff47a0b7dab6feea49e6e77d3f96e3f7c3569010e3d7ce64f4d2e2b37e36",
+      "bytes": 17957
+    },
+    {
+      "path": "native/window-control/src/lifetime.rs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/src/lifetime.rs",
+      "sha256": "c4e486f5f464f75cc4f28e1bf852d1d647191e8c899e3be3d367a3ec76c7c740",
+      "bytes": 4980
+    },
+    {
+      "path": "native/window-control/src/linux_backend.py",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/src/linux_backend.py",
+      "sha256": "ebe789ea3e86dbae1d0509b81ded359411d8b569991f559430f23ac1ce84ee06",
+      "bytes": 39171
+    },
+    {
+      "path": "native/window-control/src/main.rs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/src/main.rs",
+      "sha256": "053baca1d35b407ca8a51c84f3f81a549e7e8f536d4d4ba818b10c640150480f",
+      "bytes": 6534
+    },
+    {
+      "path": "native/window-control/src/overlay.rs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/src/overlay.rs",
+      "sha256": "fd0f7deac61470b050502ccb26bdf4ba2980b0613059d6f3d7ab265cdbc20a09",
+      "bytes": 62734
+    },
+    {
+      "path": "native/window-control/src/protocol.rs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/src/protocol.rs",
+      "sha256": "9eae4a9e893cb0db3d36205882983a5894ec1154e95fea19afb0bcadae56b049",
+      "bytes": 17347
+    },
+    {
+      "path": "native/window-control/src/uia.rs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/src/uia.rs",
+      "sha256": "46af97e845cd79c3c11fdc0472b82c5a4a01842702efd402bc25c600ad8737de",
+      "bytes": 27179
+    },
+    {
+      "path": "native/window-control/src/windows_backend.rs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/src/windows_backend.rs",
+      "sha256": "a8af7810d537410a6b3f9241755a522995b219db41e8f60b273a9e5c1e14dddf",
+      "bytes": 38926
+    },
+    {
+      "path": "native/window-control/THIRD_PARTY_NOTICES.md",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/native/window-control/THIRD_PARTY_NOTICES.md",
+      "sha256": "b17b06661ccc4b6089de39bd0d8ee7a44f536268172f7c040e65f0c913dd8062",
+      "bytes": 27625
+    },
+    {
+      "path": "vendor/azrael/multi-pointer-mcp.cjs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/scripts/multi-pointer-mcp.cjs",
+      "sha256": "a3337c2cf9acc03e534e1d1a987e4333ed0d494f2003e585d9da224fa9140d2d",
+      "bytes": 14429
+    },
+    {
+      "path": "vendor/azrael/use-control-settings.cjs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/scripts/use-control-settings.cjs",
+      "sha256": "6724f4cb4a5011d620d9da4670a2456bc6851c691efda29530f2728169a1511b",
+      "bytes": 5726
+    },
+    {
+      "path": "vendor/azrael/window-control-backend.cjs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/scripts/window-control-backend.cjs",
+      "sha256": "89705e7c6dcd08920592d1a42a586d7e535b5e1b3e2ebe5ff2e38bab1dac3400",
+      "bytes": 15930
+    },
+    {
+      "path": "vendor/azrael/window-control-errors.cjs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/scripts/window-control-errors.cjs",
+      "sha256": "5e6a5f36a3b3ef6021bdede66a01d50398a2114d7da63669d2e739a57ac3abaf",
+      "bytes": 8869
+    },
+    {
+      "path": "vendor/azrael/window-control-mcp.cjs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/scripts/window-control-mcp.cjs",
+      "sha256": "4b98037406ba18b7de289958e81d440b40b634b1b02cf95fb918529d3f44994e",
+      "bytes": 27445
+    },
+    {
+      "path": "vendor/azrael/window-control-occupancy.cjs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/scripts/window-control-occupancy.cjs",
+      "sha256": "bbdb7464470addf14c21758b112c3683da1395c843a4f4a36b4caf9cbe8b5af3",
+      "bytes": 10373
+    },
+    {
+      "path": "vendor/azrael/window-control-policy.cjs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/scripts/window-control-policy.cjs",
+      "sha256": "f4f12f18f019fbfbd37bc09d9875c317c729658833bcedda71019a610560240e",
+      "bytes": 50717
+    },
+    {
+      "path": "vendor/azrael/window-switched-input.cjs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/scripts/window-switched-input.cjs",
+      "sha256": "17d7b9ae9ec3795bdbd664cbd836f4d87dd3bb48625da97bdbdd3d6e2a841461",
+      "bytes": 15796
+    },
+    {
+      "path": "vendor/azrael/window-task-macros.cjs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/scripts/window-task-macros.cjs",
+      "sha256": "72cdc1a97c18f33e7ddd65ce84c295b6b379fa7ba515eecc9afb064f90620ff2",
+      "bytes": 15139
+    },
+    {
+      "path": "vendor/azrael/window-use-approvals.cjs",
+      "originalPath": "C:/Users/felre/Desktop/pi-harness-init/scripts/window-use-approvals.cjs",
+      "sha256": "ae7c9ef5f840c35f2ad29dbca1383408e0a32d89ce2639ee001d813bd1651ad2",
+      "bytes": 11054
+    }
+  ],
+  "localAdapters": [
+    "vendor/azrael/window-control-runtime.cjs"
+  ],
+  "exclusions": [
+    "native build/target output",
+    "retired child-session host and virtual-input driver"
+  ]
+}

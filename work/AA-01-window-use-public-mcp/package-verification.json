@@ -1,0 +1,138 @@
+{
+  "platform": "win32",
+  "arch": "x64",
+  "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\releases\\0.1.0-20261106T050046680-0236951431-f711e6\\WindowUseMCP-win32-x64\\WindowUseMCP.exe",
+  "checks": [
+    {
+      "name": "standard SDK stdio connection and tool discovery"
+    },
+    {
+      "name": "automatic approval popup; denial sends no input"
+    },
+    {
+      "name": "approved real UIA edit and invoke with observed postcondition"
+    },
+    {
+      "name": "compact custom-chrome UI renders and switches light/dark"
+    },
+    {
+      "name": "own settings/approval windows blocked from observation and control in full mode"
+    },
+    {
+      "name": "native desktop capture masks own UI",
+      "maskedWindowCount": 1
+    },
+    {
+      "name": "trusted UI Stop and explicit resume"
+    },
+    {
+      "name": "EOF releases resources and exits"
+    }
+  ],
+  "exitCode": 1,
+  "coordinateFailure": {
+    "code": "state_changed",
+    "message": "Switched input requires a fresh observation before another operation",
+    "actionExecuted": true,
+    "mutationOutcome": "unknown",
+    "observationRequired": true,
+    "recovery": "observe_again",
+    "nativeCode": "interrupted",
+    "switchedInputDetails": {
+      "operationId": 1,
+      "deliveredInputs": 5,
+      "activationDeliveredInputs": 3,
+      "appEffectVerified": false,
+      "observeRequired": true,
+      "syntheticReleased": true,
+      "foregroundAttempted": true,
+      "noReplay": true,
+      "activationPath": "caption_click",
+      "interference": {
+        "baselineEpoch": 19,
+        "currentEpoch": 21,
+        "ownTaggedMouseEvents": 5,
+        "ownTaggedKeyboardEvents": 0,
+        "foreignMouseEvents": 21,
+        "foreignKeyboardEvents": 0,
+        "targetWindowDestroyEvents": 0,
+        "epochChanged": true,
+        "snapshotCoherent": true,
+        "emergencyRequested": false,
+        "disconnected": false,
+        "lastForeign": {
+          "injected": false,
+          "lowerIntegrityInjected": false,
+          "extraInfoZero": true,
+          "kind": "mouse",
+          "messageCategory": "move"
+        }
+      },
+      "recovery": {
+        "operationId": 1,
+        "rounds": 1,
+        "maxRounds": 3,
+        "activeRecoveryMs": 19,
+        "maxActiveRecoveryMs": 5000,
+        "applicationInputs": 1,
+        "observeRequired": true,
+        "uncertainDelivery": false,
+        "budgetExhausted": false,
+        "completed": true,
+        "lastBlocker": "interrupted"
+      },
+      "collaboration": {
+        "probeRemainingMs": 0,
+        "rawPackets": 0,
+        "suppressedMouseEvents": 0,
+        "rawSuppressionPairs": 0,
+        "queuedHumanOperations": 0,
+        "queuedInputOperations": 0,
+        "pendingLogicalMoves": 0,
+        "failureCount": 0,
+        "lastRawEventTime": 0,
+        "lastSuppressedEventTime": 0,
+        "completedHumanOperations": 0,
+        "skippedHumanOperations": 0,
+        "lastHumanApplicationInputs": 0,
+        "requested": false,
+        "enabled": false,
+        "capability_pending": false,
+        "failed": false,
+        "suppression": false,
+        "modelActive": false,
+        "lastHumanObserveRequired": false,
+        "rawConsumerAppsVerified": false,
+        "pointerAccelerationEmulated": false,
+        "phase": "off",
+        "lastFailure": "none",
+        "lastHumanFailure": "none",
+        "physicalKeyboard": "fail_open_and_stop_model",
+        "user": {
+          "x": 0,
+          "y": 0
+        },
+        "systemCursor": {
+          "visibilityCommands": 0,
+          "supported": false,
+          "hidden": false,
+          "restorePending": false,
+          "guardReady": false
+        },
+        "deviceDiagnostics": {
+          "snapshotMouseCount": 0,
+          "allowedInitialArrivals": 0,
+          "rejectedDeviceChanges": 0,
+          "ignoredOwnRawPackets": 0,
+          "mouseSnapshotReady": false,
+          "snapshotReason": "not_requested",
+          "preparationWaitReason": "relative_motion_required"
+        }
+      }
+    }
+  },
+  "run": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\verification\\windows-1793941386109",
+  "releaseZipSha256": "d1a5b2ca5c330ee4801e7334fe235016c6c54eafc2ff3091f153967c97410da4",
+  "launcherSha256": "3cac19e0ca7bd4867306ab67f16ce57706328cf73a0f2f7a9e30ea00ff1a0478",
+  "status": "partial: physical coordinate postcondition not accepted"
+}
