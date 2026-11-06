@@ -1,6 +1,6 @@
 # Window Use MCP
 
-Status: partial. The independent package, permission UI, real UI Automation input and self-protection are verified on Windows x64. Physical-coordinate input acceptance is pending. Execution evidence belongs in the work record.
+Status: implemented for Windows x64. The independent package, permission UI, real UI Automation and physical-coordinate input, self-protection and lifecycle checks are verified on the current Windows desktop. Clean-machine and individual third-party client acceptance remain unverified. Execution evidence belongs in the work record.
 
 ## Product boundary
 

@@ -8,7 +8,7 @@ const { chromium } = require('playwright');
 const { Client } = require('@modelcontextprotocol/sdk/client/index.js');
 const { ReadBuffer, serializeMessage } = require('@modelcontextprotocol/sdk/shared/stdio.js');
 const root = path.resolve(__dirname, '..');
-const run = path.join(root, 'artifacts/verification/windows-' + Date.now());
+const run = path.join(root, 'artifacts/acceptance/windows-' + Date.now());
 fs.mkdirSync(run, { recursive: true });
 const checks = [];
 function passed(name, data = {}) { checks.push({ name, ...data }); process.stdout.write('PASS ' + name + '\n'); }
@@ -124,6 +124,7 @@ async function main() {
       const next=await client.callTool({name:'capture_desktop',arguments:{}});if(next.isError)break;desktop=json(next);
     }
     let coordinateFailure;
+    fs.writeFileSync(path.join(run,'coordinate-delivery.json'),JSON.stringify({button:fixtureInfo,baseline:coordinateBaseline,result:json(result)},null,2));
     if(result.isError)coordinateFailure=json(result);
     else {
       assert.equal(json(result).delivery,'desktopInput');

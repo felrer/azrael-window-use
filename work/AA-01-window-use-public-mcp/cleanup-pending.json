@@ -10,7 +10,8 @@
       "artifacts/logs/package-20261106T050046680-0236951431-f711e6"
     ],
     "purpose": "Frozen package inputs and minimal packaging logs for remaining exact-package acceptance and recovery",
-    "releaseCondition": "After remaining acceptance/user normal-operation check, review current references and delete through owner."
+    "releaseCondition": "Exact packaged acceptance passed; verified all staging/log items removed with remaining=false.",
+    "status": "deleted"
   },
   "items": [
     {
@@ -123,5 +124,14 @@
   "retentionApproval": "not granted; task remains open",
   "revisitCondition": "Supported owner resolves the nested ownership registration and fresh whole-group review passes.",
   "status": "cleanup pending; no deletion bypass",
-  "uniqueLogicalBytes": 127317506
+  "uniqueLogicalBytes": 127317506,
+  "completedCleanup": {
+    "groups": [
+      "accepted-package-staging",
+      "quiet-input-acceptance"
+    ],
+    "logicalBytes": 88387339,
+    "remaining": false,
+    "purpose": "Successful frozen package staging/logs and two quiet-input verification profiles; compact acceptance evidence preserved in work."
+  }
 }

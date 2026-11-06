@@ -5,7 +5,10 @@ using System.Windows.Forms;
 using System.Runtime.InteropServices;
 class VerificationFixture {
   [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll", SetLastError=true)] static extern bool SetProcessDpiAwarenessContext(IntPtr value);
   [STAThread] static void Main(string[] args) {
+    // Match the native broker's physical-pixel coordinates on scaled desktops.
+    if(!SetProcessDpiAwarenessContext(new IntPtr(-4))) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
     Application.EnableVisualStyles();
     using (var form = new Form { Text="Window Use MCP verification", AccessibleName="Window Use MCP verification", StartPosition=FormStartPosition.Manual, Location=new Point(80,80), Size=new Size(540,330) }) {
       var edit = new TextBox { Name="verificationInput", AccessibleName="Verification input", Location=new Point(25,35), Size=new Size(450,30), Text="before" };

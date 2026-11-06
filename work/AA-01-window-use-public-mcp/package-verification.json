@@ -23,116 +23,32 @@
       "maskedWindowCount": 1
     },
     {
+      "name": "real coordinate input reaches owned fixture with observed postcondition",
+      "attempts": 1
+    },
+    {
       "name": "trusted UI Stop and explicit resume"
     },
     {
       "name": "EOF releases resources and exits"
     }
   ],
-  "exitCode": 1,
-  "coordinateFailure": {
-    "code": "state_changed",
-    "message": "Switched input requires a fresh observation before another operation",
-    "actionExecuted": true,
-    "mutationOutcome": "unknown",
-    "observationRequired": true,
-    "recovery": "observe_again",
-    "nativeCode": "interrupted",
-    "switchedInputDetails": {
-      "operationId": 1,
-      "deliveredInputs": 5,
-      "activationDeliveredInputs": 3,
-      "appEffectVerified": false,
-      "observeRequired": true,
-      "syntheticReleased": true,
-      "foregroundAttempted": true,
-      "noReplay": true,
-      "activationPath": "caption_click",
-      "interference": {
-        "baselineEpoch": 19,
-        "currentEpoch": 21,
-        "ownTaggedMouseEvents": 5,
-        "ownTaggedKeyboardEvents": 0,
-        "foreignMouseEvents": 21,
-        "foreignKeyboardEvents": 0,
-        "targetWindowDestroyEvents": 0,
-        "epochChanged": true,
-        "snapshotCoherent": true,
-        "emergencyRequested": false,
-        "disconnected": false,
-        "lastForeign": {
-          "injected": false,
-          "lowerIntegrityInjected": false,
-          "extraInfoZero": true,
-          "kind": "mouse",
-          "messageCategory": "move"
-        }
-      },
-      "recovery": {
-        "operationId": 1,
-        "rounds": 1,
-        "maxRounds": 3,
-        "activeRecoveryMs": 19,
-        "maxActiveRecoveryMs": 5000,
-        "applicationInputs": 1,
-        "observeRequired": true,
-        "uncertainDelivery": false,
-        "budgetExhausted": false,
-        "completed": true,
-        "lastBlocker": "interrupted"
-      },
-      "collaboration": {
-        "probeRemainingMs": 0,
-        "rawPackets": 0,
-        "suppressedMouseEvents": 0,
-        "rawSuppressionPairs": 0,
-        "queuedHumanOperations": 0,
-        "queuedInputOperations": 0,
-        "pendingLogicalMoves": 0,
-        "failureCount": 0,
-        "lastRawEventTime": 0,
-        "lastSuppressedEventTime": 0,
-        "completedHumanOperations": 0,
-        "skippedHumanOperations": 0,
-        "lastHumanApplicationInputs": 0,
-        "requested": false,
-        "enabled": false,
-        "capability_pending": false,
-        "failed": false,
-        "suppression": false,
-        "modelActive": false,
-        "lastHumanObserveRequired": false,
-        "rawConsumerAppsVerified": false,
-        "pointerAccelerationEmulated": false,
-        "phase": "off",
-        "lastFailure": "none",
-        "lastHumanFailure": "none",
-        "physicalKeyboard": "fail_open_and_stop_model",
-        "user": {
-          "x": 0,
-          "y": 0
-        },
-        "systemCursor": {
-          "visibilityCommands": 0,
-          "supported": false,
-          "hidden": false,
-          "restorePending": false,
-          "guardReady": false
-        },
-        "deviceDiagnostics": {
-          "snapshotMouseCount": 0,
-          "allowedInitialArrivals": 0,
-          "rejectedDeviceChanges": 0,
-          "ignoredOwnRawPackets": 0,
-          "mouseSnapshotReady": false,
-          "snapshotReason": "not_requested",
-          "preparationWaitReason": "relative_motion_required"
-        }
-      }
-    }
-  },
-  "run": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\verification\\windows-1793941386109",
+  "exitCode": 0,
+  "run": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\acceptance\\windows-1793942955303",
+  "status": "passed on current Windows x64 desktop",
   "releaseZipSha256": "d1a5b2ca5c330ee4801e7334fe235016c6c54eafc2ff3091f153967c97410da4",
   "launcherSha256": "3cac19e0ca7bd4867306ab67f16ce57706328cf73a0f2f7a9e30ea00ff1a0478",
-  "status": "partial: physical coordinate postcondition not accepted"
+  "coordinatePostcondition": {
+    "button": {
+      "buttonX": 186,
+      "buttonY": 230
+    },
+    "baseline": 1,
+    "observed": 2,
+    "delivery": "desktopInput",
+    "deliveredInputs": 3,
+    "foreignMouseEvents": 0,
+    "attempts": 1
+  },
+  "fixtureCorrection": "The first quiet run delivered input but failed the button postcondition. Enable per-monitor-v2 DPI awareness, as used by the native broker, so PointToScreen returns physical coordinates."
 }
