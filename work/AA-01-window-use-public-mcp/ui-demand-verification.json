@@ -208,5 +208,20 @@
     "cleanup": "deleted through owner review/apply, remaining=false",
     "manualAcceptance": "unverified; asked user whether popup was visible and which button was pressed",
     "retryDeletedLogicalBytes": 64139427
+  },
+  "manualUiAcceptance": {
+    "status": "confirmed",
+    "visibleConfirmedByUser": true,
+    "approvalClickConfirmedByUser": true,
+    "serverApprovalPath": {
+      "run": "ui-live-20261106-04",
+      "evidence": "Freshness rejection occurs after awaited permission approval/guard and before native act",
+      "owner": "src/runtime.cjs:39; vendor/azrael/window-control-policy.cjs:404,457,460"
+    },
+    "exactUserClickToAttemptCorrelation": "not established; do not equate separate run05 timeout with no user approval",
+    "manualInputPostcondition": "not verified",
+    "samePackageInputAcceptance": "reuse exact packaged 11-check acceptance, exit0",
+    "additionalPermissionRequestsSent": false,
+    "cleanup": "all temporary runs already deleted; no new generated artifacts"
   }
 }
