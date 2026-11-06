@@ -1,4 +1,4 @@
-상태: MCP 승인 UI 보완·정확한 패키지 수용 검증·Azrael 경로 갱신·이번 임시 자료 정리 완료. 기존 별도 테스트 세션의 Azrael 자체 승인 대기는 이 MCP 검증과 구분한다.
+상태: MCP 보완·자동 수용 검증은 완료. 추가 실제 사용자 승인 테스트는 창 생성·표시 로그를 확인했으나 응답 없이 만료되어 사용자 화면 확인을 기다린다. 이번 테스트 임시 자료는 모두 정리했다.
 
 # Azrael 등록과 테스트 세션 전달
 
@@ -37,3 +37,13 @@
 - 결과: 새 빌드 20261106T070756738-295b2046c3-ec4566, packaging exit0, 실제 패키지 Windows 수용 11 checks/exit0. 사전 UI 0개, 승인창 실제 닫기와 재생성, 거절 시 입력 없음, 승인 후 실제 UIA 입력, 설정 재생성/테마 보존, 자기 보호/마스킹/물리 입력/Stop/EOF를 확인했다. 승인창 렌더링도 직접 확인했다. 불변 build-info의 초기 acceptance=pending은 수정하지 않고 ui-demand-verification.json이 독립 수용 결과를 소유한다.
 - Azrael: 공식 버전 검사 config/value/write로 window_use_public.command만 검증된 새 패키지로 변경하고 API 재독과 별도 TOML 파싱으로 확인했다. 기존 연결은 중단하지 않았으며 새 MCP 연결부터 적용된다. Azrael 클라이언트의 사전 도구 승인은 MCP 호출 전 단계이므로 이번 변경으로 자동 해결됐다고 주장하지 않는다.
 - 정리: 중단 실행/비점유 잠금 및 성공 staging/log/검증 프로필 총 79,322,830 logical bytes를 owner review/apply로 삭제하고 모든 remaining=false를 확인했다. 일회용 portable 빌드 bundle은 실행 도구 제한 진단 후 제거했다. 새 배포물은 현재 설정/공개용 산출물 소비자로 보호하고, 구 배포물은 실제 활성 연결 때문에 보존하며 마지막 소비자 종료 후 검토한다. 이전 127,317,506 byte 승인 보관 예외에는 변경이 없다.
+
+## 실제 사용자 승인 테스트 — 사용자 화면 확인 대기
+
+- 사용자 요청: 수정본 실제 테스트. 현재 대화의 기존 MCP 프로세스는 구 패키지를 사용하며, native session 상태 조회는 workspace 경계로 거절되어 우회하지 않았다. 전역 MCP reload는 모든 세션에 영향을 주므로 실행하지 않는다.
+- 검증 대상: 수정본 0.1.0-20261106T070756738-295b2046c3-ec4566에 공식 SDK stdio로 새 연결을 열고 별도 WinForms fixture에서 실제 사용자 승인 UI를 확인한다. UI 자동화·승인 대리·설정 파일 변경은 사용하지 않는다.
+- 계획 산출물: artifacts/ui-live-20261106-01 (소유자 window-use-public-mcp; controller, fixture, 일회 프로필, logs/result). 기존 등록 경로와 겹치지 않는 독립 run이다. 첫 창 닫기 시 입력 없음과 다음 요청 재표시, 허용 후 UIA 값/버튼 결과를 읽어 확인한다. 실제 MCP EOF 및 fixture 종료 뒤 최소 수용 결과만 work에 남기고 run 전체를 owner review/apply로 삭제한다.
+- 첫 수동 run은 승인 요청 전 초기값 검증에서 실패했다(exit1). fixture 자체 상태에 keyPresses=5가 기록되어 시작 시 포커스를 가져온 창에 외부 키보드 입력이 들어온 것으로 확인했다. 모델의 제어 입력은 전송 전이었고 SDK 연결/fixture는 finally에서 종료됐다. 다음 run은 기존 WinForms의 ShowWithoutActivation을 사용하고 PID/executable까지 확인한 전용 창만 대상으로 삼는다. 다음 소유 경계는 artifacts/ui-live-20261106-02이며 동일 window-use-public-mcp run 소유/정리 조건을 적용한다.
+- 두 번째 run도 제어 호출 전에 검증기 자체의 잘못된 기대에서 중단됐다(exit1). 공개 status.window는 의도적으로 PID/executable을 반환하지 않는다. 해당 값이 있다고 가정한 검사를 제거하고, 직접 시작한 fixture 프로세스의 읽기 전용 Windows 메타데이터와 고유 창 제목을 대조한다. 세 번째 경계 artifacts/ui-live-20261106-03에 동일 소유/종료/정리 조건을 적용한다. 제품 코드에는 변경이 없다.
+- 세 번째 실제 요청은 approval_window_created → approval_window_shown 로그를 남겼다. 사용자의 승인/거절 응답 없이 50초가 지나 approval_timeout(actionExecuted=false)으로 끝났고 명령 exit1이다. fixture 상태에도 입력 이벤트가 기록되지 않았다. UI 자동 실행 로그 확인과 실제 사용자 화면 표시/승인 성공을 구분하며, 이번 수동 수용을 성공으로 보고하지 않는다. 창이 화면에 보였는지 사용자에게 질문했다.
+- 실제 UI 승인 조작·CDP 연결·권한 설정 변경은 하지 않았다. SDK EOF/Job-owned host와 fixture 종료를 확인했으며 프로세스 잔재는 0개다. 세 시도 임시 자료 33,782,439 logical bytes를 owner review/apply로 삭제했고 모두 remaining=false다. 최소 진단 결과는 ui-demand-verification.json의 liveUserTest에 보존한다.

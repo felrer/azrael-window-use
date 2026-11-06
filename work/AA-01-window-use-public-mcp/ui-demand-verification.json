@@ -124,5 +124,37 @@
   "acceptanceSourceHashes": {
     "scripts/verify-windows.cjs": "c68004fa4a60942919b243879634367341ce9caae9f3cbaab57a050adf646105",
     "scripts/window-fixture.cs": "277a5185ac506b87c1202e49ee26cccf801d5a8b66c6caacff7e1396fd836cb4"
+  },
+  "liveUserTest": {
+    "startedAt": "2026-11-06T07:22:33.479Z",
+    "finishedAt": "2026-11-06T07:23:25.170Z",
+    "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\releases\\0.1.0-20261106T070756738-295b2046c3-ec4566\\WindowUseMCP-win32-x64\\WindowUseMCP.exe",
+    "fixtureIdentity": {
+      "title": "Window Use MCP live approval 03",
+      "pid": 44248,
+      "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\ui-live-20261106-03\\window-fixture.exe"
+    },
+    "commandExitCode": 1,
+    "mcpCode": "approval_timeout",
+    "approvalWindowEvents": [
+      {
+        "timestamp": "2026-11-06T07:22:34.962Z",
+        "event": "approval_window_created"
+      },
+      {
+        "timestamp": "2026-11-06T07:22:35.167Z",
+        "event": "approval_window_shown"
+      },
+      {
+        "timestamp": "2026-11-06T07:23:25.049Z",
+        "event": "approval_window_closed"
+      }
+    ],
+    "userResponseReceived": false,
+    "actualInputExecuted": false,
+    "fixtureInputEventsRecorded": false,
+    "manualAcceptance": "unverified; waiting for user to confirm whether popup was visible",
+    "cleanup": "all three owned runs deleted through review/apply, remaining=false",
+    "deletedLogicalBytes": 33782439
   }
 }
