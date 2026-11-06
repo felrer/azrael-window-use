@@ -121,9 +121,19 @@
     }
   ],
   "reason": "A new child profile was registered under an already registered verification root. Both whole-group reviews block overlapping lifecycle members. No force deletion or registry editing was used.",
-  "retentionApproval": "not granted; task remains open",
+  "retentionApproval": {
+    "status": "approved",
+    "answer": "?? ?? ??? ?? ??",
+    "logicalBytes": 127317506,
+    "groups": [
+      "aa01-unused-verification-material",
+      "source-verification-attempts"
+    ],
+    "scope": "Exact listed temporary items only",
+    "condition": "Supported owner resolves the nested ownership registration and fresh whole-group review passes."
+  },
   "revisitCondition": "Supported owner resolves the nested ownership registration and fresh whole-group review passes.",
-  "status": "cleanup pending; no deletion bypass",
+  "status": "retained with explicit user approval; functional work complete",
   "uniqueLogicalBytes": 127317506,
   "completedCleanup": {
     "groups": [
