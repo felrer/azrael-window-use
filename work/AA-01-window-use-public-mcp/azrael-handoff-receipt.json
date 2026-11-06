@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "status": "delivered",
+  "serverName": "window_use_public",
+  "cwd": "C:/Users/felre/Desktop/azrael-window-use-mcp",
+  "startedAt": "2026-11-06T05:49:53.442Z",
+  "beforeConfigVersion": "sha256:51d126c39ae4817c4c09f7cf674635e779bf9850f011e20998a2dbdc41d357b9",
+  "configWrite": {
+    "status": "ok",
+    "filePath": "C:\\Users\\felre\\.azrael-ex\\config.toml",
+    "version": "sha256:2f377b5cb91f8fb9d10da7a76cdf669ee85ad6958e2764999578dd287dab3144"
+  },
+  "configEntry": {
+    "command": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\releases\\0.1.0-20261106T050046680-0236951431-f711e6\\WindowUseMCP-win32-x64\\WindowUseMCP.exe",
+    "args": [
+      "--mcp"
+    ],
+    "enabled": true,
+    "startup_timeout_sec": 20,
+    "tool_timeout_sec": 120
+  },
+  "otherServersUnchanged": true,
+  "threadId": "01a1af68-14af-74b0-aa45-99112869ebc1",
+  "model": "gpt-6.1-sol",
+  "modelProvider": "openai",
+  "title": "독립 Window Use MCP 실사용 테스트",
+  "mcp": {
+    "runtimeStatus": "connected",
+    "toolsError": null,
+    "toolCount": 25,
+    "modelVisibleCount": 24,
+    "toolNames": [
+      "capture",
+      "capture_desktop",
+      "collapse",
+      "context",
+      "desktop_input",
+      "expand",
+      "inspect",
+      "invoke",
+      "list_task_macros",
+      "list_windows",
+      "press_key",
+      "release_desktop_input",
+      "release_switched_input",
+      "resize",
+      "restore_window",
+      "run_size_macro",
+      "run_task_macro",
+      "save_task_macro",
+      "scroll",
+      "select",
+      "set_value",
+      "status",
+      "switched_input",
+      "toggle",
+      "ui_operation"
+    ]
+  },
+  "proxyExited": true,
+  "initialAttempt": {
+    "outcome": "stopped before turn submission",
+    "error": "Public MCP catalog is not ready",
+    "correction": "Catalog includes app-only ui_operation; catalog is 25, model-visible tools are 24."
+  },
+  "promptSha256": "171ea62ae8ca13175e06c1655d98ee364d60d7f2380edeb6eb2a3e3386e59632",
+  "turnId": "01a1af69-0e52-76c1-8a1f-f08160a68759",
+  "turnStatus": "inProgress",
+  "threadReadback": {
+    "id": "01a1af68-14af-74b0-aa45-99112869ebc1",
+    "name": "독립 Window Use MCP 실사용 테스트",
+    "status": {
+      "activeFlags": [],
+      "type": "active"
+    },
+    "turnCount": 1,
+    "requestStored": true
+  },
+  "completedAt": "2026-11-06T05:51:01.357Z",
+  "postDisconnectReadback": {
+    "threadId": "01a1af68-14af-74b0-aa45-99112869ebc1",
+    "status": {
+      "type": "notLoaded"
+    },
+    "turnId": "01a1af69-0e52-76c1-8a1f-f08160a68759",
+    "turnStatus": "failed",
+    "error": {
+      "additionalDetails": null,
+      "codexErrorInfo": "other",
+      "message": "{\"type\":\"error\",\"status\":400,\"error\":{\"type\":\"invalid_request_error\",\"message\":\"The 'gpt-6.1-sol' model is not supported when using Codex with a ChatGPT account.\",\"code\":\"model_not_found\"}}",
+      "misalignment": null
+    },
+    "itemTypes": [
+      "userMessage"
+    ],
+    "observedAt": "2026-11-06T05:52:40.006Z"
+  }
+}
