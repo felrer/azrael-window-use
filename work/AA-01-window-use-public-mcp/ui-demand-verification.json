@@ -106,7 +106,7 @@
       "previous": {
         "group": "public-release-0.1.0-20261106T050046680",
         "logicalBytes": 556215071,
-        "consumer": "preexisting active MCP processes/test session; retire once last consumer releases it"
+        "consumer": "Loaded Azrael session configurations still select this old release; running processes stopped by explicit user request, retire after cached consumers refresh/release"
       }
     }
   },
@@ -223,5 +223,31 @@
     "samePackageInputAcceptance": "reuse exact packaged 11-check acceptance, exit0",
     "additionalPermissionRequestsSent": false,
     "cleanup": "all temporary runs already deleted; no new generated artifacts"
+  },
+  "idleProcessCleanup": {
+    "checkedAtUtc": "2026-11-06T08:11:50.3287596Z",
+    "stoppedLauncherIds": [
+      48840,
+      23492,
+      44408,
+      39764,
+      47164,
+      27448,
+      24704
+    ],
+    "stoppedInstanceCount": 7,
+    "originalHostCount": 21,
+    "remainingWindowUseCount": 0,
+    "remainingOwnedTreeCount": 0,
+    "remaining": [],
+    "afterAutomaticReconnect": {
+      "instanceCount": 1,
+      "processCount": 4,
+      "launcherPid": 47764,
+      "mainHostPid": 28064,
+      "release": "0.1.0-20261106T070756738-295b2046c3-ec4566",
+      "parentAzraelEnginePid": 27480,
+      "disposition": "preserved current configured MCP connection; all seven old instances terminated"
+    }
   }
 }
