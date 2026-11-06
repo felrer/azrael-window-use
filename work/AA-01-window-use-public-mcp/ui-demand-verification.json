@@ -1,0 +1,128 @@
+{
+  "schema": 1,
+  "status": "passed",
+  "scope": "Windows x64 interactive desktop, exact packaged MCP standalone launch and on-demand approval UI",
+  "buildId": "20261106T070756738-295b2046c3-ec4566",
+  "sourceSha256": "295b2046c3586782853466922cdbd62e98ef5b8d172ec064d5055bd13f634da2",
+  "release": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\releases\\0.1.0-20261106T070756738-295b2046c3-ec4566",
+  "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\releases\\0.1.0-20261106T070756738-295b2046c3-ec4566\\WindowUseMCP-win32-x64\\WindowUseMCP.exe",
+  "zip": {
+    "path": "WindowUseMCP-0.1.0-win32-x64.zip",
+    "bytes": 162317356,
+    "sha256": "4a44c541f8049f865227f1d4c0eb715e98558489da4fca05852cedf07d23b9ce"
+  },
+  "proof": {
+    "launcherExactContents": true,
+    "asarExactContents": true,
+    "nativeRuntimeManifests": true,
+    "zipExactContents": true,
+    "selectedInputsUnchanged": true,
+    "packagedBehaviorAcceptance": "pending"
+  },
+  "packageExitCode": 0,
+  "packageSteps": [
+    {
+      "name": "compile-launcher",
+      "exitCode": 0,
+      "elapsedMs": 287
+    },
+    {
+      "name": "production-dependencies",
+      "exitCode": 0,
+      "elapsedMs": 5515
+    },
+    {
+      "name": "zip-and-verify",
+      "exitCode": 0,
+      "elapsedMs": 24213
+    }
+  ],
+  "acceptanceExitCode": 0,
+  "checks": [
+    {
+      "name": "standard SDK stdio connection and tool discovery"
+    },
+    {
+      "name": "MCP alone launches approval UI; closing denies and releases the renderer without disconnecting"
+    },
+    {
+      "name": "automatic approval popup; denial sends no input"
+    },
+    {
+      "name": "approved real UIA edit and invoke with observed postcondition"
+    },
+    {
+      "name": "compact custom-chrome UI renders and switches light/dark"
+    },
+    {
+      "name": "closed settings UI reopens from the host with preserved settings"
+    },
+    {
+      "name": "own settings/approval windows blocked from observation and control in full mode"
+    },
+    {
+      "name": "native desktop capture masks own UI",
+      "maskedWindowCount": 1
+    },
+    {
+      "name": "real coordinate input reaches owned fixture with observed postcondition",
+      "attempts": 1
+    },
+    {
+      "name": "trusted UI Stop and explicit resume"
+    },
+    {
+      "name": "EOF releases resources and exits"
+    }
+  ],
+  "nativeManifests": {
+    "windowControl": "eaaae4add2f237a37de4bbcac871582be0f6296a10b48f31d5b3124ce466ad25",
+    "multiPointer": "9073ec534e8dfc945e80ad948526ffa2d4928596a566648bf5f938e466edb8de"
+  },
+  "changedProductFiles": [
+    "src/main.cjs"
+  ],
+  "reusedEvidence": [
+    "work/AA-01-window-use-public-mcp/source-verification.json",
+    "work/AA-01-window-use-public-mcp/native-verification.json"
+  ],
+  "limitations": [
+    "No clean-machine or third-party client verification",
+    "Azrael host approvals before MCP dispatch remain client-owned"
+  ],
+  "cleanup": {
+    "interruptedPackage": "deleted, remaining=false",
+    "interruptedLock": "deleted, remaining=false",
+    "currentStaging": "deleted; group ui-demand-accepted-staging-01, all remaining=false",
+    "testProfile": "deleted; group ui-demand-acceptance-01, remaining=false",
+    "priorRetentionExceptionBytes": 127317506,
+    "deletedLogicalBytes": 79322830,
+    "activeVersions": {
+      "current": {
+        "group": "public-release-0.1.0-20261106T070756738",
+        "logicalBytes": 556215979,
+        "consumer": "Azrael config and public portable deliverable"
+      },
+      "previous": {
+        "group": "public-release-0.1.0-20261106T050046680",
+        "logicalBytes": 556215071,
+        "consumer": "preexisting active MCP processes/test session; retire once last consumer releases it"
+      }
+    }
+  },
+  "azraelRegistration": {
+    "beforeVersion": "sha256:e1732c6062c7684ef8956407afabe74ea12cdf37abce76def7d444156c92437d",
+    "version": "sha256:51a9acbb1cc931893cfcc019a24e1911f60bd50e27b25ddf3e518a58d5ef0489",
+    "status": "ok",
+    "filePath": "C:\\Users\\felre\\.azrael-ex\\config.toml",
+    "previous": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\releases\\0.1.0-20261106T050046680-0236951431-f711e6\\WindowUseMCP-win32-x64\\WindowUseMCP.exe",
+    "executable": "C:/Users/felre/Desktop/azrael-window-use-mcp/artifacts/releases/0.1.0-20261106T070756738-295b2046c3-ec4566/WindowUseMCP-win32-x64/WindowUseMCP.exe",
+    "onlyExecutableChanged": true,
+    "loadedConnectionsRestarted": false,
+    "independentTomlVerified": true
+  },
+  "acceptanceSourceHashes": {
+    "scripts/verify-windows.cjs": "c68004fa4a60942919b243879634367341ce9caae9f3cbaab57a050adf646105",
+    "scripts/window-fixture.cs": "277a5185ac506b87c1202e49ee26cccf801d5a8b66c6caacff7e1396fd836cb4"
+  }
+}

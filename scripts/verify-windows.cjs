@@ -8,7 +8,9 @@ const { chromium } = require('playwright');
 const { Client } = require('@modelcontextprotocol/sdk/client/index.js');
 const { ReadBuffer, serializeMessage } = require('@modelcontextprotocol/sdk/shared/stdio.js');
 const root = path.resolve(__dirname, '..');
-const run = path.join(root, 'artifacts/acceptance/windows-' + Date.now());
+const runIndex = process.argv.indexOf('--run-dir');
+const run = runIndex < 0 ? path.join(root, 'artifacts/acceptance/windows-' + Date.now()) : path.resolve(process.argv[runIndex + 1]);
+assert.ok(!fs.existsSync(run), 'verification requires a fresh run directory');
 fs.mkdirSync(run, { recursive: true });
 const checks = [];
 function passed(name, data = {}) { checks.push({ name, ...data }); process.stdout.write('PASS ' + name + '\n'); }
@@ -54,6 +56,7 @@ async function main() {
     for(const name of ['context','list_windows','capture','inspect','set_value','invoke','capture_desktop','desktop_input','run_task_macro'])assert.ok(tools.tools.some(tool=>tool.name===name),name);
     assert.ok(!tools.tools.some(tool=>/approval|permission|settings/.test(tool.name)));
     passed('standard SDK stdio connection and tool discovery');
+    assert.equal(application.windows().length, 0, 'MCP starts without a pre-opened settings or approval renderer');
     const context=json(await client.callTool({name:'context',arguments:{}})); assert.equal(context.capabilities.desktopControl,true);
     const list=()=>client.callTool({name:'list_windows',arguments:{}}).then(json);
     let candidates=await list();
@@ -65,14 +68,25 @@ async function main() {
     assert.ok(edit(),'UIA input element');
     assert.equal(await readValue(),'before');
     const mutate=value=>client.callTool({name:'set_value',arguments:{windowId:target.windowId,observationId:observation.observationId,elementId:edit().id,value}});
-    let action=mutate('denied');
-    const approval=await waitFor(async()=>{for(const page of application.windows()){try{if(await page.evaluate(()=>window.windowUse?.snapshot().then(value=>value.view==='approval')))return page;}catch{}}},'automatic approval window');
+    const findApproval=()=>waitFor(async()=>{for(const page of application.windows()){try{if(await page.evaluate(()=>window.windowUse?.snapshot().then(value=>value.view==='approval')))return page;}catch{}}},'automatic approval window');
+    let action=mutate('closed');
+    let approval=await findApproval();
+    await approval.getByRole('button',{name:'닫기',exact:true}).click();
+    let result=await action;assert.equal(result.isError,true);assert.equal(json(result).code,'approval_denied');
+    await waitFor(()=>application.windows().length===0,'approval renderer actually closed');
+    observation=await inspect();assert.equal(await readValue(),'before');
+    passed('MCP alone launches approval UI; closing denies and releases the renderer without disconnecting');
+    action=mutate('denied');
+    approval=await findApproval();
     await approval.screenshot({path:path.join(run,'approval.png')});
     await approval.getByRole('button',{name:'거부',exact:true}).click();
-    let result=await action;assert.equal(result.isError,true);assert.equal(json(result).code,'approval_denied');
+    result=await action;assert.equal(result.isError,true);assert.equal(json(result).code,'approval_denied');
     observation=await inspect();assert.equal(await readValue(),'before');
     passed('automatic approval popup; denial sends no input');
+    await approval.evaluate(()=>{void window.windowUse.command('close');});
+    await waitFor(()=>application.windows().length===0,'hidden approval renderer closed');
     action=mutate('Window Use verified');
+    approval=await findApproval();
     await approval.getByRole('button',{name:'이 연결에서 허용',exact:true}).click();
     result=await action;
     if(result.isError&&json(result).actionExecuted===false&&json(result).observationRequired===true){observation=await inspect();result=await mutate('Window Use verified');}
@@ -83,7 +97,8 @@ async function main() {
     observation=await waitFor(async()=>{const current=await inspect();return current.elements.some(item=>item.name==='Applied: Window Use verified'||item.value==='Applied: Window Use verified')?current:false;},'observed invoke postcondition',5000);
     passed('approved real UIA edit and invoke with observed postcondition');
     await approval.evaluate(()=>window.windowUse.command('openSettings'));
-    const settings=await waitFor(async()=>{for(const page of application.windows()){try{if(await page.evaluate(()=>window.windowUse?.snapshot().then(value=>value.view==='settings')))return page;}catch{}}},'settings window');
+    const findSettings=()=>waitFor(async()=>{for(const page of application.windows()){try{if(await page.evaluate(()=>window.windowUse?.snapshot().then(value=>value.view==='settings')))return page;}catch{}}},'settings window');
+    let settings=await findSettings();
     const width=await settings.evaluate(()=>window.innerWidth);assert.ok(width>=400&&width<=460,'compact settings viewport');
     for(const theme of ['light','dark']){
       await settings.getByLabel('테마',{exact:true}).selectOption(theme);
@@ -92,6 +107,12 @@ async function main() {
     }
     assert.ok(await settings.getByText('항상 보호',{exact:true}).count());
     passed('compact custom-chrome UI renders and switches light/dark');
+    await settings.getByRole('button',{name:'닫기',exact:true}).click();
+    await waitFor(()=>settings.isClosed(),'settings renderer closed');
+    await approval.evaluate(()=>window.windowUse.command('openSettings'));
+    settings=await findSettings();
+    assert.equal(await settings.locator('html').getAttribute('data-theme'),'dark');
+    passed('closed settings UI reopens from the host with preserved settings');
     await settings.getByLabel('권한 모드',{exact:true}).selectOption('full');
     candidates=await list();
     const selfApps=candidates.candidates.filter(item=>item.appName===(packageArg<0?'electron.exe':'WindowUseHost.exe')&&item.title==='');assert.ok(selfApps.length,'self windows are title-redacted');

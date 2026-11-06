@@ -1,4 +1,4 @@
-상태: 완료 — MCP 등록·새 세션 요청 전달 및 승인된 GPT-6-Luna 재개를 확인했다. 실제 테스트 세션은 사용자 승인 요청 대기 중이며 테스트 완료로 보고하지 않는다.
+상태: MCP 승인 UI 보완·정확한 패키지 수용 검증·Azrael 경로 갱신·이번 임시 자료 정리 완료. 기존 별도 테스트 세션의 Azrael 자체 승인 대기는 이 MCP 검증과 구분한다.
 
 # Azrael 등록과 테스트 세션 전달
 
@@ -24,3 +24,16 @@
 - 사용자 승인을 받아 같은 스레드만 GPT-6-Luna(openai)로 재개했다. 전역 model은 전후 모두 gpt-6.1-sol로 동일하며 계정·제공자·권한 기본값은 변경하지 않았다. 새 turn ID는 01a1af74-3c8f-7e82-9295-c0d4ed2e66a2이고 원래 맥락을 이어받는 테스트 요청의 저장을 확인했다.
 - 실제 agentMessage 생성, turn inProgress, error=null을 확인해 이전 모델 거절을 벗어났음을 확인했다. 제어 프록시를 종료한 뒤에도 active/waitingOnApproval이었다. 승인은 사용자/기존 UI 소유자가 처리해야 하며 root가 응답하거나 우회하지 않았다. 새 테스트의 도구 실행/성공 판정은 아직 하지 않았다.
 - 모델 재개/확인용 일회성 자료 8,784 bytes도 azrael-luna-resume-01 그룹으로 삭제했고 remaining=false를 확인했다. 실행 중인 테스트 세션과 MCP 배포 파일은 정리 대상에 포함하지 않았다.
+
+## MCP 승인창 수명주기 보완 — 완료
+
+- 사용자 요청: MCP가 실행될 때 UI를 따로 열어두지 않아도 권한 요청 시 창을 실행하고, 닫은 창도 다시 생성한다. 기존 승인 정책·보호 앱·사용자 중지는 유지한다. Azrael 원본의 UI 자동 실행 기능 추가는 이번 변경 범위에 포함하지 않는다.
+- Windows x64 로컬 대화형 데스크톱 대상. MCP console launcher가 Electron host를 자동 시작하는 기존 경로를 재사용한다. 별도 IPC 서버·신규 의존성·상주 자동 시작 등록은 필요하지 않다.
+- 변경: 닫기는 renderer를 해제하고 host/tray/MCP는 유지한다. 다음 권한 요청은 새 승인창을 생성한다. 닫힌 승인 요청은 거절하며 만료/취소된 요청의 늦은 표시를 막는다. 로그에 창 생성/표시/종료 메타데이터를 기록한다.
+- 검증: 기존 실제 stdio/fixture 수용 검증에 UI 사전 실행 없음, 대기 승인창 닫기=거절, 창 0개 상태에서 재요청=새 창, 설정창 닫기 후 재생성을 추가한다. 향후 main-process close/show 수정 시 renderer 재사용만 검사하고 실제 종료를 누락할 수 있으므로 기존 수용 검사 안에 유지한다. PermissionService/runtime/native는 변경하지 않아 이전 단위/native 결과를 재사용한다.
+- 준비 순서: main/수용 검사/문서 확정 → syntax 검사 → 고유 불변 portable 빌드 → 그 정확한 패키지 실제 UI 수용 → Azrael 설정의 executable 경로 갱신 → 기능 단위 commit. 현재 연결된 구 패키지는 활성 소비자 종료 전 삭제하지 않는다.
+- 산출물 소유자: standalone-package가 새 artifacts/build/package-<buildId>, artifacts/logs/package-<buildId>, artifacts/releases/0.1.0-<buildId>를 자체 package-report에 실행 전에 기록한다. 이번 검증 소유자는 window-use-public-mcp, 임시 run은 artifacts/ui-demand-20261106-01 (profile/fixture/result 포함); 완료 후 최소 증거만 이 work에 보존하고 owner review/apply로 삭제한다. 기존 artifacts/verification 및 artifacts/acceptance 부모 등록과 겹치지 않는 새 경계를 사용한다. 이전 승인된 127,317,506 byte 보관 예외는 그대로 유지한다.
+- 첫 빌드 run-27480-50-1793948741651229300은 실행 도구의 10초 제한으로 exit 124 (failed, producer_completed=true)에서 종료됐다. 내부 compile-launcher/production-dependencies 단계는 각각 exit0이며 완성 패키지 증거로 사용하지 않는다. package-report는 종료 전 running 상태를 유지하므로 이 별도 기록이 중단 사실을 보완한다. 실행 receipt의 종료 확인과 전체 프로세스 조회에서 package script/해당 snapshot/고유 run을 사용하는 자식 실행 없음, npm 단계 exit0, 외부 zip 단계 미진입을 확인했다. pid35716의 package.lock은 종료된 실행의 잔재다. 락 우회 없이 이 중단 실행의 산출물·비점유 lock을 같은 소유자 정리 도구로 제거한 뒤 새 실행을 시작한다.
+- 결과: 새 빌드 20261106T070756738-295b2046c3-ec4566, packaging exit0, 실제 패키지 Windows 수용 11 checks/exit0. 사전 UI 0개, 승인창 실제 닫기와 재생성, 거절 시 입력 없음, 승인 후 실제 UIA 입력, 설정 재생성/테마 보존, 자기 보호/마스킹/물리 입력/Stop/EOF를 확인했다. 승인창 렌더링도 직접 확인했다. 불변 build-info의 초기 acceptance=pending은 수정하지 않고 ui-demand-verification.json이 독립 수용 결과를 소유한다.
+- Azrael: 공식 버전 검사 config/value/write로 window_use_public.command만 검증된 새 패키지로 변경하고 API 재독과 별도 TOML 파싱으로 확인했다. 기존 연결은 중단하지 않았으며 새 MCP 연결부터 적용된다. Azrael 클라이언트의 사전 도구 승인은 MCP 호출 전 단계이므로 이번 변경으로 자동 해결됐다고 주장하지 않는다.
+- 정리: 중단 실행/비점유 잠금 및 성공 staging/log/검증 프로필 총 79,322,830 logical bytes를 owner review/apply로 삭제하고 모든 remaining=false를 확인했다. 일회용 portable 빌드 bundle은 실행 도구 제한 진단 후 제거했다. 새 배포물은 현재 설정/공개용 산출물 소비자로 보호하고, 구 배포물은 실제 활성 연결 때문에 보존하며 마지막 소비자 종료 후 검토한다. 이전 127,317,506 byte 승인 보관 예외에는 변경이 없다.

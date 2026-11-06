@@ -38,26 +38,40 @@ function createWindow(view) {
     title: 'Window Use', roundedCorners: true,
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true, devTools: !app.isPackaged }
   });
-  windows.set(window.webContents.id, { window, view });
+  const contentsId = window.webContents.id;
+  windows.set(contentsId, { window, view });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.on('will-attach-webview', event => event.preventDefault());
   window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
   window.webContents.on('render-process-gone', () => { log('error','ui','renderer_exited'); permissions.stop(); });
-  window.on('close', event => {
+  window.on('close', () => {
     if (closing) return;
-    event.preventDefault();
     if (view === 'approval') for (const id of [...permissions.pending.keys()]) permissions.finish(id, fail('approval_denied', '승인창을 닫아 요청이 취소되었습니다.'));
-    window.hide();
   });
-  window.on('closed', () => windows.delete(window.webContents.id));
+  window.on('closed', () => {
+    windows.delete(contentsId);
+    if (view === 'approval' && approvalWindow === window) approvalWindow = undefined;
+    if (view === 'settings' && settingsWindow === window) settingsWindow = undefined;
+    log('info','ui',view + '_window_closed');
+  });
   window.loadFile(html).catch(error => { log('error','ui','load_failed',{code:error.code}); permissions.stop(); });
   return window;
 }
 function show(view) {
+  if (closing || view === 'approval' && !permissions.pending.size) return;
   let window = view === 'approval' ? approvalWindow : settingsWindow;
-  if (!window || window.isDestroyed()) { window = createWindow(view); if (view === 'approval') approvalWindow = window; else settingsWindow = window; }
-  const reveal = () => { if (window.isDestroyed() || closing) return; if (window.isMinimized()) window.restore(); window.show(); window.focus(); broadcast(); };
+  if (!window || window.isDestroyed()) {
+    window = createWindow(view);
+    if (view === 'approval') approvalWindow = window; else settingsWindow = window;
+    log('info','ui',view + '_window_created');
+  }
+  const reveal = () => {
+    if (window.isDestroyed() || closing || view === 'approval' && !permissions.pending.size) return;
+    if (window.isMinimized()) window.restore();
+    window.show(); window.focus(); broadcast();
+    log('info','ui',view + '_window_shown');
+  };
   if (window.webContents.isLoadingMainFrame()) window.once('ready-to-show', reveal); else reveal();
 }
 function sender(event) {
