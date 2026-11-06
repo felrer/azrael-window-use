@@ -156,5 +156,57 @@
     "manualAcceptance": "unverified; waiting for user to confirm whether popup was visible",
     "cleanup": "all three owned runs deleted through review/apply, remaining=false",
     "deletedLogicalBytes": 33782439
+  },
+  "liveRetry4": {
+    "startedAt": "2026-11-06T07:32:54.698Z",
+    "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\releases\\0.1.0-20261106T070756738-295b2046c3-ec4566\\WindowUseMCP-win32-x64\\WindowUseMCP.exe",
+    "exitCode": 1,
+    "fixtureIdentity": {
+      "title": "Window Use approval fixture 04",
+      "pid": 42536,
+      "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\ui-live-20261106-04\\window-fixture.exe"
+    },
+    "phase": "failed",
+    "error": {
+      "code": "state_changed",
+      "message": "Fresh selected-window observation required"
+    },
+    "finishedAt": "2026-11-06T07:33:00.775Z",
+    "diagnosis": "One-off checker read inspection superseded summary IDs; freshness guard rejects before native act; not a product UI launch failure",
+    "cleanup": "deleted through owner review/apply, remaining=false"
+  },
+  "liveRetry5": {
+    "startedAt": "2026-11-06T07:34:03.221Z",
+    "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\releases\\0.1.0-20261106T070756738-295b2046c3-ec4566\\WindowUseMCP-win32-x64\\WindowUseMCP.exe",
+    "exitCode": 1,
+    "fixtureIdentity": {
+      "title": "Window Use approval fixture 05",
+      "pid": 52864,
+      "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\ui-live-20261106-05\\window-fixture.exe"
+    },
+    "phase": "failed",
+    "error": {
+      "code": "approval_timeout",
+      "message": "승인 대기 시간이 만료되었습니다.",
+      "actionExecuted": false
+    },
+    "finishedAt": "2026-11-06T07:34:54.943Z",
+    "approvalWindowEvents": [
+      {
+        "timestamp": "2026-11-06T07:34:04.716Z",
+        "event": "approval_window_created"
+      },
+      {
+        "timestamp": "2026-11-06T07:34:04.843Z",
+        "event": "approval_window_shown"
+      },
+      {
+        "timestamp": "2026-11-06T07:34:54.804Z",
+        "event": "approval_window_closed"
+      }
+    ],
+    "cleanup": "deleted through owner review/apply, remaining=false",
+    "manualAcceptance": "unverified; asked user whether popup was visible and which button was pressed",
+    "retryDeletedLogicalBytes": 64139427
   }
 }
