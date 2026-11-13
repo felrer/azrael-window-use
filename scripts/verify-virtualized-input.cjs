@@ -40,7 +40,16 @@ async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtur
     const pending=call('switched_input',{windowId:target.windowId,observationId:current.value.observationId,input:{action:'status'}});
     const approval=await waitFor(async()=>{for(const page of application.windows())try{if(await page.evaluate(()=>window.windowUse?.snapshot().then(s=>s.view==='approval')))return page;}catch{}},'virtual input approval');
     await approval.getByRole('button',{name:'이 연결에서 허용',exact:true}).click();
-    cases.push({label:'permission and default virtualization',...await pending});
+    const initial=await pending;
+    cases.push({label:'permission and default virtualization',...initial});
+    if(batchMode) {
+      const collaboration=(initial.value.switchedInputDetails||initial.value.inputResult)?.collaboration;
+      cases.push({label:'autonomous startup readiness',isError:initial.isError,collaboration,
+        postcondition:!initial.isError&&collaboration?.requested===true&&collaboration.enabled===true&&collaboration.phase==='ready'&&
+          collaboration.capability_pending===false&&collaboration.failed!==true,
+        // These observations do not prove raw-input survival or require physical motion.
+        rawPackets:collaboration?.rawPackets,suppression:collaboration?.suppression});
+    }
     await approval.evaluate(()=>window.windowUse.command('close'));
     fs.writeFileSync(fixtureReady+'.activate','activate owned fixture');
     await new Promise(resolve=>setTimeout(resolve,300));
@@ -49,10 +58,6 @@ async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtur
     // do not skip virtualized operation assertions because the fixture could not activate.
     // Status must expose the session default without an explicit enable request.
     await input('virtualization status',{action:'status'});
-    for(let attempt=0;attempt<12&&lastCollaboration?.requested&&!lastCollaboration.enabled&&!lastCollaboration.failed;attempt++) {
-      await new Promise(resolve=>setTimeout(resolve,800));
-      await input('virtualization readiness '+(attempt+1),{action:'status'});
-    }
     const baseline=Number(fs.readFileSync(fixtureReady+'.clicks','utf8'));
     if(batchMode) {
       await input('virtualized batch',{action:'batch',x:fixtureInfo.editX,y:fixtureInfo.editY,maxMs:1000,steps:[
@@ -102,14 +107,19 @@ function summarizeVirtualizedCases(cases,mouseOnly=false,batchMode=false) {
   const externalMouseObserved=cases.some(e=>e.externalEventDelta?.mouse>0);
   const externalKeyboardObserved=cases.some(e=>e.externalEventDelta?.keyboard>0);
   if(batchMode) {
+    const startup=cases.find(e=>e.label==='autonomous startup readiness');
+    const startupReady=!!startup&&!startup.isError&&startup.postcondition===true&&startup.collaboration?.requested===true&&
+      startup.collaboration.enabled===true&&startup.collaboration.phase==='ready'&&startup.collaboration.capability_pending===false&&startup.collaboration.failed!==true;
     const effect=cases.find(e=>e.label==='virtualized batch');
     const effectsPassed=enabled&&!!effect&&!effect.isError&&effect.collaboration?.enabled===true&&effect.postcondition===true&&effect.batch?.completedSteps===4&&effect.batch?.completed===true&&
       effect.keyboardReservation?.restored===true&&effect.keyboardReservation?.pending===false&&effect.keyboardReservation?.active===false;
-    const capabilityBlocked=!enabled&&!!effect&&(!!effect.blocked||effect.collaboration?.failed===true||effect.collaboration?.capability_pending===true)&&!(effect.batch?.completedSteps>0);
+    const capabilityBlocked=!enabled&&!!effect&&startup?.collaboration?.failed!==true&&effect.collaboration?.failed!==true&&
+      (!!effect.blocked||effect.collaboration?.capability_pending===true)&&!(effect.batch?.completedSteps>0);
     // A call-local foreign-key delta plus buffered events is required; cumulative
     // foreign counters alone cannot establish physical keyboard hook coverage.
     const externalReservationConcurrencyVerified=effectsPassed&&effect.externalEventDelta?.keyboard>0&&effect.keyboardReservation?.bufferedEvents>0;
-    return {passed:effectsPassed,verdict:effectsPassed?'passed':capabilityBlocked?'capability_blocked':'failed',effectsPassed,enabled,
+    const passed=startupReady&&effectsPassed;
+    return {passed,verdict:passed?'passed':capabilityBlocked?'capability_blocked':'failed',startupReady,effectsPassed,enabled,
       externalObserved:externalMouseObserved||externalKeyboardObserved,externalMouseObserved,externalKeyboardObserved,
       externalReservationConcurrencyVerified,externalReservationConcurrency:externalReservationConcurrencyVerified?'verified':'unverified'};
   }

@@ -190,7 +190,7 @@ class Ui {
             else {
                 if (instance->routing.requested.load() && (s.disconnected.load() || s.explicitStop.load() || s.emergency.load())) instance->routing.fail(MouseRouting::Fault::staleIntent);
                 const bool routed=!(e.flags&LLMHF_INJECTED) && instance->routing.intercept(static_cast<UINT>(wp),e);
-                if ((e.flags&LLMHF_INJECTED) && (instance->routing.capture.load() || instance->routing.phase.load()==MouseRouting::Phase::probe))
+                if ((e.flags&LLMHF_INJECTED) && instance->routing.capture.load())
                     instance->routing.fail(MouseRouting::Fault::foreignInjection);
                 s.observeForeign(Signals::ForeignKind::mouse, static_cast<UINT>(wp), e.time,
                     (e.flags & LLMHF_INJECTED) != 0, (e.flags & LLMHF_LOWER_IL_INJECTED) != 0, e.dwExtraInfo, e.pt,
@@ -234,7 +234,7 @@ class Ui {
                     instance->notifyKeyboardAbort();
                     return 1;
                 }
-                if (interrupt && (instance->routing.capture.load() || instance->routing.phase.load()==MouseRouting::Phase::probe))
+                if (interrupt && instance->routing.capture.load())
                     instance->routing.fail(injected?MouseRouting::Fault::foreignInjection:MouseRouting::Fault::physicalKeyboard);
             }
         }
@@ -488,6 +488,10 @@ public:
             if (enabled) {
                 routing.enable(controller);
                 if (!overlays.count("@user")) create("@user",routing.userPosition,RGB(255,255,255));
+                // Publish the replacement cursor and its guard synchronously;
+                // no physical event or later timer completes initialization.
+                refreshUserOverlay();
+                if (routing.enabled.load()) require(syncSystemCursor(),"cursor_visibility","Cannot initialize the user cursor guard");
             } else { routing.disable(); require(syncSystemCursor(),"cursor_visibility","System cursor restoration failed"); remove("@user"); }
         });
     }

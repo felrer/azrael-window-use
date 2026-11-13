@@ -120,7 +120,7 @@ effect; physical mouse operations can still arrive during that model request.
 | `key` | `{pointerId,vk,down}`; concrete Windows virtual key (8–254), boolean down. |
 | `press` | `{pointerId,keys}`; atomic 1–8 unique concrete VKs, down in order/up in reverse, fully released. |
 | `text` | `{pointerId,text}`; UTF-8 converted to Unicode input; 1–4096 bytes and at most 1024 UTF-16 units. |
-| `collaboration` | `{enabled:boolean}`; explicit mouse-only opt-in/probe or routing release; see below. |
+| `collaboration` | `{enabled:boolean}`; synchronous cooperative routing initialization or release; see below. |
 | `remove_pointer` | `{pointerId}`; release that pointer's own synthetic state, remove overlay. |
 | `stop` | Release all own synthetic state and destroy every overlay; permits creating new pointers afterward. |
 | `shutdown` | Successful stop followed by normal exit. Cleanup failure leaves the broker alive for retry. |
@@ -142,31 +142,23 @@ permitted keys can still have effects beyond their default key meaning.
 While collaboration is requested, `key` returns `unsupported_atomicity`; use
 `press`. With collaboration off, legacy cross-request key behavior is preserved.
 
-## Mouse collaboration and capability probe
+## Autonomous mouse collaboration startup
 
-Collaboration starts disabled. `collaboration({enabled:true})` registers only this
-EXE for mouse Raw Input using `RIDEV_INPUTSINK`, creates the white, dark-outlined
-`사용자` overlay,
-and returns `requested:true,enabled:false,capability_pending:true`. No model input
-is allowed until capability is ready. Waiting for ordinary relative mouse motion
-without held buttons/modifiers has no expiry and does not suppress input. The first relative
-motion starts a probe that suppresses legacy physical motion for at most 250ms.
-Two distinct suppressed low-level motion observations must pair by Windows event
-time with nonzero relative Raw Input received during that suppression. Only then
-does `enabled:true,phase:"ready"` become available. Failure releases suppression
-immediately and exposes `failed:true` and `lastFailure`; it never silently claims
-that Raw Input survives the hook. The probe emits no synthetic input. It does not
-use `RIDEV_NOLEGACY` as a global-routing claim. Event-time matching is bounded
-capability evidence for this runtime/device path; actual cursor isolation and app
-effects still require manual acceptance.
+The native process starts with collaboration off; the public adapter enables it
+by default for each real input session. `collaboration({enabled:true})` snapshots
+mouse devices, registers only this EXE for Raw Input using `RIDEV_INPUTSINK`, and
+initializes the white, dark-outlined `사용자` overlay and system-cursor guard.
+Successful initialization returns `requested:true,enabled:true,phase:"ready"`
+without waiting for physical mouse or keyboard events. There are no
+`awaiting_relative_motion` or `probing_suppressed_raw` states, startup suppression
+interval, 250ms probe deadline or user-motion admission requirement.
 
-Held physical buttons/modifiers in the awaiting phase do not
-start suppression or fail readiness. Waiting continues without a deadline while
-`deviceDiagnostics.preparationWaitReason` reports only a category
-(`physical_buttons_held`, `physical_modifiers_held`, `physical_mouse_event` or
-`relative_motion_required`). Fresh plain relative motion after release starts the
-probe. Only this active suppression probe retains its 250ms timeout. In the waiting
-phase, `probeRemainingMs:0` means no active probe countdown, not readiness.
+Readiness means synchronous initialization succeeded; it does not assert that
+physical Raw Input has already survived suppression. Actual packet origin,
+device support, delivery/hook watchdogs, target identity and Stop are checked
+during work. An OS registration/initialization failure returns a failure rather
+than a pending wait. Startup does not suppress an idle user. Device snapshot,
+registration and cursor initialization remain required OS work and can fail.
 Physical keyboard events remain counted without failing mouse routing or
 advancing its interruption epoch during collaboration. Cooperative model key/text
 and batch work buffer physical keyboard input under the reservation described below.
@@ -192,7 +184,7 @@ lifetime failure counter. Stop/disconnect signals cannot turn an unrequested
 collaboration session into a failed one.
 
 Raw packets produced by this EXE's own `SendInput` do not advance the user pointer,
-become human gestures, satisfy the probe or trip the physical absolute-device gate
+become human gestures or trip the physical absolute-device gate
 when a strict own-origin correlation succeeds. The low-level mouse hook records
 at most 64 fixed receipts only after exact full-`ULONG_PTR` tag equality and an
 injected flag. Raw classification additionally requires a null device, matching
@@ -279,8 +271,8 @@ Relative counts are mapped directly to user pixels while captured; Windows point
 acceleration is not emulated. Both routing limits require actual device/app tests.
 
 `result.collaboration` exposes `requested`, `enabled`, `capability_pending`,
-`failed`, `phase`, `probeRemainingMs`, `suppression`, `modelActive`, `user:{x,y}`,
-queue sizes, raw/suppression-pair counters and bounded failure/completion statistics.
+`failed`, `phase` (`off`, `ready`, `failed`), `suppression`, `modelActive`, `user:{x,y}`,
+queue sizes, raw/suppressed-event counters and bounded failure/completion statistics.
 There is no hidden auto-enable. Disable, emergency stop, explicit stop and EOF
 release routing and synthetic held state. The hook itself contains only bounded
 atomic updates and suppression decisions; Raw Input processing, target pinning,
@@ -356,10 +348,10 @@ preparation rounds. Exhaustion stops that operation and leaves native physical
 input available. Budgets and gesture deadlines are cooperative; Win32 calls and
 scheduling can add latency. Successful SendInput remains delivery evidence only.
 
-During proven mouse cooperation, a separate same-executable guard hides the
+During initialized mouse cooperation, a separate same-executable guard hides the
 system cursor using `MagShowSystemCursor`; logical user/model overlays remain
 visible. Hiding follows the ready cooperative mode, including idle periods,
-and requires a visible replacement user overlay. Preparation or a missing user
+and requires a visible replacement user overlay. Failed initialization or a missing user
 overlay does not hide the native pointer. The broker waits for the initial hide
 acknowledgment before positional input. Subsequent health checks are nonblocking;
 unchanged acknowledged visibility does not issue another guard command. The

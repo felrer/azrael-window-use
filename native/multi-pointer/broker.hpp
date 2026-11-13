@@ -742,7 +742,7 @@ class Broker {
         if (!desktopEnabled) for (const auto& t : targets) t.validate();
         require(method!="key" || !signals.collaborationRequested.load(),"unsupported_atomicity","Use atomic press while collaboration is requested; cross-request key holds are disabled");
         if (actuation(method) && signals.collaborationRequested.load())
-            require(ui.routing.enabled.load(),"capability_pending","Collaboration needs a successful explicit relative-motion probe before model input");
+            require(ui.routing.enabled.load(),"routing_unavailable","Collaboration is disabled or initialization failed");
         require(!cleanupFailed, "cleanup_failed", "Synthetic cleanup is pending; stop must succeed before new actions");
         if (method == "create_pointer") {
             auto id = identifier(params,"pointerId"), tid = identifier(params,"targetId");

@@ -2,7 +2,6 @@
 #include "platform.hpp"
 #include "raw-origin.hpp"
 #include <functional>
-#include <string_view>
 
 namespace mp {
 struct HumanGesture {
@@ -22,14 +21,14 @@ struct HumanGesture {
 };
 class MouseRouting {
 public:
-    enum class Phase : uint32_t { off, awaitingRaw, probe, ready, failed };
-    enum class Fault : uint32_t { none, rawRegistration, rawSurvival, unsupportedDevice, physicalKeyboard, foreignInjection,
+    enum class Phase : uint32_t { off, ready, failed };
+    enum class Fault : uint32_t { none, rawRegistration, unsupportedDevice, physicalKeyboard, foreignInjection,
         rawLost, hookLost, queueFull, gestureTooLong, unsupportedTarget, staleIntent, restoration };
     static_assert(std::atomic<Phase>::is_always_lock_free && std::atomic<Fault>::is_always_lock_free,"Routing hook state must be lock-free");
     std::atomic<Phase> phase{Phase::off};
     std::atomic<Fault> fault{Fault::none};
     std::atomic<bool> requested{false}, enabled{false}, capture{false}, modelActive{false};
-    std::atomic<uint64_t> rawPackets{0}, suppressed{0}, suppressedMotion{0}, pairedProbePackets{0}, faults{0};
+    std::atomic<uint64_t> rawPackets{0}, suppressed{0}, faults{0};
     std::atomic<uint64_t> lastSuppressedTick{0}, firstUnmatchedTick{0}, rawWithoutHookTick{0};
     std::atomic<DWORD> lastSuppressedTime{0};
     std::atomic<DWORD> lastSuppressedMotionTime{0}, lastPhysicalRawMotionTime{0};
@@ -46,8 +45,6 @@ public:
     std::shared_ptr<HumanGesture> recording;
 private:
     HWND controller = nullptr;
-    uint64_t probeDeadline = 0, probeSuppressedBaseline = 0;
-    uint64_t probeLastMatched = 0;
     uint64_t lastPathSample = 0;
     uint64_t idleCaptureStarted = 0;
     DWORD lastRawTime = 0;
@@ -87,7 +84,6 @@ private:
     };
     std::array<ReceiptMismatch,8> lastReceiptMismatches{};
     size_t lastReceiptMismatchCount = 0;
-    const char* preparationWaitReason = "relative_motion_required";
     std::vector<std::weak_ptr<Target>> humanTargets;
     std::vector<std::weak_ptr<HumanGesture>> humanIntents;
     struct CursorSample {
@@ -101,17 +97,10 @@ private:
     bool cursorTraceActive=false;
     POINT lastModelCursor{};
     static const char* phaseName(Phase value) {
-        return value==Phase::off?"off":value==Phase::awaitingRaw?"awaiting_relative_motion":value==Phase::probe?"probing_suppressed_raw":value==Phase::ready?"ready":"failed";
+        return value==Phase::off?"off":value==Phase::ready?"ready":"failed";
     }
     static const char* deviceTypeName(DWORD value) {
         return value==RIM_TYPEMOUSE?"mouse":value==RIM_TYPEKEYBOARD?"keyboard":value==RIM_TYPEHID?"hid":"unavailable";
-    }
-    static const char* heldPreparationReason() {
-        for (int vk : {VK_LBUTTON,VK_RBUTTON,VK_MBUTTON,VK_XBUTTON1,VK_XBUTTON2})
-            if (GetAsyncKeyState(vk)&0x8000) return "physical_buttons_held";
-        for (int vk : {VK_SHIFT,VK_CONTROL,VK_MENU,VK_LWIN,VK_RWIN})
-            if (GetAsyncKeyState(vk)&0x8000) return "physical_modifiers_held";
-        return "relative_motion_required";
     }
     static bool deviceInfo(HANDLE handle, RID_DEVICE_INFO& info) {
         info={}; info.cbSize=sizeof(info); UINT bytes=sizeof(info);
@@ -137,7 +126,6 @@ private:
         switch (value) {
         case Fault::none: return "none";
         case Fault::rawRegistration: return "raw_registration_failed";
-        case Fault::rawSurvival: return "raw_survival_unproven";
         case Fault::unsupportedDevice: return "unsupported_absolute_touch_pen_or_device";
         case Fault::physicalKeyboard: return "physical_keyboard_fail_open";
         case Fault::foreignInjection: return "foreign_injection_fail_open";
@@ -214,7 +202,7 @@ public:
     void fail(Fault value) {
         if (!requested.load()) return;
         auto previous=phase.load();
-        if (previous==Phase::off || previous==Phase::failed || !phase.compare_exchange_strong(previous,Phase::failed)) return;
+        if (previous==Phase::failed || !phase.compare_exchange_strong(previous,Phase::failed)) return;
         fault.store(value); faults.fetch_add(1); enabled.store(false); capture.store(false);
     }
     // Hook-safe subset: only lock-free state changes; recording is UI-thread
@@ -222,13 +210,11 @@ public:
     bool intercept(UINT message, const MSLLHOOKSTRUCT& event) {
         const auto current=phase.load();
         if (current==Phase::ready && !capture.load()) sampleCursor("idle_physical_hook",event.pt,event.time,true);
-        if (current!=Phase::probe && !(current==Phase::ready && capture.load())) return false;
+        if (current!=Phase::ready || !capture.load()) return false;
         if (message==WM_XBUTTONDOWN || message==WM_XBUTTONUP) { fail(Fault::unsupportedDevice); return false; }
-        if (current==Phase::probe && message!=WM_MOUSEMOVE) { fail(Fault::rawSurvival); return false; }
         suppressed.fetch_add(1);
         lastSuppressedTime.store(event.time); lastSuppressedTick.store(GetTickCount64());
         if (message==WM_MOUSEMOVE) {
-            suppressedMotion.fetch_add(1);
             lastSuppressedMotionTime.store(event.time);
             if (physicalRawMotionSeen.load() && static_cast<int32_t>(lastPhysicalRawMotionTime.load()-event.time)>=0) {
                 firstUnmatchedTick.store(0); rawWithoutHookTick.store(0);
@@ -240,9 +226,7 @@ public:
     }
     void enable(HWND window) {
         disable(); controller=window; requested.store(true); fault.store(Fault::none);
-        phase.store(Phase::awaitingRaw);
         allowedInitialArrivals=0; rejectedDeviceChanges=0; hasDeviceChange=false; hasRawSample=false;
-        preparationWaitReason=heldPreparationReason();
         restorationReason="not_attempted";
         hasHumanSubmission=false; physicalRawMotionSeen.store(false);
         ownRawDesktop={GetSystemMetrics(SM_XVIRTUALSCREEN),GetSystemMetrics(SM_YVIRTUALSCREEN),
@@ -252,6 +236,9 @@ public:
         RAWINPUTDEVICE device{0x01,0x02,RIDEV_INPUTSINK|RIDEV_DEVNOTIFY,controller};
         if (!RegisterRawInputDevices(&device,1,sizeof(device))) { fail(Fault::rawRegistration); return; }
         syncUserCursor("enable_sync");
+        // Device registration and cursor initialization are synchronous. There
+        // is no physical-motion admission test or startup suppression interval.
+        if (phase.load()!=Phase::failed) { enabled.store(true); phase.store(Phase::ready); }
     }
     void disable() {
         requested.store(false); enabled.store(false); capture.store(false); modelActive.store(false); phase.store(Phase::off);
@@ -332,20 +319,6 @@ public:
         const uint64_t now=GetTickCount64();
         const bool moved=mouse.lLastX!=0 || mouse.lLastY!=0;
         if (moved) { lastPhysicalRawMotionTime.store(time); physicalRawMotionSeen.store(true); }
-        if (phase.load()==Phase::awaitingRaw) {
-            preparationWaitReason=heldPreparationReason();
-            if (mouse.usButtonFlags) preparationWaitReason=(mouse.usButtonFlags&(RI_MOUSE_LEFT_BUTTON_DOWN|RI_MOUSE_RIGHT_BUTTON_DOWN|RI_MOUSE_MIDDLE_BUTTON_DOWN)) ?
-                "physical_buttons_held":"physical_mouse_event";
-        }
-        if (phase.load()==Phase::awaitingRaw && moved) {
-            if (std::string_view(preparationWaitReason)!="relative_motion_required") { syncUserCursor("preparation_sync"); return; }
-            preparationWaitReason="none";
-            phase.store(Phase::probe); probeDeadline=now+250; probeSuppressedBaseline=suppressedMotion.load(); probeLastMatched=probeSuppressedBaseline; pairedProbePackets.store(0);
-        }
-        if (phase.load()==Phase::probe && moved && suppressedMotion.load()>probeLastMatched && time==lastSuppressedMotionTime.load()) {
-            probeLastMatched=suppressedMotion.load(); pairedProbePackets.fetch_add(1); firstUnmatchedTick.store(0);
-            if (pairedProbePackets.load()>=2) { enabled.store(true); phase.store(Phase::ready); capture.store(false); }
-        }
         if (phase.load()!=Phase::ready || !capture.load()) { syncUserCursor("inactive_raw_sync"); return; }
         if (moved && static_cast<int32_t>(time-lastSuppressedMotionTime.load())>=0 && firstUnmatchedTick.load()) firstUnmatchedTick.store(0);
         if (moved) {
@@ -392,10 +365,6 @@ public:
                 receivingExpiredOwnRaw=true; receive(expired.packet,expired.time); receivingExpiredOwnRaw=false;
                 if (phase.load()==Phase::failed) break;
             }
-        if (phase.load()==Phase::awaitingRaw) preparationWaitReason=heldPreparationReason();
-        // No physical input is a normal idle state. Only an active suppression
-        // probe has a deadline; waiting must never start or retain suppression.
-        if (phase.load()==Phase::probe && now>=probeDeadline) fail(Fault::rawSurvival);
         if (recording && now-recording->submittedAt>2000) fail(Fault::gestureTooLong);
         for (const auto& entry : humanIntents) if (auto intent=entry.lock()) if (!intent->started.load() && now-intent->submittedAt>5000) {
             intent->aborted.store(true); intent->ready.store(true); fail(Fault::staleIntent);
@@ -417,7 +386,7 @@ public:
         return false;
     }
     void beginModel() {
-        require(requested.load() && enabled.load() && phase.load()==Phase::ready,"capability_pending","Mouse collaboration has no current proven routing capability");
+        require(requested.load() && enabled.load() && phase.load()==Phase::ready,"routing_unavailable","Mouse collaboration is disabled or initialization failed");
         cursorSampleCount=0; cursorTraceActive=true;
         if (!capture.load()) syncUserCursor("model_begin_sync");
         userAtModelStart=userPosition;
@@ -436,7 +405,7 @@ public:
         for (const auto& entry : humanTargets) if (auto target=entry.lock()) if (target->hwnd==window) target->destroyed->store(true);
     }
     json status() const {
-        const auto current=phase.load(); const auto now=GetTickCount64();
+        const auto current=phase.load();
         auto cursorTrace=json::array();
         for (size_t i=0;i<cursorSampleCount;++i) {
             const auto& sample=cursorSamples[i];
@@ -447,9 +416,8 @@ public:
                 {"model",{{"x",sample.model.x},{"y",sample.model.y}}},
                 {"capture",sample.capturing},{"modelActive",sample.modelActive},{"phase",phaseName(sample.phase)}});
         }
-        const uint64_t remaining=current==Phase::probe && probeDeadline>now ? probeDeadline-now : 0;
         json diagnostics{{"mouseSnapshotReady",mouseSnapshotReady},{"snapshotReason",mouseSnapshotReason},{"snapshotMouseCount",initialMice.size()},{"allowedInitialArrivals",allowedInitialArrivals},
-            {"rejectedDeviceChanges",rejectedDeviceChanges},{"ignoredOwnRawPackets",ignoredOwnRawPackets},{"preparationWaitReason",preparationWaitReason},{"restorationReason",restorationReason},
+            {"rejectedDeviceChanges",rejectedDeviceChanges},{"ignoredOwnRawPackets",ignoredOwnRawPackets},{"restorationReason",restorationReason},
             {"lastDeviceChange",nullptr},{"lastRaw",nullptr}};
         if (hasDeviceChange) diagnostics["lastDeviceChange"]={{"change",lastChange==GIDC_ARRIVAL?"arrival":lastChange==GIDC_REMOVAL?"removal":"unknown"},
             {"deviceHandle",hex(reinterpret_cast<uintptr_t>(lastChangeHandle))},{"deviceType",deviceTypeName(lastChangeDeviceType)},{"phase",phaseName(lastChangePhase)},
@@ -466,14 +434,14 @@ public:
             }
             diagnostics["lastRaw"]["receiptMismatches"]=std::move(samples);
         }
-        return {{"requested",requested.load()},{"enabled",enabled.load()},{"capability_pending",current==Phase::awaitingRaw || current==Phase::probe},
+        return {{"requested",requested.load()},{"enabled",enabled.load()},{"capability_pending",false},
             {"cursorTrace",std::move(cursorTrace)},
             {"userAtModelStart",{{"x",userAtModelStart.x},{"y",userAtModelStart.y}}},
             {"lastHumanSubmission",hasHumanSubmission?json{{"x",lastHumanSubmission.x},{"y",lastHumanSubmission.y}}:json(nullptr)},
-            {"failed",current==Phase::failed},{"phase",current==Phase::off?"off":current==Phase::awaitingRaw?"awaiting_relative_motion":current==Phase::probe?"probing_suppressed_raw":current==Phase::ready?"ready":"failed"},
-            {"probeRemainingMs",remaining},{"suppression",current==Phase::probe || capture.load()},{"modelActive",modelActive.load()},
+            {"failed",current==Phase::failed},{"phase",phaseName(current)},
+            {"suppression",capture.load()},{"modelActive",modelActive.load()},
             {"user",{{"x",userPosition.x},{"y",userPosition.y}}},{"rawPackets",rawPackets.load()},{"suppressedMouseEvents",suppressed.load()},
-            {"rawSuppressionPairs",pairedProbePackets.load()},{"queuedHumanOperations",pendingHuman.load()},{"failureCount",faults.load()},{"lastFailure",faultName(fault.load())},
+            {"queuedHumanOperations",pendingHuman.load()},{"failureCount",faults.load()},{"lastFailure",faultName(fault.load())},
             {"lastRawEventTime",lastRawTime},{"lastSuppressedEventTime",lastSuppressedTime.load()},
             {"completedHumanOperations",completedHuman.load()},{"skippedHumanOperations",skippedHuman.load()},
             {"lastHumanApplicationInputs",lastHumanApplicationInputs.load()},{"lastHumanObserveRequired",lastHumanFailure.load()!=0 && lastHumanApplicationInputs.load()>0},
