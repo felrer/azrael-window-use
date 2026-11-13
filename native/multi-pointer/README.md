@@ -147,8 +147,8 @@ Collaboration starts disabled. `collaboration({enabled:true})` registers only th
 EXE for mouse Raw Input using `RIDEV_INPUTSINK`, creates the white, dark-outlined
 `사용자` overlay,
 and returns `requested:true,enabled:false,capability_pending:true`. No model input
-is allowed until capability is ready. The user has at most ten seconds to provide
-ordinary relative mouse motion without held buttons/modifiers. The first relative
+is allowed until capability is ready. Waiting for ordinary relative mouse motion
+without held buttons/modifiers has no expiry and does not suppress input. The first relative
 motion starts a probe that suppresses legacy physical motion for at most 250ms.
 Two distinct suppressed low-level motion observations must pair by Windows event
 time with nonzero relative Raw Input received during that suppression. Only then
@@ -159,12 +159,14 @@ use `RIDEV_NOLEGACY` as a global-routing claim. Event-time matching is bounded
 capability evidence for this runtime/device path; actual cursor isolation and app
 effects still require manual acceptance.
 
-Held physical buttons/modifiers in the initial ten-second awaiting phase do not
-start suppression or fail readiness immediately. The unchanged original deadline
-continues while `deviceDiagnostics.preparationWaitReason` reports only a category
+Held physical buttons/modifiers in the awaiting phase do not
+start suppression or fail readiness. Waiting continues without a deadline while
+`deviceDiagnostics.preparationWaitReason` reports only a category
 (`physical_buttons_held`, `physical_modifiers_held`, `physical_mouse_event` or
 `relative_motion_required`). Fresh plain relative motion after release starts the
-probe. Physical keyboard events remain counted without failing mouse routing or
+probe. Only this active suppression probe retains its 250ms timeout. In the waiting
+phase, `probeRemainingMs:0` means no active probe countdown, not readiness.
+Physical keyboard events remain counted without failing mouse routing or
 advancing its interruption epoch during collaboration. Model keyboard/text work,
 foreign injected input, explicit Stop, disconnection and target invalidation retain
 their interruption behavior. The probe's motion matching and timeout checks remain.

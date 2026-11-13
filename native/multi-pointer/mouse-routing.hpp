@@ -46,7 +46,7 @@ public:
     std::shared_ptr<HumanGesture> recording;
 private:
     HWND controller = nullptr;
-    uint64_t pendingDeadline = 0, probeDeadline = 0, probeSuppressedBaseline = 0;
+    uint64_t probeDeadline = 0, probeSuppressedBaseline = 0;
     uint64_t probeLastMatched = 0;
     uint64_t lastPathSample = 0;
     uint64_t idleCaptureStarted = 0;
@@ -240,7 +240,7 @@ public:
     }
     void enable(HWND window) {
         disable(); controller=window; requested.store(true); fault.store(Fault::none);
-        phase.store(Phase::awaitingRaw); pendingDeadline=GetTickCount64()+10000;
+        phase.store(Phase::awaitingRaw);
         allowedInitialArrivals=0; rejectedDeviceChanges=0; hasDeviceChange=false; hasRawSample=false;
         preparationWaitReason=heldPreparationReason();
         restorationReason="not_attempted";
@@ -385,8 +385,7 @@ public:
             }
         } catch (const Failure&) { fail(Fault::unsupportedTarget); }
     }
-    void tick() {
-        const auto now=GetTickCount64();
+    void tick(uint64_t now=GetTickCount64()) {
         if (requested.load() && phase.load()!=Phase::failed) for (auto& pending : pendingOwnRaw)
             if (pending.active && now-pending.observedTick>=20) {
                 const auto expired=pending; pending.active=false;
@@ -394,7 +393,9 @@ public:
                 if (phase.load()==Phase::failed) break;
             }
         if (phase.load()==Phase::awaitingRaw) preparationWaitReason=heldPreparationReason();
-        if ((phase.load()==Phase::awaitingRaw && now>=pendingDeadline) || (phase.load()==Phase::probe && now>=probeDeadline)) fail(Fault::rawSurvival);
+        // No physical input is a normal idle state. Only an active suppression
+        // probe has a deadline; waiting must never start or retain suppression.
+        if (phase.load()==Phase::probe && now>=probeDeadline) fail(Fault::rawSurvival);
         if (recording && now-recording->submittedAt>2000) fail(Fault::gestureTooLong);
         for (const auto& entry : humanIntents) if (auto intent=entry.lock()) if (!intent->started.load() && now-intent->submittedAt>5000) {
             intent->aborted.store(true); intent->ready.store(true); fail(Fault::staleIntent);
@@ -446,7 +447,7 @@ public:
                 {"model",{{"x",sample.model.x},{"y",sample.model.y}}},
                 {"capture",sample.capturing},{"modelActive",sample.modelActive},{"phase",phaseName(sample.phase)}});
         }
-        const uint64_t remaining=current==Phase::awaitingRaw && pendingDeadline>now ? pendingDeadline-now : current==Phase::probe && probeDeadline>now ? probeDeadline-now : 0;
+        const uint64_t remaining=current==Phase::probe && probeDeadline>now ? probeDeadline-now : 0;
         json diagnostics{{"mouseSnapshotReady",mouseSnapshotReady},{"snapshotReason",mouseSnapshotReason},{"snapshotMouseCount",initialMice.size()},{"allowedInitialArrivals",allowedInitialArrivals},
             {"rejectedDeviceChanges",rejectedDeviceChanges},{"ignoredOwnRawPackets",ignoredOwnRawPackets},{"preparationWaitReason",preparationWaitReason},{"restorationReason",restorationReason},
             {"lastDeviceChange",nullptr},{"lastRaw",nullptr}};

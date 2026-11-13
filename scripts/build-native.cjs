@@ -90,6 +90,7 @@ function main() {
     step('cmake-release', cmake, ['--build', cppBuild, '--config', 'Release', '--target', 'azrael-multi-pointer', 'azrael-multi-pointer-raw-origin-selftest']);
     step('raw-origin-selftest', path.join(cppBuild, 'Release/azrael-multi-pointer-raw-origin-selftest.exe'), []);
     step('keyboard-interruption-selftest', path.join(cppBuild, 'Release/azrael-multi-pointer.exe'), ['--keyboard-interruption-selftest']);
+    step('preparation-wait-selftest', path.join(cppBuild, 'Release/azrael-multi-pointer.exe'), ['--preparation-wait-selftest']);
     step('cursor-guard-selftest', path.join(cppBuild, 'Release/azrael-multi-pointer.exe'), ['--cursor-guard-selftest']);
     if (sha(JSON.stringify(inventory(path.join(root, 'native')))) !== sha(JSON.stringify(native)) || sha(JSON.stringify(inventory(frozen))) !== sha(JSON.stringify(native)) || sha(JSON.stringify(inventory(path.join(root, 'vendor/azrael')))) !== sha(JSON.stringify(vendor)) || sha(fs.readFileSync(__filename)) !== script) throw Error('Selected build inputs changed during compilation');
     fs.mkdirSync(windowDir, { recursive: true }); fs.mkdirSync(pointerDir, { recursive: true });
