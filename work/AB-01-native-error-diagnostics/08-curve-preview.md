@@ -1,0 +1,9 @@
+# Curve preview
+
+User requested an HTML preview before deciding on native curve input. Deliverable: `docs/visualizations/curve-preview.html`, a retained standalone offline HTML, not a Window use implementation change. No MCP, runtime, keyboard reservation or configuration changes.
+
+Four draggable/numerically editable points compare polyline, centripetal Catmull–Rom (alpha 0.5, reflected endpoint neighbors), and cubic Bezier (middle points are handles). Includes four presets, keyboard point movement, equal-distance sample display, approximate constant-distance animation and compact JSON. Notes distinguish numerical visualization from OS delivery and obstacle avoidance. No new dependencies or network resources.
+
+Verification on Windows x64, installed Chrome headless through existing Playwright: three rendered paths, Catmull–Rom internal-anchor interpolation, Bezier handle distinction, four presets with finite outputs, repeated/all-identical points, sample display, animation, numeric editing, arrow key movement, mouse drag and 390px responsive overflow check passed; no page errors. First Edge launch unavailable; switched to existing Chrome without installation. Browser interaction command exit 0 (terminal record `1794578592635678-49944-35902`). Final compact JSON and rendered-layout check separately verified. Desktop screenshot visually reviewed. The checks are one-off; no retained test source needed for this explanatory artifact. Temporary screenshot removed after review. Intended delivery is browser HTML; native OS input and other browsers/platforms were not tested.
+
+Existing prior diagnostics edits and the pending autonomous keyboard-check bundle remain untouched. The HTML itself and this evidence are requested retained deliverables, not scratch. No build or install performed.

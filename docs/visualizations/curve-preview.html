@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>점에서 곡선으로 · Window use</title>
+<style>
+:root{font-family:Inter,"Segoe UI","Malgun Gothic",sans-serif;color:#242424;background:#faf9f7;font-size:14px}*{box-sizing:border-box}body{margin:0}main{max-width:1180px;margin:auto;padding:44px 28px}header{margin-bottom:26px}.eyebrow{font-size:12px;color:#70706c;letter-spacing:.08em}h1{font-size:32px;font-weight:600;letter-spacing:-1px;margin:12px 0}p{line-height:1.7;color:#656560;margin:8px 0}.layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:24px}.sheet{background:white;border:1px solid #e5e4df;border-radius:18px;overflow:hidden}.toolbar{padding:16px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #eee}button,select,input{font:inherit}button,select{border:1px solid #deded8;background:white;color:inherit;border-radius:9px;padding:9px 12px;cursor:pointer}button:hover{background:#f2f2ee}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #188265;outline-offset:3px}button.primary{background:#242424;color:white;border-color:#242424}svg{display:block;width:100%;height:auto;touch-action:none;user-select:none}.point{cursor:grab;outline:none}.point:focus circle{stroke:#202020;stroke-width:4}.point text{pointer-events:none;font-size:12px;fill:#252525;paint-order:stroke;stroke:white;stroke-width:4px;stroke-linejoin:round}.caption{border-top:1px solid #eee;padding:13px 18px;color:#73736b;font-size:12px;line-height:1.7}.side h2{font-size:15px;margin:0 0 14px}.block{padding:20px 0;border-bottom:1px solid #e5e4df}.block:first-child{padding-top:2px}.legend{display:flex;align-items:center;gap:8px;margin:13px 0;cursor:pointer}.swatch{width:20px;height:3px;background:var(--color);border-radius:2px}.muted{font-size:12px;color:#74746d;line-height:1.7}.coords{display:grid;grid-template-columns:24px 1fr 1fr;align-items:center;gap:7px;margin:8px 0}.coords input{width:100%;padding:7px;border:1px solid #deded8;border-radius:7px;background:white}.coords span{font-size:12px}pre{font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;color:#494944;background:#efefeb;padding:14px;border-radius:10px;margin:12px 0}footer{margin-top:24px;color:#74746d;font-size:12px;line-height:1.8}.stats{display:flex;gap:18px;padding:0 18px 14px;font-size:12px;color:#74746d}.stats strong{color:#252525;font-weight:500}.range{width:100%;accent-color:#188265}.note{margin-top:18px;padding:16px 18px;background:#f0f3ef;border-radius:12px;font-size:13px;line-height:1.8}a{color:#35695c}@media(max-width:850px){.layout{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr;gap:20px}.block{border:0}main{padding:24px 16px}h1{font-size:27px}}@media(max-width:480px){.side{grid-template-columns:1fr}.toolbar{padding:12px}.stats{flex-wrap:wrap}}
+</style>
+<main>
+<header><div class="eyebrow">WINDOW USE / 경로 미리보기</div><h1>점 네 개로, 서로 다른 선.</h1><p>번호가 붙은 점을 움직여 보세요. 같은 좌표가 ‘통과할 점’인지 ‘곡선을 당기는 손잡이’인지에 따라 모양이 달라집니다.</p></header>
+<div class="layout"><section class="sheet" aria-label="곡선 비교">
+<div class="toolbar"><select id="preset" aria-label="예제 선택"><option value="arch">둥근 곡선</option><option value="s">S자 곡선</option><option value="uneven">간격이 다른 점</option><option value="detour">위로 돌아가는 경로</option></select><button id="reset">초기화</button><button id="play" class="primary">이동 재생</button><button id="dots" aria-pressed="false">등거리 점 표시</button></div>
+<svg id="canvas" viewBox="0 0 800 500" role="group" aria-label="점을 드래그하거나 선택 후 방향키로 이동. Shift와 방향키는 10씩 이동.">
+<defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#f0f0ec"/></pattern></defs>
+<rect width="800" height="500" fill="url(#grid)"/>
+<g id="paths" fill="none" stroke-linecap="round" stroke-linejoin="round"></g><g id="samples"></g><g id="runners"></g><g id="points"></g>
+</svg>
+<div class="stats"><span>입력 <strong>4개 좌표</strong></span><span>초록 경로 <strong id="length">—</strong></span><span>좌표계 <strong>800 × 500</strong></span></div>
+<div class="caption">드래그 또는 좌표 입력 · 점 선택 후 방향키로 1, Shift+방향키로 10 이동<br>재생은 각 선의 길이에 비례해 좌표를 배분한 약 3초 이동입니다. 실제 OS 입력은 발생하지 않습니다.</div>
+</section><aside class="side">
+<section class="block"><h2>같은 점, 다른 해석</h2>
+<label class="legend"><input type="checkbox" id="cat" checked><span class="swatch" style="--color:#188265"></span>구심 Catmull–Rom</label><p class="muted">1 → 2 → 3 → 4를 모두 통과합니다. α = 0.5. 경유점을 지정하는 기본 방식으로 추천합니다.</p>
+<label class="legend"><input type="checkbox" id="poly" checked><span class="swatch" style="--color:#a8aaa6"></span>꺾은선</label><p class="muted">모든 점을 직선으로 연결합니다. 모서리를 그대로 유지합니다.</p>
+<label class="legend"><input type="checkbox" id="bez" checked><span class="swatch" style="--color:#ae72c7"></span>3차 Bézier</label><p class="muted">1에서 시작해 4에서 끝납니다. 2·3은 조절 손잡이이며, 보통 그 점을 통과하지 않습니다.</p>
+</section>
+<section class="block"><h2>경유점 좌표</h2><div class="muted">X / Y · 미리보기 내부 좌표</div><div id="coordinates"></div><pre id="json"></pre></section>
+</aside></div>
+<div class="note"><strong>부드러움이 장애물 회피를 보장하지는 않습니다.</strong> ‘위로 돌아가는 경로’에서 점을 옮겨 곡선이 꺾은선 바깥으로 부푸는 부분을 확인해 보세요. 실제 회피 기능에는 금지 영역과 대상 크기를 고려한 별도 검사가 필요합니다.</div>
+<footer>이 HTML은 곡선 모양을 비교하는 독립 데모입니다. Window use의 드래그 기능은 변경하지 않습니다. Catmull–Rom 양 끝의 접선은 바깥쪽 점을 반사해 계산하며, 연속 중복점은 하나로 합칩니다. 화면 표시와 등거리 이동은 수치 근사입니다.<br>참고: <a href="https://www.cemyuksel.com/research/catmullrom_param/">구심 Catmull–Rom 연구</a> · <a href="https://www.w3.org/TR/SVG/latest/paths.html">SVG Bézier 경로</a></footer>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id), NS='http://www.w3.org/2000/svg';
+const presets={arch:[[100,370],[270,140],[530,140],[700,370]],s:[[100,350],[300,100],[500,400],[700,150]],uneven:[[100,350],[380,130],[405,155],[700,350]],detour:[[100,380],[220,150],[580,150],[700,380]]};
+let points=[], curves={}, showingDots=false, frame=0, drag=-1;
+const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const mix=(a,b,u)=>a.map((v,i)=>v*(1-u)+b[i]*u);
+function node(tag,attrs,parent){const n=document.createElementNS(NS,tag);for(const [k,v]of Object.entries(attrs))n.setAttribute(k,v);parent.append(n);return n;}
+function catmull(input){
+ const p=input.filter((v,i)=>!i||distance(v,input[i-1])>1e-7);
+ if(p.length<2)return p.map(v=>v.slice());
+ const reflect=(a,b)=>a.map((v,i)=>2*v-b[i]);
+ const ext=[reflect(p[0],p[1]),...p,reflect(p.at(-1),p.at(-2))],out=[];
+ for(let k=0;k<p.length-1;k++){
+  const q=ext.slice(k,k+4),t=[0];
+  for(let j=1;j<4;j++)t.push(t[j-1]+Math.sqrt(distance(q[j],q[j-1])));
+  const blend=(a,b,ta,tb,u)=>mix(a,b,(u-ta)/(tb-ta));
+  for(let j=0;j<=120;j++){
+   if(k&&j===0)continue;
+   const u=t[1]+(t[2]-t[1])*j/120;
+   const a=blend(q[0],q[1],t[0],t[1],u),b=blend(q[1],q[2],t[1],t[2],u),c=blend(q[2],q[3],t[2],t[3],u);
+   out.push(blend(blend(a,b,t[0],t[2],u),blend(b,c,t[1],t[3],u),t[1],t[2],u));
+  }
+ }
+ return out;
+}
+function bezier(p){return Array.from({length:361},(_,i)=>{const u=i/360,v=1-u;return [0,1].map(d=>v*v*v*p[0][d]+3*v*v*u*p[1][d]+3*v*u*u*p[2][d]+u*u*u*p[3][d]);});}
+function metric(p){let total=0;const lengths=[0];for(let i=1;i<p.length;i++){total+=distance(p[i-1],p[i]);lengths.push(total);}return {p,lengths,total};}
+function at(m,f){if(!m.p.length)return [0,0];if(!m.total)return m.p[0];const d=Math.max(0,Math.min(1,f))*m.total;let lo=1,hi=m.p.length-1;while(lo<hi){const mid=(lo+hi)>>1;if(m.lengths[mid]<d)lo=mid+1;else hi=mid;}const span=m.lengths[lo]-m.lengths[lo-1];return mix(m.p[lo-1],m.p[lo],span?(d-m.lengths[lo-1])/span:0);}
+const colors={poly:'#a8aaa6',bez:'#ae72c7',cat:'#188265'};
+function stop(){cancelAnimationFrame(frame);$('runners').replaceChildren();$('play').textContent='이동 재생';frame=0;}
+function render(){
+ stop();curves={poly:metric(points),bez:metric(bezier(points)),cat:metric(catmull(points))};
+ $('paths').replaceChildren();$('samples').replaceChildren();$('points').replaceChildren();
+ for(const id of ['poly','bez','cat'])if($(id).checked){const m=curves[id];node('path',{d:m.p.map((p,i)=>(i?'L':'M')+p.join(',')).join(' '),stroke:colors[id],'stroke-width':id==='poly'?1.8:3,'stroke-dasharray':id==='poly'?'6 6':'none'},$('paths'));if(showingDots){const count=Math.max(1,Math.ceil(m.total/24));for(let i=0;i<=count;i++){const p=at(m,i/count);node('circle',{cx:p[0],cy:p[1],r:2.8,fill:colors[id],stroke:'white','stroke-width':1},$('samples'));}}}
+ points.forEach((p,i)=>{const g=node('g',{class:'point',tabindex:0,role:'button','aria-label':`점 ${i+1}, X ${p[0]}, Y ${p[1]}`,'data-index':i},$('points'));node('circle',{cx:p[0],cy:p[1],r:10,fill:'white',stroke:'#383b36','stroke-width':2},g);node('text',{x:p[0]+15,y:p[1]-14},g).textContent=String(i+1);g.addEventListener('pointerdown',e=>{stop();drag=i;$('canvas').setPointerCapture(e.pointerId);e.preventDefault();});g.addEventListener('keydown',e=>{const delta={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(!delta)return;e.preventDefault();update(i,p.map((v,d)=>v+delta[d]*(e.shiftKey?10:1)));$('points').children[i].focus();});});
+ $('length').textContent=Math.round(curves.cat.total)+' px';$('json').textContent='{\n  "points": [\n'+points.map(p=>'    ['+p.join(', ')+']').join(',\n')+'\n  ],\n  "curve": "centripetal"\n}';
+ points.forEach((p,i)=>p.forEach((v,d)=>{const el=$(`p${i}-${d}`);if(document.activeElement!==el)el.value=v;}));
+}
+function update(i,p){points[i]=p.map((v,d)=>Math.max(0,Math.min(d?500:800,Math.round(v))));render();}
+$('canvas').addEventListener('pointermove',e=>{if(drag<0)return;const p=new DOMPoint(e.clientX,e.clientY).matrixTransform($('canvas').getScreenCTM().inverse());update(drag,[p.x,p.y]);});
+for(const event of ['pointerup','pointercancel','lostpointercapture'])$('canvas').addEventListener(event,()=>{drag=-1;});
+for(let i=0;i<4;i++){const row=document.createElement('div');row.className='coords';const label=document.createElement('span');label.textContent=i+1;row.append(label);for(let d=0;d<2;d++){const input=document.createElement('input');input.type='number';input.min=0;input.max=d?500:800;input.step=1;input.id=`p${i}-${d}`;input.setAttribute('aria-label',`점 ${i+1} ${d?'Y':'X'}`);input.addEventListener('change',()=>{const value=Number(input.value);if(input.value===''||!Number.isFinite(value)){input.value=points[i][d];return;}const p=points[i].slice();p[d]=value;update(i,p);input.value=points[i][d];});row.append(input);}$('coordinates').append(row);}
+function reset(){points=presets[$('preset').value].map(p=>p.slice());render();}
+$('preset').addEventListener('change',reset);$('reset').addEventListener('click',reset);
+for(const id of ['poly','bez','cat'])$(id).addEventListener('change',render);
+$('dots').addEventListener('click',()=>{showingDots=!showingDots;$('dots').setAttribute('aria-pressed',showingDots);$('dots').textContent=showingDots?'등거리 점 숨기기':'등거리 점 표시';render();});
+$('play').addEventListener('click',()=>{if(frame){stop();return;}const active=Object.keys(curves).filter(id=>$(id).checked);if(!active.length)return;$('play').textContent='재생 중지';const dots=active.map(id=>node('circle',{r:7,fill:colors[id],stroke:'white','stroke-width':2},$('runners')));const began=performance.now();function tick(now){const f=Math.min(1,(now-began)/3000);active.forEach((id,i)=>{const p=at(curves[id],f);dots[i].setAttribute('cx',p[0]);dots[i].setAttribute('cy',p[1]);});if(f<1)frame=requestAnimationFrame(tick);else{frame=0;$('play').textContent='다시 재생';}}frame=requestAnimationFrame(tick);});
+reset();
+</script>
+</html>
