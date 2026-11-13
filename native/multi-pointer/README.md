@@ -133,8 +133,10 @@ can release only an owned synthetic down. There is no automatic repeated key-dow
 Windows keys, both Alt keys, application-menu, screenshot, browser, media and
 app-launch keys are unsupported. This excludes Win shortcuts and Alt+Tab/Escape/F4.
 Ctrl+Escape and Ctrl+Shift+Escape are rejected in either key order using the active
-pointer's tracked modifier state. Physical modifiers are separately rejected by
-the actuation gate. App commands and third-party global remapping of otherwise
+pointer's tracked modifier state. Physical modifiers are rejected for model keyboard
+operations; virtualized mouse operations observe them without cancellation. Windows
+still shares modifier state, so a held Ctrl/Shift may change an application's mouse
+semantics. App commands and third-party global remapping of otherwise
 permitted keys can still have effects beyond their default key meaning.
 While collaboration is requested, `key` returns `unsupported_atomicity`; use
 `press`. With collaboration off, legacy cross-request key behavior is preserved.
@@ -162,7 +164,10 @@ start suppression or fail readiness immediately. The unchanged original deadline
 continues while `deviceDiagnostics.preparationWaitReason` reports only a category
 (`physical_buttons_held`, `physical_modifiers_held`, `physical_mouse_event` or
 `relative_motion_required`). Fresh plain relative motion after release starts the
-probe. Its non-movement/keyboard/timeout protections remain active once probing.
+probe. Physical keyboard events remain counted without failing mouse routing or
+advancing its interruption epoch during collaboration. Model keyboard/text work,
+foreign injected input, explicit Stop, disconnection and target invalidation retain
+their interruption behavior. The probe's motion matching and timeout checks remain.
 
 Immediately before Raw Input registration, enable snapshots at most 256 existing
 raw-device entries and verifies every mouse through `RIDI_DEVICEINFO`. Within the

@@ -229,6 +229,7 @@ class Broker {
     }
     void physicalGate() const {
         for (int vk : {VK_LBUTTON,VK_RBUTTON,VK_MBUTTON,VK_XBUTTON1,VK_XBUTTON2,VK_LSHIFT,VK_RSHIFT,VK_LCONTROL,VK_RCONTROL,VK_LMENU,VK_RMENU,VK_LWIN,VK_RWIN}) {
+            if (signals.allowsPhysicalModifier(vk)) continue;
             if (ui.routing.capture.load() && ui.routing.enabled.load() && (vk==VK_LBUTTON || vk==VK_RBUTTON || vk==VK_MBUTTON)) continue;
             require(!signals.physical[static_cast<size_t>(vk)].load() && (!(GetAsyncKeyState(vk) & 0x8000) || synthetic(vk)),
                 "physical_held", "Release physical mouse buttons and modifiers before actuation");
@@ -650,6 +651,7 @@ class Broker {
             static_cast<int64_t>(xy.y)<static_cast<int64_t>(vy)+GetSystemMetrics(SM_CYVIRTUALSCREEN),"point_outside_screen","Presentation point must be on the virtual screen");
     }
     json dispatch(const std::string& method, const json& params, bool& shutdown) {
+        Signals::KeyboardOperation keyboardOperation(signals, method=="press" || method=="key" || method=="text");
         if (method == "stop" || method == "shutdown") {
             clear(); signals.emergency.store(false);
             if (signals.stopGeneration.load()==processingStopGeneration) signals.explicitStop.store(false);

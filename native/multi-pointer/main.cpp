@@ -1,9 +1,11 @@
 #include "broker.hpp"
 #include "cursor-render-selftest.hpp"
+#include "keyboard-interruption-selftest.hpp"
 #include <bcrypt.h>
 
 int wmain(int argc, wchar_t** argv) {
     try {
+        if (argc==2 && std::wstring(argv[1])==L"--keyboard-interruption-selftest") return mp::keyboardInterruptionSelftest();
         if (argc>1 && std::wstring(argv[1])==L"--cursor-guard") return mp::SystemCursor::guardMain(argc,argv);
         if (argc==2 && std::wstring(argv[1])==L"--cursor-guard-selftest") return mp::SystemCursor::selftest();
         if (argc==2 && std::wstring(argv[1])==L"--cursor-visibility-probe") return mp::SystemCursor::visibilityProbe();

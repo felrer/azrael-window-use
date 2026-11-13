@@ -20,3 +20,9 @@ test('cumulative counters and mouse-only coverage do not establish keyboard conc
   assert.equal(summarizeVirtualizedCases(cases).passed,false);
   assert.equal(summarizeVirtualizedCases(cases).verdict,'incomplete_external_input_coverage');
 });
+test('mouse-keyboard acceptance checks drag effects without requiring model text input',()=>{
+  const cases=effects();cases[1].label='virtualized keyboard-concurrent drag';
+  assert.equal(summarizeVirtualizedCases(cases,true).passed,true);
+  cases[1].postcondition=false;
+  assert.equal(summarizeVirtualizedCases(cases,true).passed,false);
+});

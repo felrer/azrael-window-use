@@ -15,6 +15,7 @@ struct Signals {
     std::atomic<bool> emergency{false};
     std::atomic<bool> disconnected{false};
     std::atomic<bool> collaborationRequested{false};
+    std::atomic<bool> modelKeyboardActive{false};
     std::atomic<bool> explicitStop{false};
     std::atomic<uint64_t> stopGeneration{0};
     std::atomic<uint64_t> brokerHeartbeat{0};
@@ -39,6 +40,19 @@ struct Signals {
         if (mouseEvent) ownMouse.fetch_add(1); else ownKeyboard.fetch_add(1);
         sampleSequence.fetch_add(1);
     }
+    bool keyboardInterrupts(bool injected) const {
+        return injected || !collaborationRequested.load() || modelKeyboardActive.load();
+    }
+    bool allowsPhysicalModifier(int vk) const {
+        const bool mouseButton=vk==VK_LBUTTON || vk==VK_RBUTTON || vk==VK_MBUTTON || vk==VK_XBUTTON1 || vk==VK_XBUTTON2;
+        return collaborationRequested.load() && !modelKeyboardActive.load() && !mouseButton;
+    }
+    struct KeyboardOperation {
+        Signals& signals;
+        bool previous;
+        KeyboardOperation(Signals& value, bool active) : signals(value), previous(value.modelKeyboardActive.exchange(active)) {}
+        ~KeyboardOperation() { signals.modelKeyboardActive.store(previous); }
+    };
     void observeForeign(ForeignKind kind, UINT message, DWORD time, bool injected, bool lowerIntegrity, ULONG_PTR extraInfo, POINT point = {}, bool interrupt = true) {
         sampleSequence.fetch_add(1);
         if (interrupt) epoch.fetch_add(1);
@@ -51,6 +65,15 @@ struct Signals {
         lastLow32MatchesOwnTag.store(static_cast<DWORD>(extraInfo) == static_cast<DWORD>(tag));
         lastExtraInfoUpper32Zero.store((static_cast<uint64_t>(extraInfo) >> 32) == 0);
         sampleSequence.fetch_add(1);
+    }
+    bool observeForeignKeyboard(UINT message, const KBDLLHOOKSTRUCT& event) {
+        const bool injected=(event.flags & LLKHF_INJECTED)!=0;
+        const bool interrupt=keyboardInterrupts(injected);
+        observeForeign(ForeignKind::keyboard,message,event.time,injected,
+            (event.flags & LLKHF_LOWER_IL_INJECTED)!=0,event.dwExtraInfo,{},interrupt);
+        if (!injected && event.vkCode<256)
+            physical[event.vkCode].store(message==WM_KEYDOWN || message==WM_SYSKEYDOWN);
+        return interrupt;
     }
     json snapshot(uint64_t baseline) const {
         uint64_t ownM = 0, ownK = 0, foreignM = 0, foreignK = 0, destroyed = 0, tick = 0;
@@ -180,13 +203,10 @@ class Ui {
             auto& s = instance->signals;
             if (e.dwExtraInfo == s.tag) s.observeOwn(false);
             else {
-                if (instance->routing.capture.load() || instance->routing.phase.load()==MouseRouting::Phase::probe)
-                    instance->routing.fail(MouseRouting::Fault::physicalKeyboard);
-                s.observeForeign(Signals::ForeignKind::keyboard, static_cast<UINT>(wp), e.time,
-                    (e.flags & LLKHF_INJECTED) != 0, (e.flags & LLKHF_LOWER_IL_INJECTED) != 0, e.dwExtraInfo);
-                if (!(e.flags & LLKHF_INJECTED) && e.vkCode < 256) {
-                    s.physical[e.vkCode].store(wp == WM_KEYDOWN || wp == WM_SYSKEYDOWN);
-                }
+                const bool injected=(e.flags & LLKHF_INJECTED)!=0;
+                const bool interrupt=s.observeForeignKeyboard(static_cast<UINT>(wp),e);
+                if (interrupt && (instance->routing.capture.load() || instance->routing.phase.load()==MouseRouting::Phase::probe))
+                    instance->routing.fail(injected?MouseRouting::Fault::foreignInjection:MouseRouting::Fault::physicalKeyboard);
             }
         }
         return CallNextHookEx(nullptr, code, wp, lp);

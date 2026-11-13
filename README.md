@@ -35,7 +35,7 @@ Windows x64에서 창을 관찰하고 제어하는 독립 MCP 프로그램입니
 
 ## 범위와 제한
 
-실제 입력 세션은 가상화 협업 모드를 기본으로 요청하며, 오류 후 새 세션에도 적용합니다. 렌더링만 하는 세션은 입력 가로채기를 켜지 않습니다. 기본 요청과 준비 완료는 다르며, 현재 물리 상대 마우스 이동을 기다릴 수 있습니다. 외부 키보드 입력 시 가상화가 중단되는 기존 제한은 아직 남아 있습니다.
+실제 입력 세션은 가상화 협업 모드를 기본으로 요청하며, 오류 후 새 세션에도 적용합니다. 렌더링만 하는 세션은 입력 가로채기를 켜지 않습니다. 기본 요청과 준비 완료는 다르며, 현재 물리 상대 마우스 이동을 기다릴 수 있습니다. 가상화 마우스 작업 중 사용자 물리 키보드 입력은 감지만 하고 작업을 중단하지 않습니다. 모델 자체의 키보드·텍스트 작업은 기존 충돌 처리를 유지합니다. Windows의 수정키 상태는 공유되므로 Ctrl/Shift 등이 클릭의 의미를 바꿀 수 있습니다.
 
 첫 버전은 로컬 Windows x64 대화형 사용자 세션을 대상으로 합니다. Linux·macOS·ARM64·원격 서비스 세션·UAC 보안 데스크톱·자동 권한 상승은 지원 범위가 아닙니다. 앱마다 UI Automation 지원이 달라 모든 앱의 모든 요소 조작을 보장하지 않습니다.
 
@@ -53,6 +53,7 @@ npm run build:native
 npm test
 node scripts/verify-windows.cjs
 node scripts/verify-windows.cjs --virtualization
+node scripts/verify-windows.cjs --mouse-keyboard
 npm run package
 node scripts/verify-windows.cjs --executable <release-folder>\WindowUseMCP.exe
 ```

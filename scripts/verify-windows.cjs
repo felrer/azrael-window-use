@@ -45,7 +45,9 @@ async function main() {
     const environment={...process.env}; // Deliberately keep inherited Node mode: launcher must sanitize it.
     const portServer=require('node:net').createServer();
     await new Promise(resolve=>portServer.listen(0,'127.0.0.1',resolve));const port=portServer.address().port;await new Promise(resolve=>portServer.close(resolve));
-    child=spawn(executable,[...(packageArg<0?[path.join(root,'scripts/launch.cjs')]:[]),'--mcp','--user-data-dir',path.join(run,'profile'),'--remote-debugging-port='+port],{env:environment,windowsHide:true,stdio:['pipe','pipe','pipe']});
+    const runtimeIndex=process.argv.indexOf('--runtime-directory');
+    const runtimeArguments=runtimeIndex<0?[]:['--runtime-directory',path.resolve(process.argv[runtimeIndex+1])];
+    child=spawn(executable,[...(packageArg<0?[path.join(root,'scripts/launch.cjs')]:[]),'--mcp',...runtimeArguments,'--user-data-dir',path.join(run,'profile'),'--remote-debugging-port='+port],{env:environment,windowsHide:true,stdio:['pipe','pipe','pipe']});
     child.stderr.on('data',chunk=>stderr.push(chunk.toString()));
     await waitFor(async()=>{try{return (await fetch('http://127.0.0.1:'+port+'/json/version')).ok;}catch{return false;}},'Electron test CDP readiness');
     const browser=await chromium.connectOverCDP('http://127.0.0.1:'+port);
@@ -66,7 +68,7 @@ async function main() {
     const edit=()=>observation.elements.find(item=>item.name==='Verification input');
     const readValue=async()=>{const reply=await client.callTool({name:'inspect',arguments:{windowId:target.windowId,mode:'read',observationId:observation.observationId,elementId:edit().id,fields:['value']}});assert.ok(!reply.isError,JSON.stringify(json(reply)));const value=json(reply).elements[0].value;observation=await inspect();return value;};
     assert.ok(edit(),'UIA input element');
-    if(process.argv.includes('--virtualization')) {
+    if(process.argv.includes('--virtualization')||process.argv.includes('--mouse-keyboard')) {
       const outcome=await require('./verify-virtualized-input.cjs').verifyVirtualizedInput({client,json,target,fixtureInfo,fixtureReady,application,run,waitFor});
       await client.close();client=undefined;
       await waitFor(()=>child.exitCode!==null,'MCP EOF shutdown');

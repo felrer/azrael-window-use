@@ -162,7 +162,9 @@ app.whenReady().then(async () => {
   tray.on('click',()=>show('settings'));
   log('info','ui','initialized');
   if(!globalShortcut.register('CommandOrControl+Alt+F12',()=>permissions.stop())) log('warn','app','stop_shortcut_unavailable');
-  const runtimeDirectory = app.isPackaged ? path.join(process.resourcesPath,'runtime/window-control') : path.resolve(__dirname,'../artifacts/runtime/window-control');
+  const runtimeIndex=process.argv.indexOf('--runtime-directory');
+  if(runtimeIndex>=0&&(app.isPackaged||!path.isAbsolute(process.argv[runtimeIndex+1]||'')))throw Error('Absolute development-only --runtime-directory required');
+  const runtimeDirectory = runtimeIndex>=0?process.argv[runtimeIndex+1]:app.isPackaged ? path.join(process.resourcesPath,'runtime/window-control') : path.resolve(__dirname,'../artifacts/runtime/window-control');
   runtime = createRuntime({runtimeDirectory,directory,permissions,log});
   log('info','runtime','initialized');
   if (isMcp) {

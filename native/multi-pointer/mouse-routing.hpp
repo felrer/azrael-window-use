@@ -477,7 +477,7 @@ public:
             {"completedHumanOperations",completedHuman.load()},{"skippedHumanOperations",skippedHuman.load()},
             {"lastHumanApplicationInputs",lastHumanApplicationInputs.load()},{"lastHumanObserveRequired",lastHumanFailure.load()!=0 && lastHumanApplicationInputs.load()>0},
             {"lastHumanFailure",lastHumanFailure.load()==0?"none":lastHumanFailure.load()==1?"intent_changed":lastHumanFailure.load()==2?"stopped_or_unroutable":lastHumanFailure.load()==3?"delivery_or_hook_unverified":"internal_failure"},
-            {"physicalKeyboard","fail_open_and_stop_model"},{"rawConsumerAppsVerified",false},{"pointerAccelerationEmulated",false},{"deviceDiagnostics",diagnostics}};
+            {"physicalKeyboard","observe_during_mouse_stop_during_keyboard"},{"rawConsumerAppsVerified",false},{"pointerAccelerationEmulated",false},{"deviceDiagnostics",diagnostics}};
     }
 };
 } // namespace mp
