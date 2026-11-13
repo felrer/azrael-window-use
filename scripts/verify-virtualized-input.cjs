@@ -9,7 +9,7 @@ async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtur
   let previousCounters,lastCollaboration;
   async function input(label,packet,postcondition) {
     if(['click','text'].includes(packet.action)&&lastCollaboration?.requested!==true)
-      await input('restore virtualization before '+label,{action:'collaboration',enabled:true});
+      await input('default mode before '+label,{action:'status'});
     const current=await capture();
     if(current.isError){cases.push({label,phase:'capture',...current});return;}
     if(['click','text'].includes(packet.action)&&lastCollaboration?.requested!==true) {
@@ -34,19 +34,17 @@ async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtur
   try {
     const current=await capture();
     if(current.isError)throw Error('Initial capture failed: '+current.value.code);
-    const pending=call('switched_input',{windowId:target.windowId,observationId:current.value.observationId,input:{action:'collaboration',enabled:true}});
+    const pending=call('switched_input',{windowId:target.windowId,observationId:current.value.observationId,input:{action:'status'}});
     const approval=await waitFor(async()=>{for(const page of application.windows())try{if(await page.evaluate(()=>window.windowUse?.snapshot().then(s=>s.view==='approval')))return page;}catch{}},'virtual input approval');
     await approval.getByRole('button',{name:'이 연결에서 허용',exact:true}).click();
-    cases.push({label:'permission and initial collaboration',...await pending});
+    cases.push({label:'permission and default virtualization',...await pending});
     await approval.evaluate(()=>window.windowUse.command('close'));
     fs.writeFileSync(fixtureReady+'.activate','activate owned fixture');
     await new Promise(resolve=>setTimeout(resolve,300));
     cases.push({label:'fixture activation',foregroundConfirmed:fs.existsSync(fixtureReady+'.active')});
     // A foreground refusal is evidence. The actual broker still owns target activation;
     // do not skip virtualized operation assertions because the fixture could not activate.
-    // Permission invalidation may reject the initial request; enabling is configuration,
-    // not replay of a potentially delivered click, key or text operation.
-    await input('enable virtualization',{action:'collaboration',enabled:true});
+    // Status must expose the session default without an explicit enable request.
     await input('virtualization status',{action:'status'});
     for(let attempt=0;attempt<12&&lastCollaboration?.requested&&!lastCollaboration.enabled&&!lastCollaboration.failed;attempt++) {
       await new Promise(resolve=>setTimeout(resolve,800));

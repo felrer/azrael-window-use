@@ -26,6 +26,8 @@ Every own executable identity is an immutable entry in the same protected-app li
 
 Pinned Azrael policy and native sources retain exact window lifetime identities, stale-observation rejection, bounded UI Automation queries, password withholding, window occupancy, masked desktop capture and cooperative physical input rules. A standalone adapter supplies settings, approvals, connection context and input callbacks without fabricating Codex metadata. Native executables and payloads are verified from content manifests before launch.
 
+Real switched/desktop input sessions request virtualized collaboration by default on their first operation. Replacement sessions repeat this initialization under the existing permission and cancellation guards. An explicit collaboration disable applies until that session ends. Cosmetic-only pointer visualization does not enable interception. A default request is not proof of readiness: native relative-motion preparation and physical-keyboard fail-open limitations still apply.
+
 ## Data and failures
 
 Settings live under the product's own user-data directory and are revision-checked and atomically persisted. Corrupt settings fail closed. Logs record lifecycle, request names, correlation IDs, outcome and duration without screenshot data, UI text, typed text or credentials. Logs are bounded. Runtime failure, failed IPC or missing UI never creates a grant. Disconnect releases owned input and pending requests without closing user applications.

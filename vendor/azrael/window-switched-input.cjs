@@ -156,7 +156,7 @@ function createSwitchedInputProvider(declaration, { stateDirectory, createNative
   async function launch(thread, window, desktop = false, initialPoint) {
     const runtimeDirectory = verify(), root = prepareStateDirectory(stateDirectory);
     const directory = fs.mkdtempSync(path.join(root, 'switched-input-'));
-    const s = { directory, directoryIdentity: fileIdentity(directory), window, desktop, initialPoint, broker: null, retired: false, pointer: false, busy: false };
+    const s = { directory, directoryIdentity: fileIdentity(directory), window, desktop, initialPoint, broker: null, retired: false, pointer: false, busy: false, collaborationConfigured: false };
     sessions.set(thread, s);
     s.targetsFile = path.join(directory, 'targets.json');
     const bytes = JSON.stringify({ schema: 1, ...(desktop ? { desktop: true } : {}), targets: [{ id: 'selected', pid: window.pid,
@@ -204,6 +204,12 @@ function createSwitchedInputProvider(declaration, { stateDirectory, createNative
           }
         } finally { await guard(); live(); }
       };
+      // Each real input session starts in virtualized collaboration mode. Rendering
+      // alone must not enable interception, and an explicit session opt-out wins.
+      if (!cosmetic && !s.collaborationConfigured && packet.action !== 'collaboration') {
+        await call('collaboration', { enabled: true });
+        s.collaborationConfigured = true;
+      }
       const creating = needsPointer && !s.pointer;
       if (creating) {
         await call('create_pointer', { pointerId: 'model', targetId: 'selected', ...(desktop ? s.initialPoint : point),
@@ -220,6 +226,7 @@ function createSwitchedInputProvider(declaration, { stateDirectory, createNative
       if (needsPointer) args.pointerId = 'model';
       if (!['move', 'drag'].includes(action)) { delete args.x; delete args.y; }
       const result = await call(action, args);
+      if (action === 'collaboration') s.collaborationConfigured = true;
       return { ...switchedMetadata(result), ...(typeof result?.delivered === 'boolean' ? { delivered: result.delivered } : {}),
         delivery: 'switchedInput', verified: false, applicationEffectVerified: false };
     } catch (error) {
