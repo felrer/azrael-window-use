@@ -23,7 +23,8 @@ function createRuntime({ runtimeDirectory, directory, permissions, log, backend:
   let disposed = false;
   function active() { permissions.assertActive(); if (disposed || scope.getStore()?.signal?.aborted) throw fail('cancelled', '요청이 취소되었습니다.'); }
   function protectedTarget(window) { if (permissions.blocked(window)) throw fail('security_app_blocked', '보호 앱은 관찰하거나 제어할 수 없습니다.'); }
-  const point = input => input?.action === 'drag' ? { x: input.fromX, y: input.fromY } : { x: input?.x, y: input?.y };
+  const point = input => input?.action === 'drag' ? input.points ? {x:input.points[0][0],y:input.points[0][1]} :
+    { x: input.fromX, y: input.fromY } : { x: input?.x, y: input?.y };
   async function resolveDesktopWindow(_thread, packet) {
     active(); const p = point(packet);
     if (!Number.isSafeInteger(p.x) || !Number.isSafeInteger(p.y)) throw fail('invalid_arguments', '명시적인 화면 좌표가 필요합니다.');

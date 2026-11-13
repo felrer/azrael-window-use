@@ -50,7 +50,9 @@ function desktopInputSchema() {
     const drag = def.properties.action.enum[0] === 'drag';
     return { ...def, properties: { ...def.properties, x: coordinates.x, y: coordinates.y,
       ...(drag ? { fromX: coordinates.x, fromY: coordinates.y } : {}) },
-      required: [...new Set([...def.required, 'x', 'y', ...(drag ? ['fromX', 'fromY'] : [])])] };
+      required: drag ? def.required : [...new Set([...def.required, 'x', 'y'])],
+      ...(drag ? {oneOf:[{required:['x','y','fromX','fromY'],not:{required:['points']}},
+        {required:['points'],not:{anyOf:['x','y','fromX','fromY'].map(key=>({required:[key]}))}}]} : {}) };
   }) };
 }
 function validateDesktopInput(input) {
@@ -61,6 +63,7 @@ function validateDesktopInput(input) {
     const packet = validateInput(['status', 'collaboration'].includes(input.action) ? args : input);
     return { ...packet, x, y };
   }
+  if(Object.hasOwn(input,'points'))return validateInput(input);
   const { fromX, fromY, ...args } = input;
   const packet = validateInput(args);
   validateInput({ action: 'move', x: fromX, y: fromY });
@@ -171,7 +174,8 @@ function createSwitchedInputProvider(declaration, { stateDirectory, createNative
     if (disposed) throw windowError('cancelled', 'Switched input provider disposed');
     if (typeof thread !== 'string' || thread.length < 1 || thread.length > 1024 || thread.includes('\0')) throw windowError('invalid_request', 'Invalid switched input thread identity');
     const target = identity(window), packet = cosmetic ? validatePresentation(input) : desktop ? validateDesktopInput(input) : validateInput(input);
-    const point = packet.action === 'drag' && desktop ? { x: packet.fromX, y: packet.fromY } : { x: packet.x, y: packet.y };
+    const point = packet.action === 'drag' && packet.points ? {x:packet.points[0][0],y:packet.points[0][1]} :
+      packet.action === 'drag' && desktop ? { x: packet.fromX, y: packet.fromY } : { x: packet.x, y: packet.y };
     let s = sessions.get(thread);
     if (pending.has(thread)) throw windowError('state_changed', 'Switched input operation already pending');
     pending.add(thread);
@@ -183,7 +187,7 @@ function createSwitchedInputProvider(declaration, { stateDirectory, createNative
       if (s && (s.desktop !== desktop || (!desktop && !same(s.window, target)))) { await release(thread); s = undefined; }
       if (s?.retired) throw windowError('cancelled', 'Switched input session requires verified cleanup');
       const needsPointer = cosmetic || !['status', 'collaboration'].includes(packet.action);
-      if (needsPointer && !s?.pointer && packet.x === undefined) throw windowError('invalid_request', 'First pointer action requires an explicit physical screen x/y inside the selected main client');
+      if (needsPointer && !s?.pointer && point.x === undefined) throw windowError('invalid_request', 'First pointer action requires an explicit physical screen start point inside the selected main client');
       if (!cosmetic) admitOperation(thread, packet);
       if (!s) s = await launch(thread, target, desktop, point);
       s.busy = true;

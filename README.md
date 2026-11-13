@@ -55,6 +55,16 @@ Windows x64에서 창을 관찰하고 제어하는 독립 MCP 프로그램입니
 
 각 MCP 프로세스는 자신의 승인 UI·일시 권한·중지 상태를 가집니다. 저장된 설정은 같은 제품 데이터 디렉터리에서 공유되며, 별도 실행한 설정창의 변경도 연결에 반영됩니다. 개별 대화방 식별을 가정하지 않고 MCP 연결을 권한의 단위로 사용합니다.
 
+### 곡선 드래그
+
+`switched_input` 또는 `desktop_input`의 `input`에 시작·끝점을 포함한 `points`를 주면 한 번 누르고 구심 Catmull–Rom(α=0.5) 곡선을 따라 이동한 뒤 뗍니다.
+
+```json
+{"action":"drag","points":[[120,300],[220,180],[380,180],[480,300]],"durationMs":1200}
+```
+
+좌표는 최신 관찰의 실제 화면 픽셀을 사용합니다. 경유점은 2~32개이며 `x/y/fromX/fromY`와 함께 지정할 수 없습니다. 기존 끝점 방식 드래그도 유지됩니다. 연속 중복점은 합치고 모든 점이 같으면 거절합니다. 곡선 길이 기준으로 이동하며 모든 경유점을 포함합니다. 전체 생성 경로가 대상 창·화면 범위를 벗어나거나 2048개 전달 샘플을 초과하면 입력 전에 거절합니다. 시간은 50~2000ms(기본 300ms)의 목표값이며 OS 처리 때문에 길어질 수 있습니다. 장애물 자동 회피나 펜 필압은 제공하지 않습니다. [곡선 비교 HTML](docs/visualizations/curve-preview.html)에서 모양을 볼 수 있습니다.
+
 ## 개발과 검증
 
 Node.js, Rust MSVC 도구 체인, Visual Studio C++/CMake가 있는 Windows x64 개발 환경에서:
@@ -67,6 +77,7 @@ node scripts/verify-windows.cjs
 node scripts/verify-windows.cjs --virtualization
 node scripts/verify-windows.cjs --mouse-keyboard
 node scripts/verify-windows.cjs --batch
+node scripts/verify-windows.cjs --curve
 npm run package
 node scripts/verify-windows.cjs --executable <release-folder>\WindowUseMCP.exe
 ```

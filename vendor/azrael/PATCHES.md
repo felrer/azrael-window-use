@@ -1,5 +1,7 @@
 # Standalone adaptations
 
+- Curved drag: bounded physical `points` paths use native centripetal Catmull-Rom alpha 0.5, approximate arc-length delivery and whole generated-path bounds preflight. Native/host schemas, desktop observation bounds and exact first-point target resolution preserve single-operation no-replay; original endpoint drag remains available.
+
 - Keyboard reservation and `batch`: native cooperative key/text and single-call click/text/press batches buffer physical keys, restore the pinned user focus/state and reuse the waiting cursor. Public schemas, operation identity and safe metadata projection preserve one execution/no-replay; no keyboard contents are logged. Focus/device/IME limitations remain explicit in architecture and native documentation.
 
 `SOURCE.json` records the original imported bytes. Local adaptations are reviewed separately:

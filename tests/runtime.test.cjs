@@ -61,3 +61,48 @@ test('runtime routes protected observation and desktop capture through actual pe
   permissions.stop();
   await assert.rejects(runtime.call('list_windows', {}), { code: 'user_stopped', actionExecuted: false });
 });
+
+test('runtime desktop curve preserves fresh observation bounds, target resolution and permission guards',async t=>{
+  const root=path.resolve(__dirname,'../artifacts/verification/unit');fs.mkdirSync(root,{recursive:true});
+  const directory=fs.mkdtempSync(path.join(root,'runtime-curve-'));
+  const permissions=new PermissionService({directory,selfExecutables:['C:\\WindowUse\\WindowUse.exe']});
+  const target={executable:'C:\\Apps\\Editor.exe',hwnd:'1234',pid:123,processCreated:'abc',minimized:false,widthPx:200,heightPx:200,dpi:96};
+  let resolved=target,revoke=false;
+  const requests=[],delivered=[];
+  const backend={async request(method,args){
+    requests.push({method,args});
+    if(method==='captureDesktop')return {redacted:true,originX:-50,originY:-20,maskedWindowCount:0,widthPx:200,heightPx:200,image:{mimeType:'image/png',data:'aGVsbG8='}};
+    if(method==='windowAtPoint')return {window:resolved};
+    throw Error('Unexpected curve fixture operation: '+method);
+  },async dispose(){}};
+  const switchedInput={async desktopInput(thread,window,packet,guard){
+    await guard();delivered.push({window,packet});
+    if(revoke)permissions.save({mode:'observe'});
+    await guard();return {delivered:true};
+  },async release(){},async dispose(){}};
+  const runtime=createRuntime({directory,permissions,backend,switchedInput});
+  t.after(async()=>{try{await runtime.dispose();}finally{permissions.dispose();fs.rmSync(directory,{recursive:true});assert.equal(fs.existsSync(directory),false);}});
+  const approval=permissions.request(null,'desktop');permissions.respond(permissions.approvals().at(-1).id,'session');await approval;
+  const points=[[-40,-10],[10,20],[100,120]],input={action:'drag',points,durationMs:600};
+  await assert.rejects(runtime.call('desktop_input',{observationId:'unobserved',input}),{code:'state_changed'});
+  assert.deepEqual(delivered,[]);
+  let observation=await runtime.call('capture_desktop',{});
+  await assert.rejects(runtime.call('desktop_input',{observationId:observation.observationId,input:{...input,points:[points[0],[150,30],points[2]]}}),{code:'invalid_request',message:'Screen coordinates are outside the desktop observation',actionExecuted:false});
+  assert.deepEqual(delivered,[],'an invalid interior anchor must never reach the provider');
+  requests.length=0;
+  const result=await runtime.call('desktop_input',{observationId:observation.observationId,input});
+  assert.equal(result.inputResult.delivered,true);
+  assert.deepEqual(delivered,[{window:target,packet:input}]);
+  const resolutions=requests.filter(r=>r.method==='windowAtPoint');
+  assert.ok(resolutions.length>=2,'target must be rechecked by runtime guard');
+  assert.ok(resolutions.every(r=>r.args.x===-40&&r.args.y===-10));
+  await assert.rejects(runtime.call('desktop_input',{observationId:observation.observationId,input}),{code:'state_changed'});
+  assert.equal(delivered.length,1,'consumed observation cannot deliver again');
+  observation=await runtime.call('capture_desktop',{});
+  resolved={...target,executable:'C:\\WindowUse\\WindowUse.exe'};
+  await assert.rejects(runtime.call('desktop_input',{observationId:observation.observationId,input}),{code:'security_app_blocked'});
+  assert.equal(delivered.length,1);
+  resolved=target;revoke=true;
+  observation=await runtime.call('capture_desktop',{});
+  await assert.rejects(runtime.call('desktop_input',{observationId:observation.observationId,input}),{code:'cancelled'});
+});

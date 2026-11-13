@@ -92,6 +92,7 @@ function main() {
     step('keyboard-interruption-selftest', path.join(cppBuild, 'Release/azrael-multi-pointer.exe'), ['--keyboard-interruption-selftest']);
     step('keyboard-reservation-selftest', path.join(cppBuild, 'Release/azrael-multi-pointer.exe'), ['--keyboard-reservation-selftest']);
     step('batch-selftest', path.join(cppBuild, 'Release/azrael-multi-pointer.exe'), ['--batch-selftest']);
+    step('curve-selftest', path.join(cppBuild, 'Release/azrael-multi-pointer.exe'), ['--curve-selftest']);
     step('autonomous-startup-selftest', path.join(cppBuild, 'Release/azrael-multi-pointer.exe'), ['--autonomous-startup-selftest']);
     step('cursor-guard-selftest', path.join(cppBuild, 'Release/azrael-multi-pointer.exe'), ['--cursor-guard-selftest']);
     if (sha(JSON.stringify(inventory(path.join(root, 'native')))) !== sha(JSON.stringify(native)) || sha(JSON.stringify(inventory(frozen))) !== sha(JSON.stringify(native)) || sha(JSON.stringify(inventory(path.join(root, 'vendor/azrael')))) !== sha(JSON.stringify(vendor)) || sha(fs.readFileSync(__filename)) !== script) throw Error('Selected build inputs changed during compilation');

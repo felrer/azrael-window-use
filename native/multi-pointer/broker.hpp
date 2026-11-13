@@ -2,6 +2,7 @@
 #include "overlay.hpp"
 #include "operations.hpp"
 #include "batch-input.hpp"
+#include "curve-path.hpp"
 #include <chrono>
 #include <condition_variable>
 #include <deque>
@@ -867,21 +868,39 @@ class Broker {
             send(p,mouseInput(downFlags[b]),p.position); heldButtons[static_cast<size_t>(b)]=true;
             send(p,mouseInput(upFlags[b]),p.position); heldButtons[static_cast<size_t>(b)]=false;
         } else if (method == "drag") {
-            const POINT end = point(params); target(p).point(end);
-            const int duration = params.contains("durationMs") ? integer(params,"durationMs",1,2000) : 300;
+            const int duration = params.contains("durationMs") ? integer(params,"durationMs",50,2000) : 300;
+            const bool curved=params.contains("points");
+            const POINT logicalStart=stored.position;
+            curve::Path path;
+            if (curved) {
+                path=curve::plan(curve::anchors(params),duration);
+                // No focus, cursor movement or button-down until every delivery
+                // pixel is in the pinned target and on the physical desktop.
+                target(p).point(path.start); absoluteMove(path.start);
+                for (const auto& sample : path.samples) { target(p).point(sample.point); absoluteMove(sample.point); }
+                p.position=path.start;
+            }
+            const POINT end = curved?path.end:point(params); target(p).point(end);
             prepare(p); require(std::none_of(heldButtons.begin(),heldButtons.end(),[](bool held) { return held; }), "held_state", "A synthetic button is already held");
             send(p,mouseInput(MOUSEEVENTF_LEFTDOWN),p.position); heldButtons[0]=true;
             const POINT start = p.position; const auto began = std::chrono::steady_clock::now();
-            const int steps = std::max(1,duration/10);
             POINT last = start;
-            for (int step=1; step<=steps; ++step) {
-                waitUntil(began+std::chrono::milliseconds(static_cast<int64_t>(duration)*step/steps));
-                last = POINT{start.x+static_cast<LONG>(static_cast<int64_t>(end.x-start.x)*step/steps),start.y+static_cast<LONG>(static_cast<int64_t>(end.y-start.y)*step/steps)};
-                position(p,last);
+            if (curved) {
+                for (const auto& sample : path.samples) {
+                    waitUntil(began+std::chrono::microseconds(static_cast<int64_t>(duration*1000*sample.fraction)));
+                    last=sample.point; position(p,last);
+                }
+            } else {
+                const int steps = std::max(1,duration/10);
+                for (int step=1; step<=steps; ++step) {
+                    waitUntil(began+std::chrono::milliseconds(static_cast<int64_t>(duration)*step/steps));
+                    last = POINT{start.x+static_cast<LONG>(static_cast<int64_t>(end.x-start.x)*step/steps),start.y+static_cast<LONG>(static_cast<int64_t>(end.y-start.y)*step/steps)};
+                    position(p,last);
+                }
             }
             send(p,mouseInput(MOUSEEVENTF_LEFTUP),last); heldButtons[0]=false;
             // Logical position changes only once the full drag completes.
-            if (stored.position.x==start.x && stored.position.y==start.y) stored.position=end;
+            if (stored.position.x==logicalStart.x && stored.position.y==logicalStart.y) stored.position=end;
             ui.move(id,stored.position,true);
         } else if (method == "scroll") {
             const int delta = integer(params,"delta",-12000,12000); require(delta != 0,"invalid_params","Scroll delta must be nonzero");

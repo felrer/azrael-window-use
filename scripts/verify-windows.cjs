@@ -68,6 +68,14 @@ async function main() {
     const edit=()=>observation.elements.find(item=>item.name==='Verification input');
     const readValue=async()=>{const reply=await client.callTool({name:'inspect',arguments:{windowId:target.windowId,mode:'read',observationId:observation.observationId,elementId:edit().id,fields:['value']}});assert.ok(!reply.isError,JSON.stringify(json(reply)));const value=json(reply).elements[0].value;observation=await inspect();return value;};
     assert.ok(edit(),'UIA input element');
+    if(process.argv.includes('--curve')) {
+      const outcome=await require('./verify-curve-input.cjs').verifyCurveInput({client,json,target,fixtureInfo,fixtureReady,application,run,waitFor});
+      await client.close();client=undefined;
+      await waitFor(()=>child.exitCode!==null,'MCP EOF shutdown');
+      fs.writeFileSync(path.join(run,'result.json'),JSON.stringify({platform:process.platform,arch:process.arch,checks,curve:{passed:outcome.passed},exitCode:outcome.passed?0:1},null,2));
+      assert.ok(outcome.passed,'curve acceptance; see curve-results.json');
+      return;
+    }
     if(process.argv.includes('--virtualization')||process.argv.includes('--mouse-keyboard')||process.argv.includes('--batch')) {
       const outcome=await require('./verify-virtualized-input.cjs').verifyVirtualizedInput({client,json,target,fixtureInfo,fixtureReady,application,run,waitFor});
       await client.close();client=undefined;

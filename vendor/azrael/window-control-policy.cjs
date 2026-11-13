@@ -355,7 +355,8 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
           try{await check(true);}catch(error){if(error?.observationRequired===true)d.observation=null;throw error;}const observation=d.observation;
           if(!observation||observation.id!==args.observationId)throw windowError('state_changed','Fresh desktop image capture required',{observationRequired:true,actionExecuted:false,recovery:'observe_again'});
           const inside=(x,y)=>Number.isSafeInteger(x)&&Number.isSafeInteger(y)&&x>=observation.originX&&y>=observation.originY&&x<observation.originX+observation.widthPx&&y<observation.originY+observation.heightPx;
-          if(!inside(args.input.x,args.input.y)||(args.input.action==='drag'&&!inside(args.input.fromX,args.input.fromY)))fail('Screen coordinates are outside the desktop observation');
+          const points=args.input.action==='drag'&&args.input.points;
+          if(points ? !points.every(([x,y])=>inside(x,y)) : !inside(args.input.x,args.input.y)||(args.input.action==='drag'&&!inside(args.input.fromX,args.input.fromY)))throw windowError('invalid_request','Screen coordinates are outside the desktop observation',{actionExecuted:false});
           d.observation=null;
           const result=await desktopInput(thread,args.input,{...observation},check,expectedWindow);await check();
           return {delivery:'desktopInput',verified:false,observationRequired:true,inputResult:result};

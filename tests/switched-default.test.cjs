@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const {createHash}=require('node:crypto');
-const {createSwitchedInputProvider,validateInput,switchedInputSchema,desktopInputSchema}=require('../vendor/azrael/window-switched-input.cjs');
+const {createSwitchedInputProvider,validateInput,validateDesktopInput,switchedInputSchema,desktopInputSchema}=require('../vendor/azrael/window-switched-input.cjs');
 const native=require('../vendor/azrael/multi-pointer-mcp.cjs');
 const {switchedMetadata}=require('../vendor/azrael/window-control-errors.cjs');
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -119,4 +119,40 @@ test('batch and keyboard reservation metadata exclude input content on success a
   await assert.rejects(provider.input('thread',target,{action:'batch',steps:[{action:'press',keys:[13]}]}),error=>{
     assert.deepEqual(error.switchedInputDetails,safe);assert.ok(!JSON.stringify(error.switchedInputDetails).includes('secret'));return true;
   });
+});
+// Retained to prevent path-shape validation and initial-point forwarding omissions.
+test('curved drag validates complete pair paths and excludes mixed coordinate forms before native calls',async t=>{
+  const {provider,calls}=fixture(t),points=[[10,20],[30,40],[50,60]];
+  assert.deepEqual(validateInput({action:'drag',points}),{action:'drag',points});
+  assert.deepEqual(validateDesktopInput({action:'drag',points}),{action:'drag',points});
+  for(const schema of [switchedInputSchema(),desktopInputSchema()])
+    assert.deepEqual(native.validateArguments({inputSchema:schema},{action:'drag',points}),{action:'drag',points});
+  const badPaths=[[],[[1,2]],Array(33).fill([1,2]),[[1,2],[3]],[[1,2],[3,4,5]],[[1,2],null],[[1,2],{x:3,y:4}],[[1,2],[3.5,4]],[[1,2],[100001,4]],[[1,2],[3,'4']]];
+  for(const pathPoints of badPaths)await assert.rejects(provider.input('thread',target,{action:'drag',points:pathPoints}),{code:'invalid_request'});
+  for(const extra of [{x:1},{y:2},{x:1,y:2},{fromX:1},{fromY:2},{fromX:1,fromY:2}]) {
+    await assert.rejects(provider.input('thread',target,{action:'drag',points,...extra}),{code:'invalid_request'});
+    await assert.rejects(provider.desktopInput('thread',target,{action:'drag',points,...extra}),{code:'invalid_request'});
+    for(const schema of [switchedInputSchema(),desktopInputSchema()])
+      assert.throws(()=>native.validateArguments({inputSchema:schema},{action:'drag',points,...extra}));
+  }
+  assert.deepEqual(calls,[]);
+});
+test('curved drag initializes and pins its explicit first point then forwards one intact native drag',async t=>{
+  const {provider,calls}=fixture(t),points=[[10,20],[35,25],[50,60]];
+  await provider.input('thread',target,{action:'drag',points,durationMs:800});
+  assert.deepEqual(calls.map(c=>c.method),['collaboration','create_pointer','drag']);
+  assert.deepEqual(calls[1].args,{pointerId:'model',targetId:'selected',x:10,y:20});
+  assert.deepEqual(calls[2].args,{points,durationMs:800,operationId:1,pointerId:'model'});
+  calls.length=0;
+  const next=[[70,80],[90,100]];
+  await provider.input('thread',target,{action:'drag',points:next});
+  assert.deepEqual(calls,[{method:'drag',args:{points:next,operationId:2,pointerId:'model'}}]);
+  calls.length=0;
+  await provider.desktopInput('desktop',target,{action:'drag',points});
+  assert.deepEqual(calls.map(c=>c.method),['collaboration','create_pointer','desktop_target','drag']);
+  assert.equal(calls[1].args.x,10);assert.equal(calls[1].args.y,20);
+  assert.equal(calls[2].args.x,10);assert.equal(calls[2].args.y,20);
+  assert.deepEqual(calls[3].args,{points,operationId:1,pointerId:'model'});
+  assert.deepEqual(validateInput({action:'drag',x:30,y:40}),{action:'drag',x:30,y:40});
+  assert.deepEqual(validateDesktopInput({action:'drag',x:30,y:40,fromX:10,fromY:20}),{action:'drag',x:30,y:40,fromX:10,fromY:20});
 });

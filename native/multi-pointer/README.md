@@ -518,6 +518,12 @@ shutdown return `cleanup_failed`; a failed final disconnect cleanup exits with c
 forced termination cannot guarantee release. SendInput acceptance never proves
 the target application changed; all results keep `appEffectVerified:false`.
 
+## Curved drag
+
+In addition to endpoint x/y, `drag` accepts `points:[[x,y],...]` with 2..32 integer physical-screen anchors, including start/end. The coordinate forms are mutually exclusive. Start position is the first anchor; button-down occurs only after complete generated delivery-pixel bounds validation and normal preparation. Consecutive duplicates collapse; an entirely stationary path is invalid. Centripetal Catmull-Rom alpha 0.5 uses reflected endpoint neighbors. Piece conversion to cubic Bezier and adaptive control-hull subdivision bound chord error to 0.25px before pixel rounding; approximate arc-length sampling includes every anchor, uses <=2px travel / <=10ms intended cadence and refuses paths above 2048 delivery samples. Duration is 50..2000ms, default 300ms, not an OS timing guarantee. Every event retains existing target/hit/Stop/cleanup/no-replay checks. No obstacle planning, keyboard reservation or pressure input is implied.
+
+`--curve-selftest` covers exact endpoints/anchors, known symmetric and uneven-knot geometry, spacing, duplicate handling and bounded refusal. The normal build runs it. Real SDK `scripts/verify-windows.cjs --curve` checks application-observed curved and original straight strokes in an owned canvas; geometry tests alone do not verify application output.
+
 ## Overlay and diagnostics
 
 Tiny colored cursor triangles with neutral native-font ID labels use topmost,
