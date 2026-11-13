@@ -255,8 +255,8 @@ impl Layer {
             .lock()
             .unwrap()
             .insert(hwnd.0 as usize);
-        // Keep UI chrome out of capture where supported. Rendering still works if unsupported.
-        let _ = SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+        // Keep control chrome recordable: capture-exclusion flags can stop desktop recorders.
+        // App authorization and protected-app masking are enforced separately.
         Ok(Self(hwnd))
     }
     unsafe fn paint(
@@ -966,7 +966,7 @@ mod fixture {
                 .find(|h| IsWindowVisible(HWND(**h as *mut _)).as_bool())
                 .unwrap();
             let glow = HWND(glow as *mut _);
-            SetWindowDisplayAffinity(glow, WDA_NONE).unwrap();
+
             let styles: Vec<isize> = handles
                 .iter()
                 .map(|h| GetWindowLongPtrW(HWND(*h as *mut _), GWL_EXSTYLE))
@@ -1185,6 +1185,9 @@ mod fixture {
             assert_eq!(handles.len(), 2);
             for hwnd in &handles {
                 let hwnd = HWND(*hwnd as *mut _);
+                let mut affinity = u32::MAX;
+                GetWindowDisplayAffinity(hwnd, &mut affinity).unwrap();
+                assert_eq!(affinity, WDA_NONE.0, "control overlays must remain recordable");
                 assert_eq!(
                     SendMessageW(hwnd, WM_NCHITTEST, WPARAM(0), LPARAM(0)).0,
                     HTTRANSPARENT as isize
@@ -1216,23 +1219,8 @@ mod fixture {
                 let _ = DeleteObject(brush);
                 ReleaseDC(first.0, dc);
                 pump();
-                let excluded = format!("{out}/excluded.png");
-                if theme == "light" {
-                    capture(first.0, &excluded);
-                }
-                for hwnd in &handles {
-                    SetWindowDisplayAffinity(HWND(*hwnd as *mut _), WDA_NONE).unwrap();
-                }
                 pump();
                 capture(first.0, &format!("{out}/{theme}.png"));
-                if theme == "light" {
-                    assert_ne!(
-                        std::fs::read(&excluded).unwrap(),
-                        std::fs::read(format!("{out}/light.png")).unwrap(),
-                        "screen capture exclusion had no effect"
-                    );
-                    std::fs::remove_file(excluded).unwrap();
-                }
             }
             let _ = ShowWindow(second.0, SW_SHOW);
             assert!(SetForegroundWindow(second.0).as_bool());
@@ -1376,7 +1364,7 @@ mod fixture {
                 .collect();
             for h in new_handles {
                 let hwnd = HWND(h as *mut _);
-                SetWindowDisplayAffinity(hwnd, WDA_NONE).unwrap();
+
                 let mut r = RECT::default();
                 GetWindowRect(hwnd, &mut r).unwrap();
                 if r.bottom - r.top < 150 {
@@ -1394,7 +1382,7 @@ mod fixture {
             pump();
             capture(first.0, &format!("{out}/long-label-fallback.png"));
             let narrow = Layer::new(first.0).unwrap();
-            SetWindowDisplayAffinity(narrow.0, WDA_NONE).unwrap();
+
             SetWindowPos(
                 narrow.0,
                 HWND_TOP,
@@ -1616,9 +1604,6 @@ mod fixture {
                     .iter()
                     .copied()
                     .collect();
-                for h in &handles {
-                    SetWindowDisplayAffinity(HWND(*h as *mut _), WDA_NONE).unwrap();
-                }
                 pump();
                 let mut outer = RECT::default();
                 GetWindowRect(window.0, &mut outer).unwrap();
