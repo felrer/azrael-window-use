@@ -155,7 +155,7 @@ async function main() {
     assert.ok(!result.isError,JSON.stringify(json(result)));desktop=json(result);
     let inputAttempts=0;
     for(;inputAttempts<4;inputAttempts++) {
-      result=await client.callTool({name:'desktop_input',arguments:{observationId:desktop.observationId,input:{action:'click',x:fixtureInfo.buttonX,y:fixtureInfo.buttonY,button:'left'}}});
+      result=await client.callTool({name:'desktop_input',arguments:{observationId:desktop.observationId,input:{points:[[fixtureInfo.buttonX,fixtureInfo.buttonY]]}}});
       if(!result.isError)break;
       const refusal=json(result),details=refusal.switchedInputDetails;
       // A fresh attempt is allowed only when the native receipt proves zero delivered input.

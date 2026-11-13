@@ -10,14 +10,18 @@ async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtur
   const capture=()=>call('capture',{windowId:target.windowId});
   let previousCounters,lastCollaboration;
   async function input(label,packet,postcondition) {
-    if(['click','text','batch'].includes(packet.action)&&lastCollaboration?.requested!==true)
+    if((!packet.action||['text','batch'].includes(packet.action))&&lastCollaboration?.requested!==true)
       await input('default mode before '+label,{action:'status'});
     const current=await capture();
     if(current.isError){cases.push({label,phase:'capture',...current});return;}
-    if(['click','text','batch'].includes(packet.action)&&lastCollaboration?.requested!==true) {
+    if((!packet.action||['text','batch'].includes(packet.action))&&lastCollaboration?.requested!==true) {
       cases.push({label,isError:true,blocked:'virtualization was not requested; no fallback input sent'});return;
     }
-    const result=await call('switched_input',{windowId:target.windowId,observationId:current.value.observationId,input:packet});
+    const geometry=current.value.coordinateSpace.screenBounds;
+    const relative=points=>points.map(([x,y])=>[x-geometry.originX,y-geometry.originY]);
+    const imagePacket={...packet,...(packet.points?{points:relative(packet.points)}:{}),
+      ...(packet.steps?{steps:packet.steps.map(step=>({...step,...(step.points?{points:relative(step.points)}:{})}))}:{})};
+    const result=await call('switched_input',{windowId:target.windowId,observationId:current.value.observationId,input:imagePacket});
     const details=result.value.switchedInputDetails||result.value.inputResult;
     const entry={label,...result,interference:details?.interference,collaboration:details?.collaboration,
       ...(batchMode?{batch:details?.batch,keyboardReservation:details?.keyboardReservation}: {})};
@@ -60,11 +64,11 @@ async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtur
     await input('virtualization status',{action:'status'});
     const baseline=Number(fs.readFileSync(fixtureReady+'.clicks','utf8'));
     if(batchMode) {
-      await input('virtualized batch',{action:'batch',x:fixtureInfo.editX,y:fixtureInfo.editY,maxMs:1000,steps:[
-        {action:'click',x:fixtureInfo.editX,y:fixtureInfo.editY,button:'left'},
+      await input('virtualized batch',{action:'batch',points:[[fixtureInfo.editX,fixtureInfo.editY]],maxMs:1000,steps:[
+        {action:'click',points:[[fixtureInfo.editX,fixtureInfo.editY]],button:'left'},
         {action:'press',keys:[162,65]},
         {action:'text',text:'virtual-batch'},
-        {action:'click',x:fixtureInfo.buttonX,y:fixtureInfo.buttonY,button:'left'}
+        {action:'click',points:[[fixtureInfo.buttonX,fixtureInfo.buttonY]],button:'left'}
       ]},async()=>{
         await new Promise(resolve=>setTimeout(resolve,300));
         const observation=await call('inspect',{windowId:target.windowId,mode:'summary',limit:100});
@@ -74,19 +78,19 @@ async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtur
         return !read.isError&&read.value.elements?.[0]?.value==='virtual-batch'&&Number(fs.readFileSync(fixtureReady+'.clicks','utf8'))>baseline;
       });
     } else {
-    await input('virtualized button click',{action:'click',x:fixtureInfo.buttonX,y:fixtureInfo.buttonY,button:'left'},async()=>{
+    await input('virtualized button click',{points:[[fixtureInfo.buttonX,fixtureInfo.buttonY]]},async()=>{
       await new Promise(resolve=>setTimeout(resolve,300));
       return Number(fs.readFileSync(fixtureReady+'.clicks','utf8'))>baseline;
     });
     if(mouseOnly) {
       const beforeDrag=Number(fs.readFileSync(fixtureReady+'.clicks','utf8'));
-      await input('virtualized keyboard-concurrent drag',{action:'drag',x:fixtureInfo.buttonX+20,y:fixtureInfo.buttonY+5,durationMs:1800},async()=>{
+      await input('virtualized keyboard-concurrent drag',{points:[[fixtureInfo.buttonX,fixtureInfo.buttonY],[fixtureInfo.buttonX+20,fixtureInfo.buttonY+5]],durationMs:1800},async()=>{
         await new Promise(resolve=>setTimeout(resolve,300));
         return Number(fs.readFileSync(fixtureReady+'.clicks','utf8'))>beforeDrag;
       });
     } else {
-    await input('virtualized edit focus',{action:'click',x:fixtureInfo.editX,y:fixtureInfo.editY,button:'left'});
-    await input('virtualized text',{action:'text',text:'virtual-test',x:fixtureInfo.editX,y:fixtureInfo.editY},async()=>{
+    await input('virtualized edit focus',{points:[[fixtureInfo.editX,fixtureInfo.editY]]});
+    await input('virtualized text',{action:'text',text:'virtual-test',points:[[fixtureInfo.editX,fixtureInfo.editY]]},async()=>{
       const observation=await call('inspect',{windowId:target.windowId,mode:'summary',limit:100});
       const edit=observation.value.elements?.find(e=>e.name==='Verification input');
       if(observation.isError||!edit)return false;

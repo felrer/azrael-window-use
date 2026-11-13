@@ -83,7 +83,7 @@ test('runtime desktop curve preserves fresh observation bounds, target resolutio
   const runtime=createRuntime({directory,permissions,backend,switchedInput});
   t.after(async()=>{try{await runtime.dispose();}finally{permissions.dispose();fs.rmSync(directory,{recursive:true});assert.equal(fs.existsSync(directory),false);}});
   const approval=permissions.request(null,'desktop');permissions.respond(permissions.approvals().at(-1).id,'session');await approval;
-  const points=[[-40,-10],[10,20],[100,120]],input={action:'drag',points,durationMs:600};
+  const points=[[-40,-10],[10,20],[100,120]],input={points,durationMs:600};
   await assert.rejects(runtime.call('desktop_input',{observationId:'unobserved',input}),{code:'state_changed'});
   assert.deepEqual(delivered,[]);
   let observation=await runtime.call('capture_desktop',{});
@@ -92,7 +92,7 @@ test('runtime desktop curve preserves fresh observation bounds, target resolutio
   requests.length=0;
   const result=await runtime.call('desktop_input',{observationId:observation.observationId,input});
   assert.equal(result.inputResult.delivered,true);
-  assert.deepEqual(delivered,[{window:target,packet:input}]);
+  assert.deepEqual(delivered,[{window:target,packet:{action:'drag',...input}}]);
   const resolutions=requests.filter(r=>r.method==='windowAtPoint');
   assert.ok(resolutions.length>=2,'target must be rechecked by runtime guard');
   assert.ok(resolutions.every(r=>r.args.x===-40&&r.args.y===-10));

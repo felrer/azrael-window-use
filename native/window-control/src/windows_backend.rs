@@ -9,7 +9,7 @@ use windows::{
     core::*,
     Win32::{
         Foundation::*,
-        Graphics::Gdi::*,
+        Graphics::{Gdi::*, Dwm::*},
         Security::*,
         System::{Com::*, Threading::*, WinRT::*},
         UI::{Accessibility::*, HiDpi::*, WindowsAndMessaging::*},
@@ -161,9 +161,17 @@ impl Backend {
                 current.hwnd, current.pid, current.process_created, current.executable
             );
             let previous = self.last_frames.get(&identity).copied().unwrap_or(0);
+            let geometry = capture_geometry(hwnd, current.dpi)?;
             let frame = capture::capture(hwnd, previous)?;
             let after_capture = verify(requested)?;
             ensure_capture_geometry(&current, &after_capture)?;
+            if geometry != capture_geometry(hwnd, after_capture.dpi)? {
+                return Err(Error::new("capture-size-changed", "Window moved during capture; observe again"));
+            }
+            if geometry["widthPx"].as_i64() != Some(frame.width as i64)
+                || geometry["heightPx"].as_i64() != Some(frame.height as i64) {
+                return Err(Error::new("capture-size-changed", "Capture pixels do not match physical frame bounds"));
+            }
             self.sequence = self
                 .sequence
                 .checked_add(1)
@@ -176,7 +184,7 @@ impl Backend {
             });
             Ok(
                 json!({ "window": after_capture, "observationId": id, "frameTimestamp": frame.timestamp.to_string(),
-                "widthPx": frame.width, "heightPx": frame.height, "dpi": after_capture.dpi, "captureProtection": frame.protection,
+                "widthPx": frame.width, "heightPx": frame.height, "dpi": after_capture.dpi, "captureProtection": frame.protection, "captureGeometry": geometry,
                 "elements": [], "elementsTruncated": false, "retrieval": {"mode":"image","coverage":"image-only","returnedCount":0}, "image": { "mimeType": "image/png", "data": frame.data } }),
             )
         })();
@@ -710,13 +718,26 @@ fn guarded(window: &Window, operation: impl FnOnce(HWND) -> Result<Value>) -> Re
     verify(window).map_err(Error::uncertain)?;
     result
 }
+fn capture_geometry(hwnd: HWND, dpi: u32) -> Result<Value> {
+    unsafe {
+        let mut bounds = RECT::default();
+        DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS,
+            &mut bounds as *mut _ as *mut std::ffi::c_void, size_of::<RECT>() as u32)?;
+        if bounds.right <= bounds.left || bounds.bottom <= bounds.top {
+            return Err(Error::new("capture-size-changed", "Invalid physical capture bounds"));
+        }
+        Ok(json!({"originX":bounds.left,"originY":bounds.top,
+            "widthPx":bounds.right-bounds.left,"heightPx":bounds.bottom-bounds.top,"dpi":dpi}))
+    }
+}
 fn status(window: &Window) -> Result<Value> {
     let actual = verify(window)?;
     let hwnd = handle(window)?;
     let state = interference_state()?;
     Ok(
         json!({ "window": actual, "state": if actual.minimized { "minimized" } else if unsafe { IsZoomed(hwnd).as_bool() } { "maximized" } else { "normal" },
-        "foregroundHwnd": format!("{:x}", state.foreground), "cursorVisible": state.cursor_visible }),
+        "foregroundHwnd": format!("{:x}", state.foreground), "cursorVisible": state.cursor_visible,
+        "captureGeometry": if actual.minimized { Value::Null } else { capture_geometry(hwnd, actual.dpi)? } }),
     )
 }
 fn restore(hwnd: HWND) -> Result<Value> {

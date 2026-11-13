@@ -52,6 +52,10 @@ class VerificationFixture {
       edit.TextChanged += (sender,e)=>writeState();
       var activationTimer = new Timer { Interval=100 };
       activationTimer.Tick += (sender,e) => {
+        if(args.Length>0 && File.Exists(args[0]+".move")) {
+          File.Delete(args[0]+".move"); form.Location=new Point(form.Left+30,form.Top+20);
+          File.WriteAllText(args[0]+".moved","true");
+        }
         if(args.Length>0 && File.Exists(args[0]+".activate")) {
           form.TopMost=true; form.Activate(); form.BringToFront();
           if(GetForegroundWindow()==form.Handle) { File.Delete(args[0]+".activate"); File.WriteAllText(args[0]+".active","true"); }

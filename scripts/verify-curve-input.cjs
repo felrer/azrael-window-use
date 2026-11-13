@@ -29,7 +29,7 @@ function assessStroke(events,anchors,curved=true,tolerance=3) {
   else assert.ok(excursion<=tolerance,'legacy two-point drag must remain straight');
   return {downs:1,ups:1,observedEvents:events.length,anchorDistances:near,maxChordExcursion:excursion,maxPolylineDeviation:polylineDeviation,tolerance};
 }
-async function verifyCurveInput({client,json,fixtureInfo,fixtureReady,application,run,waitFor}) {
+async function verifyCurveInput({client,json,target,fixtureInfo,fixtureReady,application,run,waitFor}) {
   const cases=[];
   const call=async(name,args)=>{const raw=await client.callTool({name,arguments:args});return {isError:!!raw.isError,value:json(raw)};};
   const readStroke=()=>{try{return JSON.parse(fs.readFileSync(fixtureReady+'.strokes','utf8'));}catch{return undefined;}};
@@ -78,22 +78,23 @@ async function verifyCurveInput({client,json,fixtureInfo,fixtureReady,applicatio
   let passed=false;
   try {
     let desktop=await freshDesktop();
-    const status=await approved('desktop_input',{observationId:desktop.observationId,input:{action:'status',x:anchors[0][0],y:anchors[0][1]}});
+    const status=await approved('desktop_input',{observationId:desktop.observationId,input:{action:'status',points:[anchors[0]]}});
     const collaboration=(status.value.switchedInputDetails||status.value.inputResult)?.collaboration;
     cases.push({label:'approved desktop default virtualization',...status,collaboration});
     assert.ok(!status.isError&&collaboration?.requested===true&&collaboration.enabled===true&&collaboration.phase==='ready',
       'desktop input must expose ready default virtualization without physical-input preparation');
     fs.writeFileSync(fixtureReady+'.activate','activate owned curve fixture');
-    await waitFor(()=>fs.existsSync(fixtureReady+'.active'),'owned drawing fixture foreground');
-    await gesture('four-anchor curved desktop drag',{action:'drag',points:anchors,durationMs:1800},anchors,true);
+    try { await waitFor(()=>fs.existsSync(fixtureReady+'.active'),'owned drawing fixture foreground',1000); }
+    catch { cases.push({label:'fixture foreground request refused; real broker preparation and application assertions remain required',foregroundConfirmed:false}); }
+    await gesture('four-anchor curved desktop drag',{points:anchors,durationMs:600},anchors,true);
     const straight=[point(.16,.90),point(.84,.90)];
-    await gesture('legacy two-point desktop drag',{action:'drag',fromX:straight[0][0],fromY:straight[0][1],x:straight[1][0],y:straight[1][1],durationMs:500},straight,false);
+    await gesture('two-point automatic straight desktop drag',{points:straight,durationMs:500},straight,false);
     // This schema-valid point is outside the captured desktop observation.
     // The host policy may reject it before native whole-path preflight runs;
     // this check therefore claims only refusal before application button down.
     const before=await waitFor(readStroke,'preflight baseline');
     desktop=await freshDesktop();
-    const refused=await call('desktop_input',{observationId:desktop.observationId,input:{action:'drag',points:[anchors[0],[-100000,-100000]],durationMs:500}});
+    const refused=await call('desktop_input',{observationId:desktop.observationId,input:{points:[anchors[0],[-100000,-100000]],durationMs:500}});
     const entry={label:'outside observation path rejected before input',...refused};cases.push(entry);
     assert.ok(refused.isError,'outside desktop path must be refused');
     const validationCode=refused.value.nativeCode||refused.value.code;
@@ -107,6 +108,22 @@ async function verifyCurveInput({client,json,fixtureInfo,fixtureReady,applicatio
     assert.equal(after.downs,before.downs,'outside observation path must not send a button down');
     assert.equal(after.ups,before.ups);assert.equal(after.events.length,before.events.length);
     entry.noApplicationInput=true;
+    // Exercise the public image-to-screen path against actual application events.
+    const captureImage=async()=>{const r=await approved('capture',{windowId:target.windowId});assert.ok(!r.isError,JSON.stringify(r.value));assert.equal(r.value.coordinateSpace.type,'capture-image');return r.value;};
+    for(const [label,screen,curved]of [['image click',[point(.2,.5)],false],['image straight',straight,false],['image curve',anchors,true]]) {
+      const image=await captureImage(),g=image.coordinateSpace.screenBounds;
+      const before=readStroke(),points=screen.map(([x,y])=>[x-g.originX,y-g.originY]);
+      const result=await call('switched_input',{windowId:target.windowId,observationId:image.observationId,input:{points,...(points.length>1?{durationMs:600}:{})}});
+      cases.push({label,...result});assert.ok(!result.isError,JSON.stringify(result.value));
+      const after=await waitFor(()=>{const s=readStroke();return s&&s.ups>before.ups&&!s.recording?s:false;},label+' application input');
+      if(points.length>1)cases.at(-1).effect=assessStroke(after.events.slice(before.events.length),screen,curved);
+      else {assert.equal(after.downs-before.downs,1);assert.equal(after.ups-before.ups,1);assert.ok(distance([after.events.at(-1).x,after.events.at(-1).y],screen[0])<=1);}
+    }
+    const image=await captureImage(),beforeMove=readStroke();
+    fs.writeFileSync(fixtureReady+'.move','move owned fixture');await waitFor(()=>fs.existsSync(fixtureReady+'.moved'),'owned fixture movement');
+    const stale=await call('switched_input',{windowId:target.windowId,observationId:image.observationId,input:{points:[[50,50]]}});
+    cases.push({label:'moved image rejected before input',...stale});assert.ok(stale.isError);assert.equal(stale.value.observationRequired,true);assert.equal(stale.value.actionExecuted,false);assert.equal(readStroke().downs,beforeMove.downs);
+    const released=await call('release_switched_input',{windowId:target.windowId});assert.ok(!released.isError);
     passed=true;
   } finally {
     const release=await call('release_desktop_input',{});

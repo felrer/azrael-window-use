@@ -15,6 +15,7 @@ const OBSERVATION_FAILURES = new Set(['stale-element', 'stale-observation', 'unk
 const INPUT_REJECTIONS = new Set(['stale-observation', 'unknown-element', 'stale-element',
   'unsupported-action', 'unsupported-key', 'disabled-element', 'readonly-element']);
 const { expectedError, windowError } = require('./window-control-errors.cjs');
+const { normalizeInput, mapInput, sameGeometry, imageToScreen } = require('./window-input-coordinates.cjs');
 const fail = message => { throw expectedError(message); };
 const plain = value => value && typeof value === 'object' && !Array.isArray(value);
 function keys(value, allowed, required = []) {
@@ -215,8 +216,10 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
     const frameDimension = value => Number.isInteger(value) && value > 0 && value <= 16384;
     if (r.window.minimized || !frameDimension(r.widthPx) || !frameDimension(r.heightPx) || r.dpi !== b.window.dpi || !Array.isArray(r.elements) || !plain(r.image) || r.image.mimeType !== 'image/png' || typeof r.image.data !== 'string' || !r.image.data.length || !/^[A-Za-z0-9+/]*={0,2}$/.test(r.image.data)) fail('Invalid selected-window observation');
     const elements = elementsOf(r);
-    b.observation = { lease:b.requestLease || leases.observation(b.identity,thread), id: r.observationId, kind:'image', generation, ids: new Set(elements.map(e => e.id)) }; b.used = true;
-    return { ...view(b), observationId: r.observationId, frameTimestamp: r.frameTimestamp, widthPx: r.widthPx, heightPx: r.heightPx, dpi: r.dpi, elementsTruncated: r.elementsTruncated, elements, image: { mimeType: 'image/png', data: r.image.data } };
+    const geometry=r.captureGeometry;
+    if(!geometry || !['originX','originY','widthPx','heightPx','dpi'].every(k=>Number.isSafeInteger(geometry[k])) || geometry.widthPx!==r.widthPx || geometry.heightPx!==r.heightPx || geometry.dpi!==r.dpi)fail('Invalid capture coordinate mapping');
+    b.observation = { lease:b.requestLease || leases.observation(b.identity,thread), id: r.observationId, kind:'image', geometry:{...geometry}, generation, ids: new Set(elements.map(e => e.id)) }; b.used = true;
+    return { ...view(b), observationId: r.observationId, frameTimestamp: r.frameTimestamp, widthPx: r.widthPx, heightPx: r.heightPx, dpi: r.dpi, coordinateSpace:{type:'capture-image',originX:0,originY:0,widthPx:r.widthPx,heightPx:r.heightPx,screenBounds:{...geometry},scaleX:1,scaleY:1}, elementsTruncated: r.elementsTruncated, elements, image: { mimeType: 'image/png', data: r.image.data } };
   }
   function elementsOf(r, partial = false) {
     if (!Array.isArray(r.elements)) fail('Invalid elements');
@@ -347,7 +350,7 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
         return serial(async()=>{await releaseDesktopQuietly(thread,true);return {detached:true,observationRequired:true};});
       }
       if(tool==='desktop_input') {
-        try {keys(args,['observationId','input'],['observationId','input']);str(args.observationId);args={...args,input:require('./window-switched-input.cjs').validateDesktopInput(args.input)};}catch(error){return Promise.reject(error);}
+        try {keys(args,['observationId','input'],['observationId','input']);str(args.observationId);args={...args,input:normalizeInput(args.input,true)};}catch(error){return Promise.reject(error);}
         const d=desktopState(thread),generation=d.generation;
         const run=expectedWindow=>serial(async()=>{
           if(!desktopInput)throw windowError('unsupported_action','Desktop input is unavailable');
@@ -355,8 +358,7 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
           try{await check(true);}catch(error){if(error?.observationRequired===true)d.observation=null;throw error;}const observation=d.observation;
           if(!observation||observation.id!==args.observationId)throw windowError('state_changed','Fresh desktop image capture required',{observationRequired:true,actionExecuted:false,recovery:'observe_again'});
           const inside=(x,y)=>Number.isSafeInteger(x)&&Number.isSafeInteger(y)&&x>=observation.originX&&y>=observation.originY&&x<observation.originX+observation.widthPx&&y<observation.originY+observation.heightPx;
-          const points=args.input.action==='drag'&&args.input.points;
-          if(points ? !points.every(([x,y])=>inside(x,y)) : !inside(args.input.x,args.input.y)||(args.input.action==='drag'&&!inside(args.input.fromX,args.input.fromY)))throw windowError('invalid_request','Screen coordinates are outside the desktop observation',{actionExecuted:false});
+          mapInput(args.input,(x,y)=>{if(!inside(x,y))throw windowError('invalid_request','Screen coordinates are outside the desktop observation',{actionExecuted:false});return {x,y};});
           d.observation=null;
           const result=await desktopInput(thread,args.input,{...observation},check,expectedWindow);await check();
           return {delivery:'desktopInput',verified:false,observationRequired:true,inputResult:result};
@@ -372,7 +374,7 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
       const action = tool === 'set_value' ? 'setValue' : tool === 'press_key' ? 'pressKey' : tool;
       try {
         const allowed = ['windowId']; const required = ['windowId'];
-        if(tool === 'switched_input') {allowed.push('observationId','input');required.push('observationId','input');str(args.observationId);if(!switchedInput)throw windowError('unsupported_action','Switched input runtime is unavailable');args={...args,input:require('./window-switched-input.cjs').validateInput(args.input)};}
+        if(tool === 'switched_input') {allowed.push('observationId','input');required.push('observationId','input');str(args.observationId);if(!switchedInput)throw windowError('unsupported_action','Switched input runtime is unavailable');args={...args,input:normalizeInput(args.input)};}
         if(tool === 'inspect') { allowed.push('mode','query','scope','limit','observationId','elementId','fields','textRange','baseObservationId'); validateInspect(args); }
         if (ACTIONS.includes(action) || action === 'pressKey') { allowed.push('observationId', 'elementId'); required.push('observationId', 'elementId'); if (action === 'setValue' || action === 'scroll') { allowed.push('value'); required.push('value'); } }
         if (action === 'pressKey') {allowed.push('key');required.push('key');}
@@ -443,11 +445,14 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
           const observation=b.observation;
           if(!observation || observation.kind!=='image' || observation.generation!==generation || observation.id!==args.observationId) throw windowError('state_changed','Fresh image capture required');
           if(switchedReleases.has(thread)) await switchedReleases.get(thread);
-          const check=async()=>{await guard(b,thread,generation);await request(b,thread,generation,'status');if(b.state==='paused') fail('Selected window paused');};
+          let dispatched=false;
+          const check=async()=>{await guard(b,thread,generation);const current=await request(b,thread,generation,'status');if(b.state==='paused') fail('Selected window paused');if(!sameGeometry(observation.geometry,current.captureGeometry)){b.observation=null;throw windowError('state_changed','Window moved, resized or changed DPI; capture again',{...(dispatched?{mutationOutcome:'unknown'}:{actionExecuted:false}),observationRequired:true,recovery:'observe_again'});}};
+          const packet=imageToScreen(args.input,observation.geometry);
           b.observation=null;
           try {
             await check();
-            const result=await switchedInput.input(thread,{...b.identity},args.input,check);
+            dispatched=true;
+            const result=await switchedInput.input(thread,{...b.identity},packet,check);
             await check();b.used=true;
             return {...view(b),delivery:'switchedInput',verified:false,observationRequired:true,inputResult:result,...(typeof result?.delivered==='boolean'?{delivered:result.delivered}:{})};
           } catch(error) {if(bindings.get(thread)===b) {b.generation++;pause(b,'error');}await releaseSwitched(thread);throw error;}
