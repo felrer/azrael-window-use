@@ -68,7 +68,7 @@ async function main() {
     const edit=()=>observation.elements.find(item=>item.name==='Verification input');
     const readValue=async()=>{const reply=await client.callTool({name:'inspect',arguments:{windowId:target.windowId,mode:'read',observationId:observation.observationId,elementId:edit().id,fields:['value']}});assert.ok(!reply.isError,JSON.stringify(json(reply)));const value=json(reply).elements[0].value;observation=await inspect();return value;};
     assert.ok(edit(),'UIA input element');
-    if(process.argv.includes('--virtualization')||process.argv.includes('--mouse-keyboard')) {
+    if(process.argv.includes('--virtualization')||process.argv.includes('--mouse-keyboard')||process.argv.includes('--batch')) {
       const outcome=await require('./verify-virtualized-input.cjs').verifyVirtualizedInput({client,json,target,fixtureInfo,fixtureReady,application,run,waitFor});
       await client.close();client=undefined;
       await waitFor(()=>child.exitCode!==null,'MCP EOF shutdown');

@@ -5,8 +5,8 @@ const path = require('node:path');
 const { createHash } = require('node:crypto');
 const native = require('./multi-pointer-mcp.cjs');
 const { windowError, switchedMetadata } = require('./window-control-errors.cjs');
-const ACTIONS = new Set(['status', 'collaboration', 'move', 'click', 'drag', 'scroll', 'press', 'text']);
-const ACTUATION = new Set(['click', 'drag', 'scroll', 'press', 'text']);
+const ACTIONS = new Set(['status', 'collaboration', 'move', 'click', 'drag', 'scroll', 'press', 'text', 'batch']);
+const ACTUATION = new Set(['click', 'drag', 'scroll', 'press', 'text', 'batch']);
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const same = (a, b) => a.pid === b.pid && ['hwnd', 'processCreated', 'executable'].every(k => a[k].toLowerCase() === b[k].toLowerCase());
 function identity(window) {

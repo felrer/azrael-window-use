@@ -1,5 +1,7 @@
 # Standalone adaptations
 
+- Keyboard reservation and `batch`: native cooperative key/text and single-call click/text/press batches buffer physical keys, restore the pinned user focus/state and reuse the waiting cursor. Public schemas, operation identity and safe metadata projection preserve one execution/no-replay; no keyboard contents are logged. Focus/device/IME limitations remain explicit in architecture and native documentation.
+
 `SOURCE.json` records the original imported bytes. Local adaptations are reviewed separately:
 
 - `window-control-runtime.cjs` validates the independent native payload without Azrael host/engine paths.

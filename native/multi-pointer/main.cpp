@@ -2,10 +2,15 @@
 #include "cursor-render-selftest.hpp"
 #include "keyboard-interruption-selftest.hpp"
 #include "preparation-wait-selftest.hpp"
+#include "keyboard-reservation-selftest.hpp"
+#include "batch-selftest.hpp"
 #include <bcrypt.h>
 
 int wmain(int argc, wchar_t** argv) {
     try {
+        if (argc==2 && std::wstring(argv[1])==L"--batch-selftest") return mp::batchSelftest();
+        if (argc==2 && std::wstring(argv[1])==L"--keyboard-reservation-selftest") return mp::keyboardReservationSelftest();
+        if (argc==2 && std::wstring(argv[1])==L"--keyboard-reservation-live-selftest") return mp::keyboardReservationLiveSelftest();
         if (argc==2 && std::wstring(argv[1])==L"--preparation-wait-selftest") return mp::preparationWaitSelftest();
         if (argc==2 && std::wstring(argv[1])==L"--keyboard-interruption-selftest") return mp::keyboardInterruptionSelftest();
         if (argc>1 && std::wstring(argv[1])==L"--cursor-guard") return mp::SystemCursor::guardMain(argc,argv);

@@ -4,11 +4,16 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const {spawn}=require('node:child_process');
 const {StringDecoder}=require('node:string_decoder');
 const MAX_LINE=1024*1024;
-const ACTUATION=new Set(['click','drag','scroll','key','press','text']);
+const ACTUATION=new Set(['click','drag','scroll','key','press','text','batch']);
 const field=(type,extra={})=>({type,...extra});
 const pointer=()=>({pointerId:field('string',{minLength:1,maxLength:32,pattern:'^[A-Za-z0-9_-]+$'})});
 const xy=()=>({x:field('integer',{minimum:-100000,maximum:100000}),y:field('integer',{minimum:-100000,maximum:100000})});
 function tool(name,description,properties={},required=Object.keys(properties)){return {name,description,inputSchema:{type:'object',properties,required,additionalProperties:false}};}
+function batchStepSchema(){return {oneOf:[
+ tool('click','',{action:field('string',{enum:['click']}),...xy(),button:field('string',{enum:['left','right','middle']})},['action','button']).inputSchema,
+ tool('text','',{action:field('string',{enum:['text']}),text:field('string',{minLength:1,maxLength:1024})}).inputSchema,
+ tool('press','',{action:field('string',{enum:['press']}),keys:field('array',{minItems:1,maxItems:8,uniqueItems:true,items:field('integer',{minimum:8,maximum:254})})}).inputSchema
+]};}
 function toolDefinitions(){return [
  tool('status','Observe allowed targets, separate virtual cursors, shared physical cursor and foreground. No input.'),
  tool('collaboration','Enable or disable cooperative user/model mouse routing. User clicks are queued without cancelling model actions; stop always disables routing.',{enabled:field('boolean')}),
@@ -17,23 +22,32 @@ function toolDefinitions(){return [
  tool('desktop_target','Host adapter: pin an exact live desktop target at a visible hit. Requires immutable startup desktop:true; this method grants no app authorization.',{...pointer(),target:field('object',{properties:{hwnd:field('string',{pattern:'^0x[0-9A-Fa-f]{1,16}$'}),pid:field('integer',{minimum:1,maximum:4294967295}),processCreated:field('string',{pattern:'^0x[0-9A-Fa-f]{1,16}$'}),executable:field('string',{minLength:1,maxLength:32768})},required:['hwnd','pid','processCreated','executable'],additionalProperties:false}),...xy()}),
  tool('present_pointer','Host adapter: display a virtual pointer and activity without physical input, activation or changing its logical input position.',{...pointer(),...xy(),phase:field('string',{enum:['active','idle']}),click:field('boolean')},['pointerId','x','y','phase']),
  tool('click','Switch Windows foreground/input to this allowed target and click. Physical cursor/foreground can change.',{...pointer(),button:field('string',{enum:['left','right','middle']})}),
- tool('drag','Drag to a screen position. Verified cooperative mouse routing queues user mouse gestures; keyboard or unsupported input can still interrupt a partial drag.',{...pointer(),...xy(),durationMs:field('integer',{minimum:50,maximum:2000})},['pointerId','x','y']),
+ tool('drag','Drag to a screen position. Cooperative routing queues user mouse gestures and observes physical keyboard input; foreign injection or unsupported input can interrupt a partial drag.',{...pointer(),...xy(),durationMs:field('integer',{minimum:50,maximum:2000})},['pointerId','x','y']),
  tool('scroll','Switch Windows input to this target and send a vertical wheel delta.',{...pointer(),delta:field('integer',{minimum:-12000,maximum:12000})}),
  tool('key','Send a concrete Windows virtual-key down/up. Use left/right Shift or Ctrl; Alt, Windows and shell-switch shortcuts are unsupported. Release held keys before switching pointer.',{...pointer(),vk:field('integer',{minimum:8,maximum:254}),down:field('boolean')}),
  tool('press','Send one atomic key chord, releasing all keys before another participant runs. Keys are concrete Windows virtual keys in press order.',{...pointer(),keys:field('array',{minItems:1,maxItems:8,uniqueItems:true,items:field('integer',{minimum:8,maximum:254})})}),
  tool('text','Send Unicode text through Windows input to the activated allowed target. This does not perform IME composition.',{...pointer(),text:field('string',{minLength:1,maxLength:1024})}),
+ tool('batch','Run 1..16 click, text or atomic press steps as one FIFO operation on this pointer/target without replay. Physical keyboard input is buffered until original focus is restored. Budget defaults to 750ms; inspect partial completion before continuing.',{...pointer(),steps:field('array',{minItems:1,maxItems:16,items:batchStepSchema()}),maxMs:field('integer',{minimum:100,maximum:1000,default:750})},['pointerId','steps']),
  tool('remove_pointer','Release this pointer and remove its overlay.',pointer()),
  tool('stop','Release synthetic held input and remove all virtual cursors. This does not close user apps.')
 ].map(def=>{if(ACTUATION.has(def.name)){def.inputSchema.properties.operationId=field('integer',{minimum:1,maximum:Number.MAX_SAFE_INTEGER,description:'Stable identity of this intended operation. Reuse for a duplicate request; never change it to replay uncertain input. Omit for a new operation.'});}return def;});}
 function validateArguments(def,args){
- if(!args||typeof args!=='object'||Array.isArray(args))throw Error('Object tool arguments required');
- const s=def.inputSchema;if(Object.keys(args).some(k=>!Object.hasOwn(s.properties,k))||s.required.some(k=>!Object.hasOwn(args,k)))throw Error('Unknown or missing tool argument');
- for(const [k,v]of Object.entries(args)){
-  const d=s.properties[k];if(d.type==='array'?!Array.isArray(v):d.type==='integer'?!Number.isSafeInteger(v):d.type==='object'?(!v||typeof v!=='object'||Array.isArray(v)):typeof v!==d.type)throw Error('Invalid '+k+' type');
-  if(d.type==='object')validateArguments({inputSchema:d},v);
-  if(d.type==='array'&&(v.length<d.minItems||v.length>d.maxItems||new Set(v).size!==v.length||v.some(item=>!Number.isSafeInteger(item)||item<d.items.minimum||item>d.items.maximum)))throw Error('Invalid '+k+' items');
+ function validate(d,v,k){
+  if(d.oneOf){let matches=0;for(const candidate of d.oneOf){try{validate(candidate,v,k);matches++;}catch{}}if(matches!==1)throw Error('Invalid '+k+' variant');return;}
+  if(d.type==='array'?!Array.isArray(v):d.type==='integer'?!Number.isSafeInteger(v):d.type==='object'?(!v||typeof v!=='object'||Array.isArray(v)):typeof v!==d.type)throw Error('Invalid '+k+' type');
+  if(d.type==='object'){
+   if(Object.keys(v).some(key=>!Object.hasOwn(d.properties,key))||(d.required||[]).some(key=>!Object.hasOwn(v,key)))throw Error('Unknown or missing '+k+' argument');
+   for(const [key,value]of Object.entries(v))validate(d.properties[key],value,key);
+   if(v.action==='click'&&Object.hasOwn(v,'x')!==Object.hasOwn(v,'y'))throw Error('Supply both screen coordinates');
+  }
+  if(d.type==='array'){
+   if(v.length<d.minItems||v.length>d.maxItems||d.uniqueItems&&new Set(v.map(item=>JSON.stringify(item))).size!==v.length)throw Error('Invalid '+k+' items');
+   for(const item of v)validate(d.items,item,k+' item');
+  }
   if(d.enum&&!d.enum.includes(v)||d.minimum!==undefined&&v<d.minimum||d.maximum!==undefined&&v>d.maximum||d.minLength!==undefined&&v.length<d.minLength||d.maxLength!==undefined&&v.length>d.maxLength||d.pattern&&!new RegExp(d.pattern).test(v))throw Error('Invalid '+k+' value');
  }
+ validate(def.inputSchema,args,'tool');
+ if(Array.isArray(args.steps)&&args.steps.reduce((total,step)=>total+(step.action==='text'?step.text.length:0),0)>1024)throw Error('Batch text exceeds 1024 UTF-16 units');
  return args;
 }
 function plainFile(file){
@@ -69,7 +83,7 @@ function createBroker({runtimeDirectory,targetsFile}){
 function createProtocol({call,platform=process.platform}){let initialized=false;return async message=>{
  const id=message?.id;if(!message||message.jsonrpc!=='2.0'||typeof message.method!=='string')return {jsonrpc:'2.0',id:id??null,error:{code:-32600,message:'Invalid request'}};
  if(id===undefined)return null;
- if(message.method==='initialize'){initialized=true;return {jsonrpc:'2.0',id,result:{protocolVersion:'2024-11-05',capabilities:{tools:{}},serverInfo:{name:'azrael-multi-pointer',version:'0.2.0'},instructions:'Windows x64 shared foreground input. Logical cursors keep separate positions. Enable collaboration explicitly and check actual capability/suppression state before claiming mouse isolation. User mouse gestures queue in verified cooperative mode; physical keyboard or unsupported input stops model input. Use atomic press instead of cross-request key holds in collaboration. Recover target foreground/occlusion with bounded preparation; inspect partial effects and never replay unknown input. Reuse operationId for the same intended operation. Delivery does not verify app effects. Stop or EOF disables routing and releases tracked model input.'}};}
+ if(message.method==='initialize'){initialized=true;return {jsonrpc:'2.0',id,result:{protocolVersion:'2024-11-05',capabilities:{tools:{}},serverInfo:{name:'azrael-multi-pointer',version:'0.2.0'},instructions:'Windows x64 shared foreground input. Logical cursors keep separate positions. Enable collaboration explicitly and check actual capability/suppression state before claiming mouse isolation. User mouse gestures queue in verified cooperative mode; physical keyboard input is buffered during short key/batch reservations until original focus is restored; foreign injected input, unsupported input or Stop still stops model input. Use atomic press instead of cross-request key holds in collaboration. Recover target foreground/occlusion with bounded preparation; inspect partial effects and never replay unknown input. Reuse operationId for the same intended operation. Delivery does not verify app effects. Stop or EOF disables routing and releases tracked model input.'}};}
  if(!initialized)return {jsonrpc:'2.0',id,error:{code:-32002,message:'Initialize first'}};
  if(message.method==='ping')return {jsonrpc:'2.0',id,result:{}};
  if(message.method==='tools/list')return {jsonrpc:'2.0',id,result:{tools:platform==='win32'?toolDefinitions():[]}};

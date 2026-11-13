@@ -26,3 +26,21 @@ test('mouse-keyboard acceptance checks drag effects without requiring model text
   cases[1].postcondition=false;
   assert.equal(summarizeVirtualizedCases(cases,true).passed,false);
 });
+test('batch effects pass without external events but physical reservation coverage requires buffering',()=>{
+  const effect={label:'virtualized batch',isError:false,postcondition:true,collaboration:{enabled:true},batch:{completedSteps:4,completed:true},
+    keyboardReservation:{restored:true,pending:false,active:false,bufferedEvents:0},externalEventDelta:{mouse:0,keyboard:0}};
+  const summary=()=>summarizeVirtualizedCases([effect],false,true);
+  assert.equal(summary().verdict,'passed');assert.equal(summary().externalReservationConcurrency,'unverified');
+  effect.externalEventDelta.keyboard=3;
+  assert.equal(summary().externalReservationConcurrencyVerified,false);
+  effect.keyboardReservation.bufferedEvents=3;
+  assert.equal(summary().externalReservationConcurrencyVerified,true);
+  effect.postcondition=false;
+  assert.equal(summary().verdict,'failed');
+});
+test('batch distinguishes capability blocking and incomplete restoration from passing effects',()=>{
+  assert.equal(summarizeVirtualizedCases([{label:'virtualized batch',blocked:'not requested'}],false,true).verdict,'capability_blocked');
+  const effect={label:'virtualized batch',isError:false,postcondition:true,collaboration:{enabled:true},batch:{completedSteps:4,completed:true},
+    keyboardReservation:{restored:false,pending:true,active:false}};
+  assert.equal(summarizeVirtualizedCases([effect],false,true).verdict,'failed');
+});

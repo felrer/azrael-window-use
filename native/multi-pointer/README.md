@@ -133,8 +133,9 @@ can release only an owned synthetic down. There is no automatic repeated key-dow
 Windows keys, both Alt keys, application-menu, screenshot, browser, media and
 app-launch keys are unsupported. This excludes Win shortcuts and Alt+Tab/Escape/F4.
 Ctrl+Escape and Ctrl+Shift+Escape are rejected in either key order using the active
-pointer's tracked modifier state. Physical modifiers are rejected for model keyboard
-operations; virtualized mouse operations observe them without cancellation. Windows
+pointer's tracked modifier state. Cooperative key/text reservations neutralize and
+restore physical held keys; outside reservations physical modifiers are rejected
+for model keyboard operations. Virtualized mouse operations observe them without cancellation. Windows
 still shares modifier state, so a held Ctrl/Shift may change an application's mouse
 semantics. App commands and third-party global remapping of otherwise
 permitted keys can still have effects beyond their default key meaning.
@@ -167,9 +168,9 @@ start suppression or fail readiness. Waiting continues without a deadline while
 probe. Only this active suppression probe retains its 250ms timeout. In the waiting
 phase, `probeRemainingMs:0` means no active probe countdown, not readiness.
 Physical keyboard events remain counted without failing mouse routing or
-advancing its interruption epoch during collaboration. Model keyboard/text work,
-foreign injected input, explicit Stop, disconnection and target invalidation retain
-their interruption behavior. The probe's motion matching and timeout checks remain.
+advancing its interruption epoch during collaboration. Cooperative model key/text
+and batch work buffer physical keyboard input under the reservation described below.
+Foreign injection, Stop, disconnect and target invalidation still interrupt.
 
 Immediately before Raw Input registration, enable snapshots at most 256 existing
 raw-device entries and verifies every mouse through `RIDI_DEVICEINFO`. Within the
@@ -263,11 +264,11 @@ model position. Handback retries only while revalidating the latest user positio
 for at most 200ms of cooperative handback time; it does not retain an input lease
 indefinitely while the model is idle.
 
-Physical keyboard/IME is outside this first mouse-only routing scope. It is never
-suppressed: physical keyboard input during a captured turn fails mouse routing
-open and stops further model input, releasing tracked synthetic state. Model
-`press` and `text` remain supported when physical keyboard input is absent. Foreign
-injection, unsupported devices/targets, queue overflow and missing Raw Input fail
+Physical keyboard events outside reservations are observed without cancelling
+virtualized mouse work. During cooperative `press`, `text` and `batch`, physical
+keys are suppressed and buffered until synchronized original-focus restoration.
+IME composition itself remains shared and unvirtualized. Foreign
+injection, unsupported devices/targets, mouse queue overflow and missing Raw Input fail
 open in the same way. Own tagged input must be observed by its hook within 20ms;
 unmatched suppressed/raw motion has bounded watchdog checks. A silently removed
 hook can leak input before its loss is detected; this EXE has no driver-level
@@ -284,6 +285,36 @@ There is no hidden auto-enable. Disable, emergency stop, explicit stop and EOF
 release routing and synthetic held state. The hook itself contains only bounded
 atomic updates and suppression decisions; Raw Input processing, target pinning,
 queueing and overlay rendering run outside low-level callbacks.
+
+## Keyboard reservations and batches
+
+`batch({pointerId,steps,maxMs?,operationId?})` executes 1–16 `click`, `text` or
+`press` steps against one pointer/target under a single operation identity.
+Click steps require `button` and may provide paired screen `x`/`y`; text steps
+require `text`, press steps require existing concrete `keys`. All fields and
+coordinates are validated before reserving. Total text is at most 1024 UTF-16
+units. No nested batches, per-step IDs, target switches or arbitrary sleeps.
+The reservation defaults to 750ms and accepts 100–1000ms. Other queued gestures
+and logical moves cannot run between steps. Each chord/text is inserted in one
+SendInput call; target focus is observed for up to 100ms and pinned for the packet.
+App effects and clicked-element semantics still need independent observation.
+
+The UI-thread hook buffers physical edges in fixed storage (4096 events),
+tracks their state separately, and preserves foreign-injection/Stop behavior.
+Held physical keys are temporarily released before model work. After model
+releases, the original process/root/focused child is revalidated and restored,
+held keys reconstructed, and buffered edges inserted in order. Consumed records
+are zeroized. The existing user cursor waiting visual covers this reservation.
+Results expose counts/restoration/pending/failure, not key contents. Batch progress
+uses completedSteps, zero-based failedStep, totalSteps, completed and budgetMs.
+
+At 3072 events or budget expiry, the UI thread requests abort; synchronized broker
+cleanup owns replay. A permanently hung broker can retain suppression until exit.
+Overflow, destroyed original focus, rejected activation, uncertain insertion or
+focus-changing user shortcuts can leave unresolved input; no blind redirection or
+replay is allowed. This is cooperative scheduling on shared Windows input, not
+independent per-window keyboards or virtualized IME. Physical concurrency and
+third-party drivers require separate real-device acceptance.
 
 ## Operation identity and bounded recovery
 
@@ -421,7 +452,7 @@ Before actuation the broker refuses physical buttons/modifiers already held,
 activates the bound root with `SetForegroundWindow`, verifies actual OS foreground,
 and checks that the visible hit window belongs to that exact process and bound
 main-or-owned-popup surface. An accepted foreground owned popup needs no activation.
-Every subsequent input event rechecks identity, client point, hit and foreground.
+Each mouse event and keyboard packet rechecks identity, client point, hit and foreground.
 If the ordinary activation attempt does not make the exact root foreground, the
 only preparatory input exception is one natural click on that bound root's exposed
 nonclient caption. This is explicit global Switched input, outside the client
@@ -450,8 +481,10 @@ therefore cannot use this exception. Caption scan/wait budgets are cooperative;
 OS calls and scheduling add latency, and check/input races remain possible.
 
 Failed activation, occlusion, target disappearance, desktop change or short
-`SendInput` delivery returns an error. It does not use `AttachThreadInput`,
-`SetKeyboardState`, PostMessage input, or APIs in a target process.
+`SendInput` delivery returns an error. Model activation does not use
+`AttachThreadInput`; only exact original user-focus restoration may temporarily
+attach input threads, with mandatory detach. No `SetKeyboardState`, PostMessage
+input, or APIs in a target process are used.
 
 WH_MOUSE_LL / WH_KEYBOARD_LL run in this EXE on the original responsive message
 thread. With collaboration off, callbacks pass physical input through; explicit
@@ -468,17 +501,17 @@ the marker alone. With collaboration off, physical and foreign injected
 events increment an interruption generation; active drag/text stop at the next
 checked event boundary and release tracked own held keys/buttons. Idle held state
 also releases on interference. Changing the active input pointer releases the
-previous owner's state first. Text has a cooperative two-second deadline; drag
+previous owner's state first. Cooperative key/text reservations have a 750ms budget; drag
 duration is capped at two seconds. Win32 validation/dispatch and scheduling may
 add latency, so neither is a hard real-time guarantee.
 
 Ctrl+Alt+Pause stops input and clears overlays if OS hotkey registration succeeds.
 Status reports actual registration, which may fail if the chord is reserved.
-Outside explicit supported mouse suppression, physical input passes through.
+Outside explicit mouse suppression and keyboard reservations, physical input passes through.
 There is no guaranteed physical/synthetic key
 ownership separation in Windows: a human pressing the same key during a synthetic
-hold can overlap a cleanup release. Mouse collaboration does not establish keyboard
-ownership isolation.
+hold can overlap a cleanup release outside reservations. Reservations separate
+tracked key state through suppression/replay; they do not create independent OS focus.
 Hooks may be removed by Windows after an OS timeout; installation success is not
 continuous hook-health proof. The small callbacks avoid blocking work, but this
 prototype requires actual interference and emergency-stop tests.

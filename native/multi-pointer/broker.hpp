@@ -1,6 +1,7 @@
 #pragma once
 #include "overlay.hpp"
 #include "operations.hpp"
+#include "batch-input.hpp"
 #include <chrono>
 #include <condition_variable>
 #include <deque>
@@ -91,6 +92,10 @@ class Broker {
     bool executingInput = false;
     bool observationTurn = false;
     bool visualTurn = false;
+    bool batchActive = false, batchPrepared = false, reservationOwned = false;
+    uint64_t reservationDeadline = 0;
+    HWND keyboardFocus = nullptr;
+    json batchResult = nullptr, keyboardResult = nullptr;
     std::atomic<bool> finishReader{false};
     std::thread reader;
     static constexpr size_t maxLine = 65536;
@@ -213,10 +218,16 @@ class Broker {
         cleanupFailed = !ok;
         return ok;
     }
-    void clear() { const bool ok = releaseHeld(); ui.clear(); pointers.clear(); require(ok, "cleanup_failed", "One or more synthetic releases were not delivered"); }
+    void clear() {
+        const bool ok=releaseHeld();
+        if (signals.keyboardReserved.load()) { reservationOwned=false; keyboardResult=ui.endKeyboardReservation(); }
+        ui.clear(); pointers.clear(); require(ok,"cleanup_failed","One or more synthetic releases were not delivered");
+    }
     void boundary() {
         signals.brokerHeartbeat.store(GetTickCount64());
-        processMoves();
+        if (!batchActive && !reservationOwned) processMoves();
+        require(!reservationOwned || (signals.keyboardReserved.load() && GetTickCount64()<reservationDeadline),
+            "reservation_timeout","Keyboard reservation expired; partial input is not replayed");
         require(!signals.disconnected.load(), "disconnected", "Input/output stream disconnected");
         require(!signals.explicitStop.load(),"stopped","Explicit stop or collaboration revocation requested");
         require(!signals.collaborationRequested.load() || ui.routing.phase.load()!=MouseRouting::Phase::failed,"collaboration_failed","Mouse routing failed open; model input stopped safely");
@@ -229,13 +240,63 @@ class Broker {
     }
     void physicalGate() const {
         for (int vk : {VK_LBUTTON,VK_RBUTTON,VK_MBUTTON,VK_XBUTTON1,VK_XBUTTON2,VK_LSHIFT,VK_RSHIFT,VK_LCONTROL,VK_RCONTROL,VK_LMENU,VK_RMENU,VK_LWIN,VK_RWIN}) {
-            if (signals.allowsPhysicalModifier(vk)) continue;
+            const bool mouseButton=vk==VK_LBUTTON || vk==VK_RBUTTON || vk==VK_MBUTTON || vk==VK_XBUTTON1 || vk==VK_XBUTTON2;
+            if ((!mouseButton && signals.keyboardReserved.load()) || signals.allowsPhysicalModifier(vk)) continue;
             if (ui.routing.capture.load() && ui.routing.enabled.load() && (vk==VK_LBUTTON || vk==VK_RBUTTON || vk==VK_MBUTTON)) continue;
             require(!signals.physical[static_cast<size_t>(vk)].load() && (!(GetAsyncKeyState(vk) & 0x8000) || synthetic(vk)),
                 "physical_held", "Release physical mouse buttons and modifiers before actuation");
         }
     }
     Target& target(const Pointer& p) { return targets.at(p.target); }
+    void beginKeyboard(unsigned budget) {
+        if (reservationOwned) return;
+        require(releaseHeld(),"cleanup_failed","Cannot reserve keyboard while synthetic cleanup is pending");
+        keyboardFocus=nullptr;
+        reservationOwned=true; reservationDeadline=GetTickCount64()+budget;
+        keyboardResult=ui.beginKeyboardReservation(budget);
+    }
+    bool endKeyboard() {
+        if (!reservationOwned) return true;
+        reservationOwned=false;
+        const bool released=releaseHeld();
+        try { keyboardResult=ui.endKeyboardReservation(); }
+        catch (...) { keyboardResult=ui.keyboardReservationState(); return false; }
+        return released;
+    }
+    void requireKeyboardFocus(Pointer& p) {
+        const auto deadline=GetTickCount64()+100;
+        for (;;) {
+            boundary(); target(p).validate();
+            HWND foreground=GetForegroundWindow();
+            GUITHREADINFO info{}; info.cbSize=sizeof(info);
+            const DWORD thread=GetWindowThreadProcessId(foreground,nullptr);
+            if (thread && GetGUIThreadInfo(thread,&info) && info.hwndFocus &&
+                target(p).surface(GetAncestor(foreground,GA_ROOT)).accepted &&
+                target(p).surface(GetAncestor(info.hwndFocus,GA_ROOT)).accepted) {
+                require(!keyboardFocus || keyboardFocus==info.hwndFocus,"focus_changed","Keyboard focus changed inside the reserved operation; no replay");
+                keyboardFocus=info.hwndFocus; return;
+            }
+            require(GetTickCount64()<deadline,"focus_pending","Target keyboard focus was not observed within 100ms");
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        }
+    }
+    void sendKeyboard(Pointer& p, const std::vector<INPUT>& inputs) {
+        checkHit(p,p.position); requireKeyboardFocus(p); ui.requireSystemCursor(); boundary();
+        const auto before=signals.ownKeyboard.load();
+        // One Windows insertion keeps a chord/text packet contiguous and avoids
+        // a UI round-trip for every UTF-16 unit. This does not prove app effect.
+        const UINT sent=SendInput(static_cast<UINT>(inputs.size()),const_cast<INPUT*>(inputs.data()),sizeof(INPUT));
+        for (UINT i=0;i<sent;++i) trackDelivery(inputs[i]);
+        delivered+=sent; actionExecuted=actionExecuted || sent>0;
+        if (operation) {
+            operation->deliveredInputs+=sent; operation->applicationInputs+=sent;
+            operation->actionExecuted=operation->actionExecuted || sent>0;
+            if (sent!=inputs.size()) operation->uncertain=true;
+        }
+        require(sent==inputs.size(),"send_input","Keyboard packet was not fully delivered; partial input is not replayed");
+        requireHookObservation(false,before+sent-1);
+        boundary(); requireKeyboardFocus(p);
+    }
     void checkHit(Pointer& p, POINT point) { boundary(); physicalGate(); target(p).hit(point); boundary(); }
     void send(Pointer& p, INPUT e, POINT point) {
         checkHit(p, point);
@@ -414,6 +475,7 @@ class Broker {
         position(p, p.position);
     }
     void prepare(Pointer& p) {
+        if (batchActive && batchPrepared) { prepareOnce(p); return; }
         if (operation) {
             require(operation->rounds<3 && operation->activeRecoveryMs<5000,"recovery_exhausted","Operation recovery budget exhausted");
             ++operation->rounds; operation->preparing=true;
@@ -425,6 +487,7 @@ class Broker {
         try { prepareOnce(p); }
         catch (...) { account(); throw; }
         account();
+        if (batchActive) batchPrepared=true;
         if (operation) {
             operation->preparing=false;
             require(operation->activeRecoveryMs<=5000,"recovery_exhausted","Operation active recovery exceeded five seconds before application input");
@@ -633,6 +696,8 @@ class Broker {
             {"cleanupPending",cleanupFailed},{"syntheticOwner",owner},{"actionExecuted",actionExecuted},{"deliveredInputs",delivered},
             {"activationPath",activationPath},{"activationDeliveredInputs",activationDelivered},{"interference",signals.snapshot(baseline)},
             {"operations",operations.status()}};
+        if (!batchResult.is_null()) result["batch"]=batchResult;
+        result["keyboardReservation"]=keyboardResult.is_null() ? ui.keyboardReservationState() : keyboardResult;
         result["collaboration"]=collaborationSnapshot();
         result["desktopEnabled"]=desktopEnabled;
         result["targetCapacity"]=32;
@@ -760,7 +825,7 @@ class Broker {
             const auto pinned=operationTargets.emplace(operation->id,std::make_pair(std::weak_ptr<Operation>(operation),p.target));
             p.target=pinned.first->second.second;
         }
-        if (operation && operation->intentPinned) p.position=operation->intentPoint;
+        if (operation && operation->intentPinned && !batchActive) p.position=operation->intentPoint;
         if (method == "remove_pointer") {
             if (owner == id) require(releaseHeld(), "cleanup_failed", "Cannot release pointer synthetic state");
             ui.remove(id); pointers.erase(found); actionExecuted = true; return state();
@@ -769,8 +834,31 @@ class Broker {
             const POINT xy = point(params); target(p).point(xy); ui.move(id,xy,true); stored.position=xy;
             actionExecuted=true; return state();
         }
+        if (method == "batch") {
+            require(!batchActive,"invalid_params","Nested batches are unsupported");
+            const auto budget=validateBatch(params,validateKey);
+            require(signals.collaborationRequested.load(),"unsupported_atomicity","Batch requires cooperative input routing");
+            // Validate every coordinate before reserving input or executing a prefix.
+            for (const auto& step : params.at("steps")) if (step.contains("x")) target(p).point(point(step));
+            batchResult={{"completedSteps",0},{"failedStep",nullptr},{"totalSteps",params.at("steps").size()},{"completed",false},{"budgetMs",budget}};
+            beginKeyboard(budget); batchActive=true; batchPrepared=false;
+            for (size_t index=0;index<params.at("steps").size();++index) {
+                batchResult["failedStep"]=index;
+                boundary();
+                const auto& step=params.at("steps").at(index);
+                const auto action=step.at("action").get<std::string>();
+                if (step.contains("x")) dispatch("move",{{"pointerId",id},{"x",step.at("x")},{"y",step.at("y")}},shutdown);
+                json args=step; args.erase("action"); args.erase("x"); args.erase("y"); args["pointerId"]=id;
+                dispatch(action,args,shutdown);
+                batchResult["completedSteps"]=index+1;
+            }
+            batchResult["failedStep"]=nullptr; batchResult["completed"]=true;
+            batchActive=false;
+            return state();
+        }
         if (actuation(method)) ui.activity(id,method=="drag",method=="click");
         if (method == "click") {
+            keyboardFocus=nullptr;
             require(params.contains("button") && params.at("button").is_string(), "invalid_params", "Button is required");
             const auto button = params.at("button").get<std::string>();
             const int b = button == "left" ? 0 : button == "right" ? 1 : button == "middle" ? 2 : -1;
@@ -809,10 +897,12 @@ class Broker {
             const bool control=std::find(keys.begin(),keys.end(),VK_LCONTROL)!=keys.end() || std::find(keys.begin(),keys.end(),VK_RCONTROL)!=keys.end();
             require(!control || std::find(keys.begin(),keys.end(),VK_ESCAPE)==keys.end(),"unsupported_shortcut","Ctrl+Escape and Ctrl+Shift+Escape are unsupported");
             require(releaseHeld(),"cleanup_failed","Cannot begin an atomic chord while synthetic cleanup is pending");
+            if (signals.collaborationRequested.load()) beginKeyboard(750);
             prepare(p);
-            const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(2);
-            for (int vk : keys) { require(std::chrono::steady_clock::now()<deadline,"timeout","Atomic chord exceeded two seconds"); send(p,keyInput(static_cast<WORD>(vk),true),p.position); }
-            for (auto it=keys.rbegin();it!=keys.rend();++it) { require(std::chrono::steady_clock::now()<deadline,"timeout","Atomic chord exceeded two seconds"); send(p,keyInput(static_cast<WORD>(*it),false),p.position); }
+            std::vector<INPUT> inputs; inputs.reserve(keys.size()*2);
+            for (int vk : keys) inputs.push_back(keyInput(static_cast<WORD>(vk),true));
+            for (auto it=keys.rbegin();it!=keys.rend();++it) inputs.push_back(keyInput(static_cast<WORD>(*it),false));
+            sendKeyboard(p,inputs);
         } else if (method == "key") {
             require(!signals.collaborationRequested.load(),"unsupported_atomicity","Use atomic press while collaboration is requested; cross-request key holds are disabled");
             const int vk = integer(params,"vk",8,254);
@@ -832,18 +922,19 @@ class Broker {
             require(!text.empty() && text.size() <= 4096,"invalid_params","Text must be 1-4096 UTF-8 bytes");
             const auto units = wide(text); require(units.size()<=1024,"invalid_params","Text exceeds 1024 UTF-16 units");
             require(owner != id || std::none_of(heldKeys.begin(),heldKeys.end(),[](bool held) { return held; }),"held_state","Release this pointer's synthetic keys before Unicode text");
-            prepare(p); const auto deadline = std::chrono::steady_clock::now()+std::chrono::seconds(2);
+            if (signals.collaborationRequested.load()) beginKeyboard(750);
+            prepare(p); std::vector<INPUT> inputs; inputs.reserve(units.size()*2);
             for (wchar_t unit : units) {
-                require(std::chrono::steady_clock::now()<deadline,"timeout","Text exceeded two seconds; partial delivery, no replay");
                 INPUT e{}; e.type=INPUT_KEYBOARD; e.ki.wScan=static_cast<WORD>(unit); e.ki.dwFlags=KEYEVENTF_UNICODE; e.ki.dwExtraInfo=signals.tag;
-                send(p,e,p.position);
-                e.ki.dwFlags|=KEYEVENTF_KEYUP; send(p,e,p.position);
+                inputs.push_back(e);
+                e.ki.dwFlags|=KEYEVENTF_KEYUP; inputs.push_back(e);
             }
+            sendKeyboard(p,inputs);
         } else throw Failure("method_not_found","Unsupported method");
         boundary(); return state();
     }
     static bool actuation(const std::string& method) {
-        return method=="click" || method=="drag" || method=="scroll" || method=="key" || method=="press" || method=="text";
+        return method=="click" || method=="drag" || method=="scroll" || method=="key" || method=="press" || method=="text" || method=="batch";
     }
     static void validateKey(int vk) {
         require(vk != VK_PACKET && vk != VK_PROCESSKEY && vk != VK_SHIFT && vk != VK_CONTROL && vk != VK_MENU,
@@ -869,6 +960,8 @@ class Broker {
         executingInput=false;
         observationTurn=false;
         visualTurn=false;
+        batchActive=false; batchPrepared=false; keyboardFocus=nullptr;
+        batchResult=nullptr; keyboardResult=nullptr;
         delivered=0; activationDelivered=0; activationPath="none"; actionExecuted=false; foregroundAttempted=false;
         baseline = signals.epoch.load();
         try {
@@ -903,6 +996,8 @@ class Broker {
             }
             if (actuation(method)) { executingInput=true; awaitNativeHumanGesture(); }
             auto result=dispatch(method,params,shutdown);
+            require(endKeyboard(),"keyboard_restore","Keyboard reservation cleanup or original-window replay is unresolved");
+            if (!keyboardResult.is_null()) result["keyboardReservation"]=keyboardResult;
             executingInput=false;
             if (operation) result["recovery"]["completed"]=true;
             if (!observationTurn) {
@@ -918,6 +1013,8 @@ class Broker {
             reply({{"id",id},{"result",result}});
             diagnostic("INFO","request_complete",method);
         } catch (const Failure& e) {
+            batchActive=false;
+            const bool keyboardRestored=endKeyboard();
             const auto interference = signals.snapshot(baseline);
             const auto collaboration = collaborationSnapshot();
             const bool released=visualTurn ? false : releaseHeld();
@@ -927,7 +1024,7 @@ class Broker {
                 operation->lastBlocker=e.code;
                 operation->observeRequired=operation->applicationInputs>0 || operation->uncertain;
                 operation->exhausted=!operation->observeRequired && (e.code=="foreground" || e.code=="occluded") && (operation->rounds>=3 || operation->activeRecoveryMs>=5000);
-                if (released && !operation->observeRequired && (e.code=="foreground" || e.code=="occluded") && operation->rounds<3 && operation->activeRecoveryMs<5000 &&
+                if (released && keyboardRestored && batchResult.is_null() && keyboardResult.is_null() && !operation->observeRequired && (e.code=="foreground" || e.code=="occluded") && operation->rounds<3 && operation->activeRecoveryMs<5000 &&
                     !signals.disconnected.load() && !signals.emergency.load()) {
                     std::lock_guard<std::mutex> guard(queueMutex);
                     if (queue.size()<16 && !signals.explicitStop.load() && (!signals.collaborationRequested.load() || ui.routing.enabled.load())) {
@@ -938,14 +1035,18 @@ class Broker {
             json partial{{"deliveredInputs",delivered},{"foregroundAttempted",foregroundAttempted},{"activationPath",activationPath},
                 {"activationDeliveredInputs",activationDelivered},{"syntheticReleased",released},{"appEffectVerified",false},{"noReplay",true},
                 {"interference",interference},{"collaboration",collaboration}};
+            if (!batchResult.is_null()) partial["batch"]=batchResult;
+            if (!keyboardResult.is_null()) partial["keyboardReservation"]=keyboardResult;
             if (!e.details.is_null()) partial["hitObservation"] = e.details;
             if (operation) { partial["recovery"]=operation->status(); partial["operationId"]=operation->id; partial["observeRequired"]=operation->observeRequired;
                 partial["recovery"]["completed"]=true; partial["deliveredInputs"]=operation->deliveredInputs; partial["activationDeliveredInputs"]=operation->activationInputs; }
-            const json outcome{{"error",{{"code",e.code},{"message",e.what()},{"actionExecuted",operation?operation->actionExecuted:actionExecuted},{"partial",partial}}}};
+            const json outcome{{"error",{{"code",keyboardRestored?e.code:"keyboard_restore"},{"message",keyboardRestored?e.what():"Keyboard restoration or replay is unresolved; no replay"},{"actionExecuted",operation?operation->actionExecuted:actionExecuted},{"partial",partial}}}};
             if (operation) operation->outcome=outcome;
             auto response=outcome; response["id"]=id; reply(response);
             diagnostic("WARN","request_failed",e.code);
         } catch (const std::exception&) {
+            batchActive=false;
+            endKeyboard();
             const auto interference = signals.snapshot(baseline);
             const auto collaboration = collaborationSnapshot();
             const bool released=visualTurn ? false : releaseHeld();
@@ -954,6 +1055,8 @@ class Broker {
             json response{{"id",id},{"error",{{"code","invalid_request"},{"message","Malformed request, encoding or parameter type"},{"actionExecuted",actionExecuted},
                 {"partial",{{"deliveredInputs",delivered},{"activationPath",activationPath},{"activationDeliveredInputs",activationDelivered},
                     {"syntheticReleased",released},{"appEffectVerified",false},{"noReplay",true},{"interference",interference},{"collaboration",collaboration}}}}}};
+            if (!batchResult.is_null()) response["error"]["partial"]["batch"]=batchResult;
+            if (!keyboardResult.is_null()) response["error"]["partial"]["keyboardReservation"]=keyboardResult;
             if (operation) {
                 operation->observeRequired=operation->applicationInputs>0; response["error"]["partial"]["recovery"]=operation->status();
                 response["error"]["partial"]["recovery"]["completed"]=true;

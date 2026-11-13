@@ -1,6 +1,7 @@
 #pragma once
 #include "platform.hpp"
 #include "mouse-routing.hpp"
+#include "keyboard-routing.hpp"
 #include "system-cursor.hpp"
 #include "cursor-renderer.hpp"
 #include <oleacc.h>
@@ -16,6 +17,7 @@ struct Signals {
     std::atomic<bool> disconnected{false};
     std::atomic<bool> collaborationRequested{false};
     std::atomic<bool> modelKeyboardActive{false};
+    std::atomic<bool> keyboardReserved{false};
     std::atomic<bool> explicitStop{false};
     std::atomic<uint64_t> stopGeneration{0};
     std::atomic<uint64_t> brokerHeartbeat{0};
@@ -68,7 +70,7 @@ struct Signals {
     }
     bool observeForeignKeyboard(UINT message, const KBDLLHOOKSTRUCT& event) {
         const bool injected=(event.flags & LLKHF_INJECTED)!=0;
-        const bool interrupt=keyboardInterrupts(injected);
+        const bool interrupt=injected || (!keyboardReserved.load() && keyboardInterrupts(false));
         observeForeign(ForeignKind::keyboard,message,event.time,injected,
             (event.flags & LLKHF_LOWER_IL_INJECTED)!=0,event.dwExtraInfo,{},interrupt);
         if (!injected && event.vkCode<256)
@@ -164,6 +166,22 @@ class Ui {
     CursorGraphics graphics;
     bool reducedMotion = false;
     HCURSOR ordinaryCursor = nullptr; // Shared system resource; never destroyed.
+    KeyboardReservation keyboardReservation;
+    void notifyKeyboardAbort() {
+        if (keyboardReservation.takeAbortNotification()) {
+            signals.emergency.store(true);
+            signals.epoch.fetch_add(1);
+        }
+    }
+    void tickKeyboardReservation() {
+        if (keyboardReservation.expired(GetTickCount64())) keyboardReservation.requestAbort("budget_expired");
+        if (signals.disconnected.load() || signals.explicitStop.load() || signals.emergency.load())
+            keyboardReservation.requestAbort("stop_or_disconnect");
+        notifyKeyboardAbort();
+        // Abort invalidates the broker boundary immediately. Only synchronized
+        // end (after broker releaseHeld) restores focus/replays: a timer cannot
+        // safely race an in-flight broker SendInput on another thread.
+    }
     static LRESULT CALLBACK mouseHook(int code, WPARAM wp, LPARAM lp) {
         if (code == HC_ACTION && instance) {
             const auto& e = *reinterpret_cast<const MSLLHOOKSTRUCT*>(lp);
@@ -201,10 +219,21 @@ class Ui {
         if (code == HC_ACTION && instance) {
             const auto& e = *reinterpret_cast<const KBDLLHOOKSTRUCT*>(lp);
             auto& s = instance->signals;
-            if (e.dwExtraInfo == s.tag) s.observeOwn(false);
+            if (e.dwExtraInfo == s.tag) { instance->keyboardReservation.observeOwn(e); s.observeOwn(false); }
             else {
                 const bool injected=(e.flags & LLKHF_INJECTED)!=0;
                 const bool interrupt=s.observeForeignKeyboard(static_cast<UINT>(wp),e);
+                const bool buffered=instance->keyboardReservation.intercept(e);
+                if (buffered) {
+                    // Suppressed low-level events do not reach RegisterHotKey.
+                    // Recognize the emergency chord using physical state only.
+                    const bool control=s.physical[VK_LCONTROL].load() || s.physical[VK_RCONTROL].load() || s.physical[VK_CONTROL].load();
+                    const bool alt=s.physical[VK_LMENU].load() || s.physical[VK_RMENU].load() || s.physical[VK_MENU].load();
+                    if (e.vkCode==VK_PAUSE && !(e.flags&LLKHF_UP) && control && alt)
+                        instance->keyboardReservation.requestAbort("emergency_hotkey");
+                    instance->notifyKeyboardAbort();
+                    return 1;
+                }
                 if (interrupt && (instance->routing.capture.load() || instance->routing.phase.load()==MouseRouting::Phase::probe))
                     instance->routing.fail(injected?MouseRouting::Fault::foreignInjection:MouseRouting::Fault::physicalKeyboard);
             }
@@ -214,6 +243,8 @@ class Ui {
     static void CALLBACK windowEvent(HWINEVENTHOOK, DWORD event, HWND hwnd, LONG object, LONG child, DWORD, DWORD time) {
         if (!instance || event != EVENT_OBJECT_DESTROY || object != OBJID_WINDOW || child != CHILDID_SELF) return;
         instance->routing.windowDestroyed(hwnd);
+        instance->keyboardReservation.destroyed(hwnd);
+        instance->notifyKeyboardAbort();
         for (auto& t : instance->targets) if (t.hwnd == hwnd) {
             t.destroyed->store(true);
             instance->signals.observeForeign(Signals::ForeignKind::windowDestroy, event, time, false, false, 0);
@@ -230,6 +261,7 @@ class Ui {
             return DefWindowProcW(hwnd,msg,wp,lp);
         }
         if (msg==WM_TIMER && wp==2 && instance) {
+            instance->tickKeyboardReservation();
             instance->routing.tick();
             instance->refreshUserOverlay();
             instance->animateOverlays();
@@ -306,7 +338,7 @@ public:
         const bool ready=routing.enabled.load() && routing.phase.load()==MouseRouting::Phase::ready;
         bool changed=false;
         if (ready && !o.replacementReady) { o.presentation.enter(GetTickCount64()); o.replacementReady=true; changed=true; }
-        const bool waiting=routing.hasWaitingHuman();
+        const bool waiting=routing.hasWaitingHuman() || signals.keyboardReserved.load();
         if (waiting!=o.waiting) { o.waiting=waiting; o.presentation.setWaiting(waiting,GetTickCount64()); changed=true; }
         if (o.point.x!=point.x || o.point.y!=point.y) {
             o.point=point;
@@ -348,7 +380,24 @@ public:
         });
     }
     bool hotkey = false;
-    Ui(Signals& s, std::vector<Target>& t) : signals(s), targets(t) {}
+    Ui(Signals& s, std::vector<Target>& t) : signals(s), targets(t), keyboardReservation(s.keyboardReserved,s.tag) {}
+    json beginKeyboardReservation(unsigned maxMs=1000) {
+        json result; invoke([&] {
+            try { keyboardReservation.begin(maxMs); }
+            catch (...) { notifyKeyboardAbort(); throw; }
+            refreshUserOverlay(); result=keyboardReservation.status();
+        }); return result;
+    }
+    json endKeyboardReservation() {
+        json result; invoke([&] {
+            try { keyboardReservation.end(); }
+            catch (const Failure& e) { refreshUserOverlay(); throw Failure(e.code,e.what(),keyboardReservation.status()); }
+            refreshUserOverlay(); result=keyboardReservation.status();
+        }); return result;
+    }
+    json keyboardReservationState() {
+        json result; invoke([&] { tickKeyboardReservation(); result=keyboardReservation.status(); }); return result;
+    }
     void start() {
         instance = this;
         graphics.start();

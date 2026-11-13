@@ -5,20 +5,22 @@ const path = require('node:path');
 async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtureReady, application, run, waitFor}) {
   const cases=[];
   const mouseOnly=process.argv.includes('--mouse-keyboard');
+  const batchMode=process.argv.includes('--batch');
   const call=async(name,args)=>{const raw=await client.callTool({name,arguments:args});return {isError:!!raw.isError,value:json(raw)};};
   const capture=()=>call('capture',{windowId:target.windowId});
   let previousCounters,lastCollaboration;
   async function input(label,packet,postcondition) {
-    if(['click','text'].includes(packet.action)&&lastCollaboration?.requested!==true)
+    if(['click','text','batch'].includes(packet.action)&&lastCollaboration?.requested!==true)
       await input('default mode before '+label,{action:'status'});
     const current=await capture();
     if(current.isError){cases.push({label,phase:'capture',...current});return;}
-    if(['click','text'].includes(packet.action)&&lastCollaboration?.requested!==true) {
+    if(['click','text','batch'].includes(packet.action)&&lastCollaboration?.requested!==true) {
       cases.push({label,isError:true,blocked:'virtualization was not requested; no fallback input sent'});return;
     }
     const result=await call('switched_input',{windowId:target.windowId,observationId:current.value.observationId,input:packet});
     const details=result.value.switchedInputDetails||result.value.inputResult;
-    const entry={label,...result,interference:details?.interference,collaboration:details?.collaboration};
+    const entry={label,...result,interference:details?.interference,collaboration:details?.collaboration,
+      ...(batchMode?{batch:details?.batch,keyboardReservation:details?.keyboardReservation}: {})};
     lastCollaboration=entry.collaboration;
     if(entry.interference) {
       const counters={mouse:entry.interference.foreignMouseEvents||0,keyboard:entry.interference.foreignKeyboardEvents||0};
@@ -52,6 +54,21 @@ async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtur
       await input('virtualization readiness '+(attempt+1),{action:'status'});
     }
     const baseline=Number(fs.readFileSync(fixtureReady+'.clicks','utf8'));
+    if(batchMode) {
+      await input('virtualized batch',{action:'batch',x:fixtureInfo.editX,y:fixtureInfo.editY,maxMs:1000,steps:[
+        {action:'click',x:fixtureInfo.editX,y:fixtureInfo.editY,button:'left'},
+        {action:'press',keys:[162,65]},
+        {action:'text',text:'virtual-batch'},
+        {action:'click',x:fixtureInfo.buttonX,y:fixtureInfo.buttonY,button:'left'}
+      ]},async()=>{
+        await new Promise(resolve=>setTimeout(resolve,300));
+        const observation=await call('inspect',{windowId:target.windowId,mode:'summary',limit:100});
+        const edit=observation.value.elements?.find(e=>e.name==='Verification input');
+        if(observation.isError||!edit)return false;
+        const read=await call('inspect',{windowId:target.windowId,mode:'read',observationId:observation.value.observationId,elementId:edit.id,fields:['value']});
+        return !read.isError&&read.value.elements?.[0]?.value==='virtual-batch'&&Number(fs.readFileSync(fixtureReady+'.clicks','utf8'))>baseline;
+      });
+    } else {
     await input('virtualized button click',{action:'click',x:fixtureInfo.buttonX,y:fixtureInfo.buttonY,button:'left'},async()=>{
       await new Promise(resolve=>setTimeout(resolve,300));
       return Number(fs.readFileSync(fixtureReady+'.clicks','utf8'))>baseline;
@@ -72,17 +89,30 @@ async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtur
       return !read.isError&&typeof read.value.elements?.[0]?.value==='string'&&read.value.elements[0].value.includes('virtual-test');
     });
     }
+    }
     await input('virtualization final status',{action:'status'});
   } finally {
     cases.push({label:'release virtualized input',...await call('release_switched_input',{windowId:target.windowId})});
     fs.writeFileSync(path.join(run,'virtualization-results.json'),JSON.stringify({platform:process.platform,arch:process.arch,cases},null,2));
   }
-  return {...summarizeVirtualizedCases(cases,mouseOnly),cases};
+  return {...summarizeVirtualizedCases(cases,mouseOnly,batchMode),cases};
 }
-function summarizeVirtualizedCases(cases,mouseOnly=false) {
+function summarizeVirtualizedCases(cases,mouseOnly=false,batchMode=false) {
   const enabled=cases.some(e=>e.collaboration?.enabled===true||e.value?.inputResult?.collaboration?.enabled===true);
   const externalMouseObserved=cases.some(e=>e.externalEventDelta?.mouse>0);
   const externalKeyboardObserved=cases.some(e=>e.externalEventDelta?.keyboard>0);
+  if(batchMode) {
+    const effect=cases.find(e=>e.label==='virtualized batch');
+    const effectsPassed=enabled&&!!effect&&!effect.isError&&effect.collaboration?.enabled===true&&effect.postcondition===true&&effect.batch?.completedSteps===4&&effect.batch?.completed===true&&
+      effect.keyboardReservation?.restored===true&&effect.keyboardReservation?.pending===false&&effect.keyboardReservation?.active===false;
+    const capabilityBlocked=!enabled&&!!effect&&(!!effect.blocked||effect.collaboration?.failed===true||effect.collaboration?.capability_pending===true)&&!(effect.batch?.completedSteps>0);
+    // A call-local foreign-key delta plus buffered events is required; cumulative
+    // foreign counters alone cannot establish physical keyboard hook coverage.
+    const externalReservationConcurrencyVerified=effectsPassed&&effect.externalEventDelta?.keyboard>0&&effect.keyboardReservation?.bufferedEvents>0;
+    return {passed:effectsPassed,verdict:effectsPassed?'passed':capabilityBlocked?'capability_blocked':'failed',effectsPassed,enabled,
+      externalObserved:externalMouseObserved||externalKeyboardObserved,externalMouseObserved,externalKeyboardObserved,
+      externalReservationConcurrencyVerified,externalReservationConcurrency:externalReservationConcurrencyVerified?'verified':'unverified'};
+  }
   const effects=cases.filter(e=>['virtualized button click',mouseOnly?'virtualized keyboard-concurrent drag':'virtualized text'].includes(e.label));
   const effectsPassed=enabled&&effects.length===2&&effects.every(e=>!e.isError&&e.postcondition===true&&e.collaboration?.enabled===true);
   const passed=effectsPassed&&externalMouseObserved&&externalKeyboardObserved;

@@ -19,6 +19,8 @@ function switchedMetadata(value) {
   }
   if(value.recovery)out.recovery=project(value.recovery,['operationId','rounds','maxRounds','activeRecoveryMs','maxActiveRecoveryMs','applicationInputs'],['observeRequired','uncertainDelivery','budgetExhausted','completed'],['lastBlocker']);
   if(value.operations)out.operations=project(value.operations,['admittedHighWatermark','retainedOutcomes','retentionLimit'],[]);
+  if(value.batch)out.batch=project(value.batch,['completedSteps','failedStep','totalSteps','budgetMs'],['completed']);
+  if(value.keyboardReservation)out.keyboardReservation=project(value.keyboardReservation,['bufferedEvents','replayedEvents'],['active','restored','pending'],['failure']);
   if(value.collaboration){
     const c=value.collaboration;
     out.collaboration=project(c,['probeRemainingMs','rawPackets','suppressedMouseEvents','rawSuppressionPairs','queuedHumanOperations','queuedInputOperations','pendingLogicalMoves','failureCount','lastRawEventTime','lastSuppressedEventTime','completedHumanOperations','skippedHumanOperations','lastHumanApplicationInputs'],['requested','enabled','capability_pending','failed','suppression','modelActive','lastHumanObserveRequired','rawConsumerAppsVerified','pointerAccelerationEmulated'],['phase','lastFailure','lastHumanFailure','physicalKeyboard']);
