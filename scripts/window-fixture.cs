@@ -15,6 +15,7 @@ class VerificationFixture {
       var button = new Button { Name="verificationButton", AccessibleName="Apply verification", Text="Apply verification", Location=new Point(25,85), Size=new Size(180,40) };
       var label = new Label { AccessibleName="Verification result", Text="not applied", Location=new Point(25,150), Size=new Size(450,50) };
       int clickCount=0;
+      if(args.Length>0)File.WriteAllText(args[0]+".clicks","0");
       button.Click += (sender,e) => { label.Text="Applied: "+edit.Text; label.AccessibleName=label.Text; clickCount++; if(args.Length>0)File.WriteAllText(args[0]+".clicks",clickCount.ToString()); };
       form.Controls.AddRange(new Control[]{edit,button,label});
       int keyPresses=0;
@@ -29,7 +30,7 @@ class VerificationFixture {
         }
       };
       activationTimer.Start();
-      form.Shown += (sender,e) => { if(args.Length>0) { var p=button.PointToScreen(new Point(70,20)); File.WriteAllText(args[0],"{\"buttonX\":"+p.X+",\"buttonY\":"+p.Y+"}"); } };
+      form.Shown += (sender,e) => { if(args.Length>0) { var p=button.PointToScreen(new Point(70,20)); var q=edit.PointToScreen(new Point(40,10)); File.WriteAllText(args[0],"{\"buttonX\":"+p.X+",\"buttonY\":"+p.Y+",\"editX\":"+q.X+",\"editY\":"+q.Y+"}"); } };
       Application.Run(form);
       activationTimer.Dispose();
     }

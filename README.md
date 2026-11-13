@@ -50,11 +50,12 @@ npm ci
 npm run build:native
 npm test
 node scripts/verify-windows.cjs
+node scripts/verify-windows.cjs --virtualization
 npm run package
 node scripts/verify-windows.cjs --executable <release-folder>\WindowUseMCP.exe
 ```
 
-실제 Windows 검증은 독립된 테스트 앱·설정 프로필을 생성하고, 표준 SDK 연결·승인·UIA 입력·보호 정책·마스킹·데스크톱 입력·종료를 검사합니다. UI 자동화용 디버깅 포트는 검증 명령에서만 추가되며 일반 실행은 네트워크 포트를 열지 않습니다.
+실제 Windows 검증은 독립된 테스트 앱·설정 프로필을 생성하고, 표준 SDK 연결·승인·UIA 입력·보호 정책·마스킹·데스크톱 입력·종료를 검사합니다. `--virtualization`은 가상화 협업 모드를 명시적으로 켜고 외부 입력 감지량과 클릭·텍스트의 실제 반영을 별도로 기록합니다. 외부 이벤트가 있어도 나머지 검사를 진행하며, 가상화 해제·도구 오류·효과 불일치는 실패입니다. 외부 이벤트가 없는 실행은 동시 사용 통과로 인정하지 않습니다. 이 옵션은 제품의 입력 정책이나 중지 기능을 우회하지 않습니다. UI 자동화용 디버깅 포트는 검증 명령에서만 추가되며 일반 실행은 네트워크 포트를 열지 않습니다.
 
 배포물은 서명되지 않은 초기 버전입니다. Windows가 게시자를 확인할 수 없다는 알림을 표시할 수 있습니다. 공개 게시·코드 서명·실제 클라이언트별 수용 상태는 [배포 문서](docs/distribution.md)와 작업 기록을 확인하세요.
 

@@ -1,0 +1,1230 @@
+{
+  "sourceCommit": "31ca7bc",
+  "environment": "Windows x64 interactive desktop; source launcher, modified uncommitted diagnostics adapter present; no package/global registration changes",
+  "runs": [
+    {
+      "name": "collaboration-run",
+      "exitCode": 1,
+      "checks": [
+        {
+          "name": "standard SDK stdio connection and tool discovery"
+        },
+        {
+          "name": "MCP alone launches approval UI; closing denies and releases the renderer without disconnecting"
+        },
+        {
+          "name": "automatic approval popup; denial sends no input"
+        }
+      ],
+      "error": "Timed out: exact applied input value {\"keyPresses\":5,\"length\":24,\"expected\":false}"
+    },
+    {
+      "name": "corrected-run",
+      "exitCode": 1,
+      "checks": [
+        {
+          "name": "standard SDK stdio connection and tool discovery"
+        },
+        {
+          "name": "MCP alone launches approval UI; closing denies and releases the renderer without disconnecting"
+        },
+        {
+          "name": "automatic approval popup; denial sends no input"
+        },
+        {
+          "name": "approved real UIA edit and invoke with observed postcondition"
+        },
+        {
+          "name": "compact custom-chrome UI renders and switches light/dark"
+        },
+        {
+          "name": "closed settings UI reopens from the host with preserved settings"
+        },
+        {
+          "name": "own settings/approval windows blocked from observation and control in full mode"
+        },
+        {
+          "name": "native desktop capture masks own UI",
+          "maskedWindowCount": 1
+        },
+        {
+          "name": "trusted UI Stop and explicit resume"
+        },
+        {
+          "name": "EOF releases resources and exits"
+        }
+      ],
+      "error": "Coordinate input not accepted: {\"code\":\"state_changed\",\"message\":\"Switched input requires a fresh observation before another operation\",\"actionExecuted\":true,\"mutationOutcome\":\"unknown\",\"observationRequired\":true,\"recovery\":\"observe_again\",\"nativeCode\":\"interrupted\",\"switchedInputDetails\":{\"operationId\":2,\"deliveredInputs\":1,\"activationDeliveredInputs\":0,\"appEffectVerified\":false,\"observeRequired\":false,\"syntheticReleased\":true,\"foregroundAttempted\":true,\"noReplay\":true,\"activationPath\":\"already_foreground\",\"interference\":{\"baselineEpoch\":14,\"currentEpoch\":15,\"ownTaggedMouseEvents\":1,\"ownTaggedKeyboardEvents\":0,\"foreignMouseEvents\":15,\"foreignKeyboardEvents\":0,\"targetWindowDestroyEvents\":0,\"epochChanged\":true,\"snapshotCoherent\":true,\"emergencyRequested\":false,\"disconnected\":false,\"lastForeign\":{\"injected\":false,\"lowerIntegrityInjected\":false,\"extraInfoZero\":true,\"kind\":\"mouse\",\"messageCategory\":\"move\"}},\"recovery\":{\"operationId\":2,\"rounds\":1,\"maxRounds\":3,\"activeRecoveryMs\":3,\"maxActiveRecoveryMs\":5000,\"applicationInputs\":0,\"observeRequired\":false,\"uncertainDelivery\":false,\"budgetExhausted\":false,\"completed\":true,\"lastBlocker\":\"interrupted\"},\"collaboration\":{\"probeRemainingMs\":0,\"rawPackets\":0,\"suppressedMouseEvents\":0,\"rawSuppressionPairs\":0,\"queuedHumanOperations\":0,\"queuedInputOperations\":0,\"pendingLogicalMoves\":0,\"failureCount\":0,\"lastRawEventTime\":0,\"lastSuppressedEventTime\":0,\"completedHumanOperations\":0,\"skippedHumanOperations\":0,\"lastHumanApplicationInputs\":0,\"requested\":false,\"enabled\":false,\"capability_pending\":false,\"failed\":false,\"suppression\":false,\"modelActive\":false,\"lastHumanObserveRequired\":false,\"rawConsumerAppsVerified\":false,\"pointerAccelerationEmulated\":false,\"phase\":\"off\",\"lastFailure\":\"none\",\"lastHumanFailure\":\"none\",\"physicalKeyboard\":\"fail_open_and_stop_model\",\"user\":{\"x\":0,\"y\":0},\"systemCursor\":{\"visibilityCommands\":0,\"supported\":false,\"hidden\":false,\"restorePending\":false,\"guardReady\":false},\"deviceDiagnostics\":{\"snapshotMouseCount\":0,\"allowedInitialArrivals\":0,\"rejectedDeviceChanges\":0,\"ignoredOwnRawPackets\":0,\"mouseSnapshotReady\":false,\"snapshotReason\":\"not_requested\",\"preparationWaitReason\":\"relative_motion_required\"}}}}",
+      "extra": [
+        {
+          "label": "status",
+          "isError": false
+        },
+        {
+          "label": "capture",
+          "isError": false
+        },
+        {
+          "label": "inspect",
+          "isError": false
+        },
+        {
+          "label": "inspect",
+          "isError": true,
+          "code": "unclassified",
+          "nativeCode": "native-error",
+          "message": "미분류된 오류",
+          "diagnostic": {
+            "event": "window_use.native_failure",
+            "method": "inspect",
+            "requestId": "e30c0572-49eb-4a7b-9216-72e58aa8063f",
+            "timestamp": "2026-11-13T11:54:06.512Z",
+            "elapsedMs": 13,
+            "responseCorrelated": true,
+            "hresult": "0x00000000"
+          },
+          "actionExecuted": false
+        },
+        {
+          "label": "list_task_macros",
+          "isError": false
+        },
+        {
+          "label": "run_task_macro",
+          "isError": false
+        },
+        {
+          "label": "switched_input",
+          "isError": false
+        },
+        {
+          "label": "switched_input",
+          "isError": true,
+          "code": "state_changed",
+          "nativeCode": "interrupted",
+          "message": "Switched input requires a fresh observation before another operation",
+          "interference": {
+            "baselineEpoch": 434,
+            "currentEpoch": 435,
+            "ownTaggedMouseEvents": 0,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 435,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": true,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "actionExecuted": false,
+          "deliveredInputs": 0
+        },
+        {
+          "label": "release_switched_input",
+          "isError": false
+        },
+        {
+          "label": "release_desktop_input",
+          "isError": false
+        },
+        {
+          "label": "resize",
+          "isError": false
+        }
+      ]
+    },
+    {
+      "name": "extra-run",
+      "exitCode": 1,
+      "checks": [
+        {
+          "name": "standard SDK stdio connection and tool discovery"
+        },
+        {
+          "name": "MCP alone launches approval UI; closing denies and releases the renderer without disconnecting"
+        },
+        {
+          "name": "automatic approval popup; denial sends no input"
+        },
+        {
+          "name": "approved real UIA edit and invoke with observed postcondition"
+        },
+        {
+          "name": "compact custom-chrome UI renders and switches light/dark"
+        },
+        {
+          "name": "closed settings UI reopens from the host with preserved settings"
+        },
+        {
+          "name": "own settings/approval windows blocked from observation and control in full mode"
+        },
+        {
+          "name": "native desktop capture masks own UI",
+          "maskedWindowCount": 1
+        },
+        {
+          "name": "trusted UI Stop and explicit resume"
+        },
+        {
+          "name": "EOF releases resources and exits"
+        }
+      ],
+      "error": "Coordinate input not accepted: {\"code\":\"state_changed\",\"message\":\"Switched input requires a fresh observation before another operation\",\"actionExecuted\":true,\"mutationOutcome\":\"unknown\",\"observationRequired\":true,\"recovery\":\"observe_again\",\"nativeCode\":\"interrupted\",\"switchedInputDetails\":{\"operationId\":2,\"deliveredInputs\":3,\"activationDeliveredInputs\":3,\"appEffectVerified\":false,\"observeRequired\":false,\"syntheticReleased\":true,\"foregroundAttempted\":true,\"noReplay\":true,\"activationPath\":\"caption_click\",\"interference\":{\"baselineEpoch\":0,\"currentEpoch\":1,\"ownTaggedMouseEvents\":3,\"ownTaggedKeyboardEvents\":0,\"foreignMouseEvents\":0,\"foreignKeyboardEvents\":1,\"targetWindowDestroyEvents\":0,\"epochChanged\":true,\"snapshotCoherent\":true,\"emergencyRequested\":false,\"disconnected\":false,\"lastForeign\":{\"injected\":false,\"lowerIntegrityInjected\":false,\"extraInfoZero\":true,\"kind\":\"keyboard\",\"messageCategory\":\"key_down\"}},\"recovery\":{\"operationId\":2,\"rounds\":1,\"maxRounds\":3,\"activeRecoveryMs\":32,\"maxActiveRecoveryMs\":5000,\"applicationInputs\":0,\"observeRequired\":false,\"uncertainDelivery\":false,\"budgetExhausted\":false,\"completed\":true,\"lastBlocker\":\"interrupted\"},\"collaboration\":{\"probeRemainingMs\":0,\"rawPackets\":0,\"suppressedMouseEvents\":0,\"rawSuppressionPairs\":0,\"queuedHumanOperations\":0,\"queuedInputOperations\":0,\"pendingLogicalMoves\":0,\"failureCount\":0,\"lastRawEventTime\":0,\"lastSuppressedEventTime\":0,\"completedHumanOperations\":0,\"skippedHumanOperations\":0,\"lastHumanApplicationInputs\":0,\"requested\":false,\"enabled\":false,\"capability_pending\":false,\"failed\":false,\"suppression\":false,\"modelActive\":false,\"lastHumanObserveRequired\":false,\"rawConsumerAppsVerified\":false,\"pointerAccelerationEmulated\":false,\"phase\":\"off\",\"lastFailure\":\"none\",\"lastHumanFailure\":\"none\",\"physicalKeyboard\":\"fail_open_and_stop_model\",\"user\":{\"x\":0,\"y\":0},\"systemCursor\":{\"visibilityCommands\":0,\"supported\":false,\"hidden\":false,\"restorePending\":false,\"guardReady\":false},\"deviceDiagnostics\":{\"snapshotMouseCount\":0,\"allowedInitialArrivals\":0,\"rejectedDeviceChanges\":0,\"ignoredOwnRawPackets\":0,\"mouseSnapshotReady\":false,\"snapshotReason\":\"not_requested\",\"preparationWaitReason\":\"relative_motion_required\"}}}}",
+      "extra": [
+        {
+          "label": "status",
+          "isError": false
+        },
+        {
+          "label": "capture",
+          "isError": false
+        },
+        {
+          "label": "inspect",
+          "isError": false
+        },
+        {
+          "label": "inspect",
+          "isError": true,
+          "code": "unclassified",
+          "nativeCode": "native-error",
+          "message": "미분류된 오류",
+          "diagnostic": {
+            "event": "window_use.native_failure",
+            "method": "inspect",
+            "requestId": "f30e382d-7ff6-42d3-b951-88cfbb9d9e76",
+            "timestamp": "2026-11-13T11:53:26.811Z",
+            "elapsedMs": 15,
+            "responseCorrelated": true,
+            "hresult": "0x00000000"
+          },
+          "actionExecuted": false
+        },
+        {
+          "label": "list_task_macros",
+          "isError": false
+        },
+        {
+          "label": "run_task_macro",
+          "isError": false
+        },
+        {
+          "label": "switched_input",
+          "isError": true,
+          "code": "state_changed",
+          "message": "Fresh image capture required"
+        },
+        {
+          "label": "switched_input",
+          "isError": true,
+          "code": "state_changed",
+          "message": "Fresh image capture required"
+        },
+        {
+          "label": "release_switched_input",
+          "isError": false
+        },
+        {
+          "label": "release_desktop_input",
+          "isError": false
+        },
+        {
+          "label": "resize",
+          "isError": false
+        }
+      ]
+    },
+    {
+      "name": "functional-run",
+      "exitCode": 0,
+      "checks": [
+        {
+          "name": "standard SDK stdio connection and tool discovery"
+        },
+        {
+          "name": "MCP alone launches approval UI; closing denies and releases the renderer without disconnecting"
+        },
+        {
+          "name": "automatic approval popup; denial sends no input"
+        },
+        {
+          "name": "approved real UIA edit and invoke with observed postcondition"
+        },
+        {
+          "name": "compact custom-chrome UI renders and switches light/dark"
+        },
+        {
+          "name": "closed settings UI reopens from the host with preserved settings"
+        },
+        {
+          "name": "own settings/approval windows blocked from observation and control in full mode"
+        },
+        {
+          "name": "native desktop capture masks own UI",
+          "maskedWindowCount": 1
+        },
+        {
+          "name": "real coordinate input reaches owned fixture with observed postcondition",
+          "attempts": 1
+        },
+        {
+          "name": "trusted UI Stop and explicit resume"
+        },
+        {
+          "name": "EOF releases resources and exits"
+        }
+      ]
+    },
+    {
+      "name": "virtual-run",
+      "exitCode": 1,
+      "checks": [
+        {
+          "name": "standard SDK stdio connection and tool discovery"
+        }
+      ],
+      "error": "Timed out: owned fixture activation",
+      "virtualCases": [
+        {
+          "label": "permission and initial collaboration",
+          "isError": false
+        },
+        {
+          "label": "release virtualized input",
+          "isError": false
+        }
+      ]
+    },
+    {
+      "name": "virtual-run-2",
+      "exitCode": 1,
+      "checks": [
+        {
+          "name": "standard SDK stdio connection and tool discovery"
+        }
+      ],
+      "error": "Virtualized input acceptance failed; see virtualization-results.json",
+      "virtualization": {
+        "passed": false,
+        "enabled": true,
+        "externalObserved": true
+      },
+      "virtualCases": [
+        {
+          "label": "permission and initial collaboration",
+          "isError": false
+        },
+        {
+          "label": "fixture activation"
+        },
+        {
+          "label": "enable virtualization",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 2,
+            "currentEpoch": 2,
+            "ownTaggedMouseEvents": 0,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 239,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": false,
+            "phase": "awaiting_relative_motion",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          }
+        },
+        {
+          "label": "virtualization status",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 2,
+            "currentEpoch": 2,
+            "ownTaggedMouseEvents": 0,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 239,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": false,
+            "phase": "awaiting_relative_motion",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          }
+        },
+        {
+          "label": "virtualized button click",
+          "isError": false,
+          "postcondition": true,
+          "interference": {
+            "baselineEpoch": 3,
+            "currentEpoch": 3,
+            "ownTaggedMouseEvents": 6,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 267,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": true,
+            "phase": "ready",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          }
+        },
+        {
+          "label": "virtualized edit focus",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 3,
+            "currentEpoch": 3,
+            "ownTaggedMouseEvents": 11,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 397,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": true,
+            "phase": "ready",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          }
+        },
+        {
+          "label": "virtualized text",
+          "isError": false,
+          "postcondition": false,
+          "interference": {
+            "baselineEpoch": 3,
+            "currentEpoch": 3,
+            "ownTaggedMouseEvents": 14,
+            "ownTaggedKeyboardEvents": 24,
+            "foreignMouseEvents": 580,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": true,
+            "phase": "ready",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          }
+        },
+        {
+          "label": "virtualization final status",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 3,
+            "currentEpoch": 3,
+            "ownTaggedMouseEvents": 16,
+            "ownTaggedKeyboardEvents": 24,
+            "foreignMouseEvents": 580,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": true,
+            "phase": "ready",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          }
+        },
+        {
+          "label": "release virtualized input",
+          "isError": false
+        }
+      ]
+    },
+    {
+      "name": "virtual-run-3",
+      "exitCode": 1,
+      "checks": [
+        {
+          "name": "standard SDK stdio connection and tool discovery"
+        }
+      ],
+      "error": "Virtualized input acceptance failed; see virtualization-results.json",
+      "virtualization": {
+        "passed": false,
+        "enabled": true,
+        "externalObserved": true
+      },
+      "virtualCases": [
+        {
+          "label": "permission and initial collaboration",
+          "isError": false
+        },
+        {
+          "label": "fixture activation"
+        },
+        {
+          "label": "enable virtualization",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 3,
+            "currentEpoch": 3,
+            "ownTaggedMouseEvents": 0,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 374,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": false,
+            "phase": "awaiting_relative_motion",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          }
+        },
+        {
+          "label": "virtualization status",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 4,
+            "currentEpoch": 4,
+            "ownTaggedMouseEvents": 0,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 452,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": true,
+            "phase": "ready",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          }
+        },
+        {
+          "label": "virtualized button click",
+          "isError": true,
+          "postcondition": true,
+          "code": "state_changed",
+          "nativeCode": "collaboration_failed",
+          "message": "Switched input requires a fresh observation before another operation",
+          "interference": {
+            "baselineEpoch": 6,
+            "currentEpoch": 7,
+            "ownTaggedMouseEvents": 5,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 452,
+            "foreignKeyboardEvents": 3,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": true,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "keyboard",
+              "messageCategory": "key_down"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": false,
+            "phase": "failed",
+            "lastFailure": "physical_keyboard_fail_open",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "actionExecuted": true,
+          "deliveredInputs": 5
+        },
+        {
+          "label": "virtualized edit focus",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 0,
+            "currentEpoch": 0,
+            "ownTaggedMouseEvents": 3,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 0,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false
+          },
+          "collaboration": {
+            "requested": false,
+            "enabled": false,
+            "phase": "off",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          }
+        },
+        {
+          "label": "virtualized text",
+          "isError": true,
+          "postcondition": false,
+          "code": "state_changed",
+          "nativeCode": "interrupted",
+          "message": "Switched input requires a fresh observation before another operation",
+          "interference": {
+            "baselineEpoch": 21,
+            "currentEpoch": 22,
+            "ownTaggedMouseEvents": 3,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 22,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": true,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": false,
+            "enabled": false,
+            "phase": "off",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "actionExecuted": false,
+          "deliveredInputs": 0
+        },
+        {
+          "label": "virtualization final status",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 1,
+            "currentEpoch": 2,
+            "ownTaggedMouseEvents": 0,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 2,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": true,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": false,
+            "enabled": false,
+            "phase": "off",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          }
+        },
+        {
+          "label": "release virtualized input",
+          "isError": false
+        }
+      ]
+    },
+    {
+      "name": "virtual-run-final",
+      "exitCode": 1,
+      "checks": [
+        {
+          "name": "standard SDK stdio connection and tool discovery"
+        }
+      ],
+      "error": "Virtualized input acceptance failed; see virtualization-results.json",
+      "virtualization": {
+        "passed": false,
+        "enabled": false,
+        "externalObserved": true
+      },
+      "virtualCases": [
+        {
+          "label": "permission and initial collaboration",
+          "isError": false
+        },
+        {
+          "label": "fixture activation"
+        },
+        {
+          "label": "enable virtualization",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 13,
+            "currentEpoch": 13,
+            "ownTaggedMouseEvents": 0,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 0,
+            "foreignKeyboardEvents": 13,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "keyboard",
+              "messageCategory": "key_up"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": false,
+            "phase": "awaiting_relative_motion",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "externalEventDelta": null,
+          "counterReset": false
+        },
+        {
+          "label": "virtualization status",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 16,
+            "currentEpoch": 16,
+            "ownTaggedMouseEvents": 0,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 0,
+            "foreignKeyboardEvents": 16,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "keyboard",
+              "messageCategory": "key_down"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": false,
+            "phase": "awaiting_relative_motion",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "externalEventDelta": {
+            "mouse": 0,
+            "keyboard": 3
+          },
+          "counterReset": false
+        },
+        {
+          "label": "virtualized button click",
+          "isError": true,
+          "postcondition": false,
+          "code": "state_changed",
+          "nativeCode": "capability_pending",
+          "message": "Switched input requires a fresh observation before another operation",
+          "interference": {
+            "baselineEpoch": 17,
+            "currentEpoch": 17,
+            "ownTaggedMouseEvents": 0,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 0,
+            "foreignKeyboardEvents": 17,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "keyboard",
+              "messageCategory": "key_up"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": false,
+            "phase": "awaiting_relative_motion",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "externalEventDelta": {
+            "mouse": 0,
+            "keyboard": 1
+          },
+          "counterReset": false,
+          "actionExecuted": false,
+          "deliveredInputs": 0
+        },
+        {
+          "label": "virtualized edit focus",
+          "isError": true,
+          "code": "state_changed",
+          "nativeCode": "interrupted",
+          "message": "Switched input requires a fresh observation before another operation",
+          "interference": {
+            "baselineEpoch": 2,
+            "currentEpoch": 3,
+            "ownTaggedMouseEvents": 5,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 0,
+            "foreignKeyboardEvents": 3,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": true,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "keyboard",
+              "messageCategory": "key_up"
+            }
+          },
+          "collaboration": {
+            "requested": false,
+            "enabled": false,
+            "phase": "off",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "externalEventDelta": null,
+          "counterReset": true,
+          "actionExecuted": true,
+          "deliveredInputs": 5
+        },
+        {
+          "label": "virtualized text",
+          "isError": true,
+          "postcondition": false,
+          "code": "invalid_request",
+          "message": "First pointer action requires an explicit physical screen x/y inside the selected main client"
+        },
+        {
+          "label": "virtualization final status",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 0,
+            "currentEpoch": 0,
+            "ownTaggedMouseEvents": 0,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 0,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false
+          },
+          "collaboration": {
+            "requested": false,
+            "enabled": false,
+            "phase": "off",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "externalEventDelta": null,
+          "counterReset": true
+        },
+        {
+          "label": "release virtualized input",
+          "isError": false
+        }
+      ]
+    },
+    {
+      "name": "virtual-run-verified",
+      "exitCode": 1,
+      "checks": [
+        {
+          "name": "standard SDK stdio connection and tool discovery"
+        }
+      ],
+      "error": "Virtualized input acceptance failed; see virtualization-results.json",
+      "virtualization": {
+        "passed": false,
+        "enabled": true,
+        "externalObserved": true,
+        "externalMouseObserved": true,
+        "externalKeyboardObserved": false
+      },
+      "virtualCases": [
+        {
+          "label": "permission and initial collaboration",
+          "isError": false
+        },
+        {
+          "label": "fixture activation"
+        },
+        {
+          "label": "enable virtualization",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 222,
+            "currentEpoch": 222,
+            "ownTaggedMouseEvents": 0,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 222,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": false,
+            "phase": "awaiting_relative_motion",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "externalEventDelta": null,
+          "counterReset": false
+        },
+        {
+          "label": "virtualization status",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 223,
+            "currentEpoch": 223,
+            "ownTaggedMouseEvents": 0,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 359,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": true,
+            "phase": "ready",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "externalEventDelta": {
+            "mouse": 137,
+            "keyboard": 0
+          },
+          "counterReset": false
+        },
+        {
+          "label": "virtualized button click",
+          "isError": false,
+          "postcondition": true,
+          "interference": {
+            "baselineEpoch": 223,
+            "currentEpoch": 223,
+            "ownTaggedMouseEvents": 6,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 471,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": true,
+            "phase": "ready",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "externalEventDelta": {
+            "mouse": 112,
+            "keyboard": 0
+          },
+          "counterReset": false
+        },
+        {
+          "label": "virtualized edit focus",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 223,
+            "currentEpoch": 223,
+            "ownTaggedMouseEvents": 14,
+            "ownTaggedKeyboardEvents": 0,
+            "foreignMouseEvents": 836,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": true,
+            "phase": "ready",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "externalEventDelta": {
+            "mouse": 365,
+            "keyboard": 0
+          },
+          "counterReset": false
+        },
+        {
+          "label": "virtualized text",
+          "isError": false,
+          "postcondition": true,
+          "interference": {
+            "baselineEpoch": 223,
+            "currentEpoch": 223,
+            "ownTaggedMouseEvents": 17,
+            "ownTaggedKeyboardEvents": 24,
+            "foreignMouseEvents": 1440,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": true,
+            "phase": "ready",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "externalEventDelta": {
+            "mouse": 604,
+            "keyboard": 0
+          },
+          "counterReset": false
+        },
+        {
+          "label": "virtualization final status",
+          "isError": false,
+          "interference": {
+            "baselineEpoch": 223,
+            "currentEpoch": 223,
+            "ownTaggedMouseEvents": 19,
+            "ownTaggedKeyboardEvents": 24,
+            "foreignMouseEvents": 1863,
+            "foreignKeyboardEvents": 0,
+            "targetWindowDestroyEvents": 0,
+            "epochChanged": false,
+            "snapshotCoherent": true,
+            "emergencyRequested": false,
+            "disconnected": false,
+            "lastForeign": {
+              "injected": false,
+              "lowerIntegrityInjected": false,
+              "extraInfoZero": true,
+              "kind": "mouse",
+              "messageCategory": "move"
+            }
+          },
+          "collaboration": {
+            "requested": true,
+            "enabled": true,
+            "phase": "ready",
+            "lastFailure": "none",
+            "physicalKeyboard": "fail_open_and_stop_model"
+          },
+          "externalEventDelta": {
+            "mouse": 423,
+            "keyboard": 0
+          },
+          "counterReset": false
+        },
+        {
+          "label": "release virtualized input",
+          "isError": false
+        }
+      ],
+      "finalSummary": {
+        "passed": false,
+        "verdict": "incomplete_external_input_coverage",
+        "effectsPassed": true,
+        "enabled": true,
+        "externalObserved": true,
+        "externalMouseObserved": true,
+        "externalKeyboardObserved": false
+      }
+    }
+  ],
+  "unitTests": {
+    "count": 11,
+    "passed": 11,
+    "exitCode": 0,
+    "terminalRecord": "1794571291313543-49944-26074"
+  },
+  "unverified": [
+    "external keyboard concurrent virtualized text success",
+    "toggle/select/expand/collapse/scroll on supporting controls",
+    "window restore/size macro/save macro",
+    "packaged release and in-app MCP registration"
+  ],
+  "cleanup": {
+    "disposableRuns": 9,
+    "profilesAndFixturesRemoved": true,
+    "temporaryProbeRemoved": true,
+    "newDevLauncherRemoved": true,
+    "remaining": [
+      "01-plan.md",
+      "02-functional-report.md",
+      "functional-evidence.json"
+    ],
+    "processCheck": "No task-profile or dev-launcher processes at cleanup; prior SDK EOF/finally exits observed",
+    "exitCode": 0
+  }
+}

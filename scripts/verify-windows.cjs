@@ -66,6 +66,15 @@ async function main() {
     const edit=()=>observation.elements.find(item=>item.name==='Verification input');
     const readValue=async()=>{const reply=await client.callTool({name:'inspect',arguments:{windowId:target.windowId,mode:'read',observationId:observation.observationId,elementId:edit().id,fields:['value']}});assert.ok(!reply.isError,JSON.stringify(json(reply)));const value=json(reply).elements[0].value;observation=await inspect();return value;};
     assert.ok(edit(),'UIA input element');
+    if(process.argv.includes('--virtualization')) {
+      const outcome=await require('./verify-virtualized-input.cjs').verifyVirtualizedInput({client,json,target,fixtureInfo,fixtureReady,application,run,waitFor});
+      await client.close();client=undefined;
+      await waitFor(()=>child.exitCode!==null,'MCP EOF shutdown');
+      const {cases:virtualCases,...summary}=outcome;
+      fs.writeFileSync(path.join(run,'result.json'),JSON.stringify({platform:process.platform,arch:process.arch,checks,virtualization:summary,exitCode:outcome.passed?0:1},null,2));
+      if(!outcome.passed)throw Error('Virtualized input acceptance: '+outcome.verdict+'; see virtualization-results.json');
+      return;
+    }
     assert.equal(await readValue(),'before');
     const mutate=value=>client.callTool({name:'set_value',arguments:{windowId:target.windowId,observationId:observation.observationId,elementId:edit().id,value}});
     const findApproval=()=>waitFor(async()=>{for(const page of application.windows()){try{if(await page.evaluate(()=>window.windowUse?.snapshot().then(value=>value.view==='approval')))return page;}catch{}}},'automatic approval window');
