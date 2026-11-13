@@ -62,13 +62,22 @@ dependency download or product installation.
 The layered overlays use premultiplied per-pixel alpha and antialiased vectors.
 The white user arrow preserves the approximate Windows silhouette using straight
 edges and rounded corners. The model uses the adopted 90%-width Fluent-derived
-rounded arrow with a white outline, default LAIO Sky Blue Bright `#38BDF8`.
+rounded arrow with a white outline. Concurrent cursors reserve different colors
+across independent MCP processes in the Windows logon session, starting with
+LAIO Sky Blue Bright `#38BDF8` and contrasting hue families.
 `create_pointer.color` can select any of the 72 registered palette colors; the
-label uses the matching family's Pastel/Clear colors. Custom HEX still works.
+label uses the matching family's Pastel/Clear colors. Custom HEX still works,
+but a color already reserved by a visible cursor is rejected.
 Vector and palette data live in `cursor-assets.hpp`; attribution and the complete
 upstream license are in `CURSOR-NOTICES.md` and copied to runtime notices.
 
-`사용자` and `모델` labels remain unchanged. A user gesture waiting in the real
+Labels are always `User` and `Agent 1`, `Agent 2`, etc., independent of locale.
+Named Windows object handles reserve the lowest available agent number and a
+unique color until the overlay's exit fade ends or the process terminates. Numbers
+may be reused afterward; they are presentation identities, not authority. Automatic
+allocation supports the 72 registered colors and fails explicitly on exhaustion.
+Older running binaries do not participate and need a reconnect to adopt this.
+A user gesture waiting in the real
 FIFO queue adds a save badge without changing white fill. Model actuation makes
 the model opaque; dragging fades/shrinks it in place into a dot. Idle is 32%
 opacity. Explicit logical moves change coordinates immediately and leave a soft,

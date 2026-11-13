@@ -145,6 +145,7 @@ struct Overlay {
     uint64_t ghostAt=0;
     bool hasGhost=false;
     COLORREF color = RGB(56,189,248);
+    std::unique_ptr<CursorIdentity> identity;
     CursorPresentation presentation;
     CursorFrame lastFrame{},ghostFrame{};
     std::unique_ptr<CursorSurface> surface,ghostSurface;
@@ -301,7 +302,7 @@ class Ui {
         const float scale=static_cast<float>(dpi?dpi:96)/96;
         if (!o.surface || o.surface->dpiScale!=scale) { o.surface=std::make_unique<CursorSurface>(scale); force=true; }
         if (!force && o.rendered && frame==o.lastFrame) return true;
-        if (!o.surface->draw(o.userPointer,o.color,frame,false,ordinaryCursor) || !o.surface->present(o.hwnd,o.point)) return false;
+        if (!o.surface->draw(o.userPointer,o.color,frame,false,ordinaryCursor,o.identity?o.identity->label:L"User") || !o.surface->present(o.hwnd,o.point)) return false;
         o.lastFrame=frame; o.rendered=true;
         return true;
     }
@@ -436,17 +437,24 @@ public:
         for (unsigned count=0;count<256 && PeekMessageW(&message,controller,WM_INPUT,WM_INPUT,PM_REMOVE);++count)
             DispatchMessageW(&message);
     }
-    void create(const std::string& id, POINT p, COLORREF color) {
+    COLORREF create(const std::string& id, POINT p, COLORREF color,bool automaticColor=false) {
+        COLORREF assigned=color;
         invoke([&] {
             // A reused id cannot leave an old fading overlay at the same origin.
             retiring.erase(std::remove_if(retiring.begin(),retiring.end(),[&](const auto& o){return o->id==id;}),retiring.end());
             auto o = std::make_unique<Overlay>(id=="@user",reducedMotion); o->id=id; o->color = color; o->point=p;
+            if (!o->userPointer) {
+                o->identity=std::make_unique<CursorIdentity>(color,automaticColor);
+                o->color=o->identity->color;
+            }
+            assigned=o->color;
             o->hwnd=makeOverlay(p);
             require(o->hwnd != nullptr, "overlay", "Cannot create cursor overlay");
             require(render(*o,GetTickCount64(),true),"overlay","Cannot render alpha cursor overlay");
             ShowWindow(o->hwnd, SW_SHOWNOACTIVATE);
             overlays.emplace(id, std::move(o));
         });
+        return assigned;
     }
     void move(const std::string& id, POINT p,bool teleport=false) {
         invoke([&] {

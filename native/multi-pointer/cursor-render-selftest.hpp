@@ -45,7 +45,9 @@ inline int cursorRenderSelftest(const std::wstring& directory) {
         Gdiplus::SolidBrush background(CursorSurface::rgb(theme?0x202124:0xf5f5f4)); paper.FillRectangle(&background,x,y,232,170);
         Gdiplus::SolidBrush ink(CursorSurface::rgb(theme?0xeeeeee:0x333333)); paper.DrawString(scenes[i].name,-1,&font,Gdiplus::PointF(static_cast<float>(x+12),static_cast<float>(y+12)),&ink);
         CursorSurface surface(1.5f);
-        check(surface.draw(scenes[i].user,RGB(56,189,248),scenes[i].frame,scenes[i].ghost,LoadCursorW(nullptr,IDC_ARROW)),"Native frame rendering failed");
+        const auto body=cursor_assets::palette[i%cursor_assets::palette.size()].bright;
+        check(surface.draw(scenes[i].user,RGB((body>>16)&255,(body>>8)&255,body&255),scenes[i].frame,scenes[i].ghost,LoadCursorW(nullptr,IDC_ARROW),
+            i==2?L"Agent 4096":L"Agent "+std::to_wstring(i+1)),"Native frame rendering failed");
         Gdiplus::Bitmap bitmap(surface.pixelWidth,surface.pixelHeight,surface.pixelWidth*4,PixelFormat32bppPARGB,
             reinterpret_cast<BYTE*>(const_cast<uint32_t*>(surface.data())));
         paper.DrawImage(&bitmap,x+8,y+32);

@@ -24,6 +24,8 @@ Every own executable identity is an immutable entry in the same protected-app li
 
 ## Reused execution
 
+Concurrent native cursor overlays use locale-independent `Agent N` labels and distinct reserved colors across participating MCP processes in the same Windows logon session. A white physical cursor is labelled `User`. Windows named-object handles retain the lowest free number and a color through exit fading, and release on destruction or process termination. Automatic colors reuse the 72 registered palette entries (different hue families first); exhaustion or an explicitly requested color already in use fails instead of duplicating. Numbers may be reused after release and grant no authority. Older running binaries must reconnect to participate.
+
 Control overlays remain recordable (`WDA_NONE`, without capture-exclusion flags) for compatibility with desktop recorders. Borders, status text and Stop UI may appear in recordings. This does not remove MCP protected-app masking or control restrictions; external recording software has its own capture policy.
 
 Pinned Azrael policy and native sources retain exact window lifetime identities, stale-observation rejection, bounded UI Automation queries, password withholding, window occupancy, masked desktop capture and cooperative physical input rules. A standalone adapter supplies settings, approvals, connection context and input callbacks without fabricating Codex metadata. Native executables and payloads are verified from content manifests before launch.

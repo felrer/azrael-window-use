@@ -2,6 +2,7 @@
 #include "platform.hpp"
 #include "cursor-assets.hpp"
 #include "cursor-presentation.hpp"
+#include "cursor-identity.hpp"
 #include <objidl.h>
 #include <gdiplus.h>
 #include <cmath>
@@ -68,7 +69,7 @@ public:
         Gdiplus::SolidBrush b(rgb(color,alpha)); Gdiplus::Pen pen(rgb(border,alpha),.7f);
         g.FillPath(&b,&p); g.DrawPath(&pen,&p);
     }
-    bool draw(bool user,COLORREF color,const CursorFrame& frame,bool ghost=false,HICON ordinary=nullptr) {
+    bool draw(bool user,COLORREF color,const CursorFrame& frame,bool ghost=false,HICON ordinary=nullptr,const std::wstring& agentLabel=L"Agent 1") {
         if (!valid()) return false;
         auto f=frame; f.alpha=1;
         Gdiplus::Bitmap target(pixelWidth,pixelHeight,pixelWidth*4,PixelFormat32bppPARGB,static_cast<BYTE*>(pixels));
@@ -113,12 +114,16 @@ public:
                     paper=blend(.88f,255); ink=blend(.6f,0); border=blend(.55f,255);
                 }
             }
-            const float x=user?14.f:26.f,y=user?21.f:34.f,w=user?56.f:48.f;
+            const float x=user?14.f:26.f,y=user?21.f:34.f;
+            Gdiplus::FontFamily family(L"Segoe UI"); Gdiplus::Font font(&family,12,Gdiplus::FontStyleRegular,Gdiplus::UnitPixel);
+            const auto label=user?std::wstring(L"User"):agentLabel;
+            Gdiplus::RectF bounds;
+            g.MeasureString(label.c_str(),-1,&font,Gdiplus::PointF(0,0),&bounds);
+            const float w=bounds.Width+18;
             const float alpha=f.alpha*f.label;
             roundRect(g,x,y,w,23,7,paper,border,alpha);
-            Gdiplus::FontFamily family(L"Malgun Gothic"); Gdiplus::Font font(&family,12,Gdiplus::FontStyleRegular,Gdiplus::UnitPixel);
             Gdiplus::SolidBrush text(rgb(ink,alpha));
-            g.DrawString(user?L"사용자":L"모델",-1,&font,Gdiplus::PointF(x+9,y+3),&text);
+            g.DrawString(label.c_str(),-1,&font,Gdiplus::PointF(x+9,y+3),&text);
             if (user && f.waiting>0) {
                 const float a=f.alpha*f.waiting;
                 roundRect(g,18,5,18,18,4,0xffffff,0xd6dbd5,a);

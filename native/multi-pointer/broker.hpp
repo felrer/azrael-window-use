@@ -765,7 +765,7 @@ class Broker {
                 color = RGB((rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255);
                 require(color != RGB(1,2,3), "invalid_params", "Reserved transparent color");
             }
-            ui.create(id,xy,color); pointers.emplace(id, Pointer{id,static_cast<size_t>(found-targets.begin()),xy,color});
+            color=ui.create(id,xy,color,!params.contains("color")); pointers.emplace(id, Pointer{id,static_cast<size_t>(found-targets.begin()),xy,color});
             actionExecuted = true; return state();
         }
         const auto id = identifier(params,"pointerId"); auto found = pointers.find(id);
