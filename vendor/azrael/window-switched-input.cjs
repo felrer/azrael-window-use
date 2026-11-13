@@ -1,5 +1,5 @@
 'use strict';
-// Stage-2 authority and fresh observations belong to the host. Construction sends no input.
+// Window Use authority and fresh observations belong to the host. Construction sends no input.
 const fs = require('node:fs');
 const path = require('node:path');
 const { createHash } = require('node:crypto');

@@ -66,15 +66,6 @@ function toolDefinitions() {
       if(name === 'set_value' || name === 'scroll') {properties.value = name === 'scroll' ? {type:'object',properties:{horizontal:{type:'integer',minimum:-2,maximum:2},vertical:{type:'integer',minimum:-2,maximum:2}},required:['horizontal','vertical'],additionalProperties:false} : {type:'string',maxLength:32768}; required.push('value');}
       if(name === 'press_key') {properties.key = {enum:require('./window-task-macros.cjs').KEYS};required.push('key');}
     }
-    if(name === 'virtual_input') {
-      properties.observationId={type:'string'};
-      const coord={type:'integer',minimum:0,maximum:16383};
-      properties.input={oneOf:[
-        {type:'object',properties:{kind:{const:'text'},text:{type:'string',minLength:1,maxLength:2047,description:'At most 2047 UTF-16 code units; astral characters use two units.'}},required:['kind','text'],additionalProperties:false},
-        {type:'object',properties:{kind:{const:'key'},virtualKey:{type:'integer',minimum:1,maximum:255,not:{enum:[91,92]}},action:{enum:['down','up']}},required:['kind','virtualKey','action'],additionalProperties:false},
-        {type:'object',properties:{kind:{const:'mouse'},action:{enum:['move','down','up','wheel']},x:coord,y:coord,button:{enum:['left','right','middle']},delta:{type:'integer',minimum:-1200,maximum:1200,not:{const:0}}},required:['kind','action'],additionalProperties:false,allOf:[{if:{required:['x']},then:{required:['y']}},{if:{required:['y']},then:{required:['x']}},{if:{properties:{action:{const:'move'}}},then:{required:['x','y']}},{if:{properties:{action:{enum:['down','up']}}},then:{required:['button']}},{if:{properties:{action:{const:'wheel'}}},then:{required:['delta']}}]}
-      ]};required.push('observationId','input');
-    }
     if(name === 'switched_input') {properties.observationId={type:'string'};properties.input=require('./window-switched-input.cjs').switchedInputSchema();required.push('observationId','input');}
     if(name === 'desktop_input') {properties.observationId={type:'string'};properties.input=require('./window-switched-input.cjs').desktopInputSchema();required.push('observationId','input');}
     if(name === 'context') properties.guideVersion = {type:'string'};
@@ -92,8 +83,6 @@ function toolDefinitions() {
     if(name === 'resize') {properties.widthDip = {type:'number',minimum:100,maximum:8192};properties.heightDip = {type:'number',minimum:100,maximum:8192};required.push('widthDip','heightDip');}
     if(name === 'run_size_macro') {properties.macroId = {type:'string'};required.push('macroId');}
     const descriptions = {
-      virtual_input:'Optional legacy process-scoped input backend. Requires app control permission and a fresh image. Deliver target-process input using physical client coordinates. Delivery does not verify app effects. Never replay unknown input or fall back to global input.',
-      release_virtual_input:'Detach this conversation virtual-input session for the exact target, including while paused. Does not resume a user stop.',
       switched_input:'Opt-in shared-foreground mouse collaboration. Control permission is requested or reused automatically. Use fresh image observations and physical SCREEN pixels inside the main client. Start collaboration explicitly and check capability before claiming isolated mouse motion. User mouse actions queue; physical keyboard input stops model input. Recover foreground/occlusion with bounded preparation; never replay partial or unknown input. Delivery needs a new capture to verify effects.',
       release_switched_input:'Release cooperative mouse routing and tracked model input for this selected target, including while paused. Does not resume a user stop.',
       desktop_input:'Whole-screen coordinate control, separate from selected-window UI Automation. Automatically requests conversation-only desktop approval when needed, then validates a fresh capture_desktop observationId. Supply screen x/y; drag also requires fromX/fromY. Security Apps cannot be controlled, including when whitelisted. Retargets between app windows; a gesture stays within its authorized root/popup. Uses shared foreground/FIFO mouse collaboration; never replay partial or unknown delivery.',
@@ -122,7 +111,7 @@ function pipeRequest(pipe, message, { connect = net.createConnection, timeoutMs 
   return new Promise((resolve, reject) => {
     const socket = connect(pipe); const decoder = new StringDecoder('utf8'); let buffer = ''; let receivedBytes = 0; let settled = false; let stage = 'connection';
     const finish = (error, result) => { if (settled) return; settled = true; socket.destroy(); error ? reject(error) : resolve(result); };
-    const uncertainty = () => stage === 'running' && ['invoke','set_value','toggle','select','expand','collapse','scroll','press_key','resize','restore_window','run_size_macro','run_task_macro','ui_operation','virtual_input','release_virtual_input'].includes(message.tool) ? { mutationOutcome: 'unknown' } : {};
+    const uncertainty = () => stage === 'running' && ['invoke','set_value','toggle','select','expand','collapse','scroll','press_key','resize','restore_window','run_size_macro','run_task_macro','ui_operation'].includes(message.tool) ? { mutationOutcome: 'unknown' } : {};
     const timeout = () => windowError(stage === 'approval' ? 'approval_timeout' : 'timeout', stage === 'approval' ? '승인 응답을 아직 받지 못해 대기 시간이 초과됐습니다.' : stage === 'queued' ? '앞선 Window Use 작업을 기다리다 시간이 초과됐습니다.' : 'Window Use 호스트의 응답 대기 시간이 초과됐습니다.', { stage, ...(stage === 'approval' ? { approvalState: 'expired', userResponded: false, actionExecuted: false } : {}), ...uncertainty() });
     socket.setTimeout(timeoutMs, () => finish(timeout()));
     socket.on('connect', () => { stage = 'queued'; socket.write(JSON.stringify(message) + '\n'); });
@@ -170,7 +159,7 @@ function callResult(result) {
   }
   const text = observation(result);
   if(result.inputResult)text.inputResult=require('./window-control-errors.cjs').switchedMetadata(result.inputResult);
-  if(result.inputBackends)text.inputBackends=Object.fromEntries(['virtualInput','switchedInput','switchedInputGranted','desktopControlGranted'].filter(k=>typeof result.inputBackends[k]==='boolean').map(k=>[k,result.inputBackends[k]]));
+  if(result.inputBackends)text.inputBackends=Object.fromEntries(['switchedInput','switchedInputGranted','desktopControlGranted'].filter(k=>typeof result.inputBackends[k]==='boolean').map(k=>[k,result.inputBackends[k]]));
   for(const key of ['mutationOutcome','actionExecuted']) if(Object.hasOwn(result,key)) text[key]=result[key];
   for(const key of ['executionContext','enabled','permissions','capabilities','guideVersion','guide','authorized','permission','missingPrerequisite','message','available','code','ok','delivered','observationInvalidated','originX','originY','redacted','maskedWindowCount']) if(Object.hasOwn(result,key)) text[key]=result[key];
   if(typeof result.detached==='boolean') text.detached=result.detached;

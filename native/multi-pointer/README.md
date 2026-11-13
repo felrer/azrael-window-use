@@ -51,7 +51,7 @@ the exact main root and excludes popup captions.
 
 Use an authorized frozen source/build owner. CMake requires Windows MSVC x64 and
 produces the console executable `azrael-multi-pointer.exe` with `/W4 /utf-8`.
-It reuses `../virtual-input/vendor/json/single_include/nlohmann/json.hpp`
+It reuses `../vendor/json/single_include/nlohmann/json.hpp`
 (nlohmann/json 3.11.3, MIT; license at that vendor's `LICENSE.MIT`). Other libraries
 are Windows system libraries, including user32, gdi32, GDI+, ole32, advapi32, bcrypt
 and Magnification. There is no

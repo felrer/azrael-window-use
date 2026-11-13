@@ -54,7 +54,7 @@ function macro(value) {
   if (!Array.isArray(value.steps) || value.steps.length < 1 || value.steps.length > 10) fail('Macros require 1 to 10 steps');
   return { id: value.id, name: value.name, steps: value.steps.map(step => { keys(step, ['widthDip', 'heightDip'], ['widthDip', 'heightDip']); return { widthDip: size(step.widthDip), heightDip: size(step.heightDip) }; }) };
 }
-function createWindowOwner({ backend, authorize, approve, requestPermission, context, desktopCapture, desktopInput, resolveDesktopWindow, releaseDesktopInput, visualizeAction, observationAllowed, virtualInput, switchedInput, onUserStop = () => {}, onOverlayError = () => {}, codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), now = Date.now, occupancyDirectory, workspacePath, workspaceName = 'Azrael', isCancelled = () => false, leaseWaitMs = 30000 }) {
+function createWindowOwner({ backend, authorize, approve, requestPermission, context, desktopCapture, desktopInput, resolveDesktopWindow, releaseDesktopInput, visualizeAction, observationAllowed, switchedInput, onUserStop = () => {}, onOverlayError = () => {}, codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), now = Date.now, occupancyDirectory, workspacePath, workspaceName = 'Azrael', isCancelled = () => false, leaseWaitMs = 30000 }) {
   if (!backend || typeof backend.request !== 'function' || typeof authorize !== 'function') fail('Backend and authorization required');
   const scopedBindings = new Map(); const bindings = new Map(); const candidates = new Map(); const selections = new Map(); const taskStore = tasks.createStore(codexHome, workspacePath); let queue = Promise.resolve(); let disposed = false;
   const userStoppedTargets = new Map();
@@ -81,17 +81,17 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
   const desktopState = thread => { str(thread); if(!desktops.has(thread))desktops.set(thread,{generation:0,observation:null,stopped:false});return desktops.get(thread); };
   const invalidateDesktop = (thread,stopped=false) => { const d=desktopState(thread);d.generation++;d.observation=null;d.stopped ||= stopped;return d; };
   const releaseDesktopQuietly = (thread,refreshIdle=false) => { let pins=[],pinError;try{if(releaseDesktopInput||refreshIdle)pins=leases.pinSession(thread,refreshIdle);}catch(error){pinError=error;}const pending=Promise.resolve().then(()=>{if(pinError)throw pinError;return releaseDesktopInput?.(thread);}).then(result=>{for(const pin of pins)pin.complete();return result;});desktopReleases.add(pending);void pending.then(()=>desktopReleases.delete(pending),error=>{desktopReleases.delete(pending);onOverlayError(thread,error);});return pending; };
-  const virtualReleases = new Map();
-  function releaseVirtual(thread) {
-    if (!virtualInput && !switchedInput) return Promise.resolve({detached:true});
+  const switchedReleases = new Map();
+  function releaseSwitched(thread) {
+    if (!switchedInput) return Promise.resolve({detached:true});
     let pins;try{pins=leases.pinSession(thread);}catch(error){return Promise.reject(error);}
-    const previous = virtualReleases.get(thread);
-    const pending = (previous ? previous.catch(() => {}) : Promise.resolve()).then(async () => {const results=await Promise.allSettled([virtualInput?.release(thread),switchedInput?.release(thread)]);const failed=results.find(r=>r.status==='rejected');if(failed)throw failed.reason;for(const pin of pins)pin.complete();return {detached:true};});
-    virtualReleases.set(thread,pending);
-    void pending.then(() => {if(virtualReleases.get(thread)===pending) virtualReleases.delete(thread);}, error => onOverlayError(thread,error));
+    const previous = switchedReleases.get(thread);
+    const pending = (previous ? previous.catch(() => {}) : Promise.resolve()).then(async () => {await switchedInput.release(thread);for(const pin of pins)pin.complete();return {detached:true};});
+    switchedReleases.set(thread,pending);
+    void pending.then(() => {if(switchedReleases.get(thread)===pending) switchedReleases.delete(thread);}, error => onOverlayError(thread,error));
     return pending;
   }
-  const releaseQuietly = thread => {void releaseVirtual(thread).catch(() => {});};
+  const releaseQuietly = thread => {void releaseSwitched(thread).catch(() => {});};
   workspaceName = (process.platform === 'win32' ? path.win32 : path).basename(String(workspaceName).replace(/[\x00-\x1f]/g, '')).slice(0,256) || 'Azrael';
   const occupancy = createRegistry({ directory: occupancyDirectory || path.join(codexHome, 'azrael', 'window-use', 'occupancy'), now, entries: () => allBindings().map(b => ({ sessionId:b.thread, workspaceName, state: b.running && b.state !== 'paused' ? 'running' : b.state, window: Object.fromEntries(['hwnd','pid','processCreated','executable'].map(k => [k,b.identity[k]])) })) });
   const occupancyOf = (w, thread) => leases.read(w,thread);
@@ -134,7 +134,7 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
   };
   function releaseOwnedSession(thread) {
     let pins;try{pins=leases.pinSession(thread);}catch(error){return Promise.reject(error);}
-    const pending=Promise.all([sessionCleanups.get(thread),virtualReleases.get(thread),...desktopReleases]).then(()=>{for(const pin of pins)pin.complete();leases.releaseSession(thread);});
+    const pending=Promise.all([sessionCleanups.get(thread),switchedReleases.get(thread),...desktopReleases]).then(()=>{for(const pin of pins)pin.complete();leases.releaseSession(thread);});
     sessionCleanups.set(thread,pending);
     return pending;
   }
@@ -316,7 +316,7 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
       if(!requestPermission)fail('Permission requests are unavailable');
       if(args.permission!=='desktop'&&!b)fail('Select a target first');
       const result=await requestPermission(thread,args,b?{...b.identity}:undefined);
-      if(b&&bindings.get(thread)===b&&result.authorized===true){b.observation=null;await releaseVirtual(thread);}
+      if(b&&bindings.get(thread)===b&&result.authorized===true){b.observation=null;await releaseSwitched(thread);}
       return result;
     }),
     listWindows: thread => serial(async () => { if(context && !await authorize(null,thread,{permission:'observation',operation:'list_windows'})) throw windowError('permission_denied','Window Use observation is disabled or unavailable'); const result = await backend.request('listWindows', {}); if (!Array.isArray(result)) fail('Invalid window list'); return result.map(w => ({...descriptor(w),...(observationAllowed&&!observationAllowed(w,thread)?{title:''}:{}),occupancy:occupancyOf(w,thread)})); }),
@@ -328,7 +328,7 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
     clear: thread => { cancelSelection(thread);candidates.delete(thread); invalidateDesktop(thread);releaseDesktopQuietly(thread);desktops.delete(thread);releaseQuietly(thread); const b = bindings.get(thread); if (b) { hideOverlay(b, b.generation); b.generation++; } bindings.delete(thread); for(const b of allBindings().filter(b=>b.thread===thread)){b.generation++;b.observation=null;scopedBindings.delete(b.targetId);} userStoppedTargets.delete(thread); occupancy.publish(); },
     invalidateObservation: thread => { invalidateDesktop(thread);releaseDesktopQuietly(thread);releaseQuietly(thread); const b = bindings.get(thread); if (b) { hideOverlay(b, b.generation); b.generation++; b.observation = null; } for(const b of allBindings().filter(b=>b.thread===thread)){b.generation++;b.observation=null;} return b?view(b):undefined; },
     peek: (thread,windowId) => { const b = windowId===undefined?bindings.get(thread):scopedBindings.get(windowId); return b?.thread===thread ? view(b) : undefined; },
-    dispose: () => { disposed = true; const closingThreads=new Set([...desktops.keys(),...allBindings().map(b=>b.thread),...sessionCleanups.keys()]);for(const thread of desktops.keys()) {invalidateDesktop(thread,true);releaseDesktopQuietly(thread);}desktops.clear();overlaySubscription?.dispose(); for (const b of allBindings()) { releaseQuietly(b.thread); hideOverlay(b, b.generation); b.generation++; } const closing=Promise.all([...closingThreads].map(releaseOwnedSession));bindings.clear(); scopedBindings.clear(); userStoppedTargets.clear(); candidates.clear(); selections.clear(); occupancy.dispose(); return closing.then(()=>{leases.dispose();return Promise.all([...virtualReleases.values(),...desktopReleases]);}); },
+    dispose: () => { disposed = true; const closingThreads=new Set([...desktops.keys(),...allBindings().map(b=>b.thread),...sessionCleanups.keys()]);for(const thread of desktops.keys()) {invalidateDesktop(thread,true);releaseDesktopQuietly(thread);}desktops.clear();overlaySubscription?.dispose(); for (const b of allBindings()) { releaseQuietly(b.thread); hideOverlay(b, b.generation); b.generation++; } const closing=Promise.all([...closingThreads].map(releaseOwnedSession));bindings.clear(); scopedBindings.clear(); userStoppedTargets.clear(); candidates.clear(); selections.clear(); occupancy.dispose(); return closing.then(()=>{leases.dispose();return Promise.all([...switchedReleases.values(),...desktopReleases]);}); },
     withWindowLease: (thread,identity,fn) => withLease(thread,identity,true,()=>{checkCancelled(thread);if(desktopState(thread).stopped)fail('User stop requires explicit resume');},()=>fn()),
     getMacros: () => serial(() => locked(readMacros)),
     saveMacro: entry => { const checked = macro(entry); return serial(() => locked(async () => { const entries = await readMacros(); const next = entries.filter(m => m.id !== checked.id).concat(checked); if (next.length > 100) fail('Too many macros'); await writeMacros(next); return checked; })); },
@@ -363,15 +363,14 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
         if(!resolveDesktopWindow)return Promise.reject(windowError('unsupported_action','Desktop target resolution is unavailable',{actionExecuted:false}));
         return Promise.resolve().then(()=>resolveDesktopWindow(thread,args.input)).then(expectedWindow=>{if(!expectedWindow)fail('Desktop target resolution failed');return withLease(thread,expectedWindow,true,()=>{checkCancelled(thread);if(d.stopped)fail('User stop requires explicit resume');if(d.generation!==generation)fail('Operation cancelled');},()=>run(expectedWindow));});
       }
-      if (tool === 'release_virtual_input' || tool === 'release_switched_input') {
+      if (tool === 'release_switched_input') {
         try {keys(args,['windowId'],['windowId']);str(args.windowId);} catch(error) {return Promise.reject(error);}
-        const b=scopedBindings.get(args.windowId);if(!b || b.thread!==thread)return Promise.reject(expectedError('Stale or forged target'));return withLease(thread,b.identity,false,()=>checkCancelled(thread),()=>serial(async()=>{b.generation++;b.observation=null;await releaseVirtual(thread);const {targetId,...result}=view(b);return {...result,detached:true};}));
+        const b=scopedBindings.get(args.windowId);if(!b || b.thread!==thread)return Promise.reject(expectedError('Stale or forged target'));return withLease(thread,b.identity,false,()=>checkCancelled(thread),()=>serial(async()=>{b.generation++;b.observation=null;await releaseSwitched(thread);const {targetId,...result}=view(b);return {...result,detached:true};}));
       }
       if (['list_windows','list_task_macros','save_task_macro'].includes(tool)) return discovery(thread,tool,args);
       const action = tool === 'set_value' ? 'setValue' : tool === 'press_key' ? 'pressKey' : tool;
       try {
         const allowed = ['windowId']; const required = ['windowId'];
-        if(tool === 'virtual_input') {allowed.push('observationId','input');required.push('observationId','input');str(args.observationId);if(!virtualInput) throw windowError('unsupported_action','Virtual input runtime is unavailable');args={...args,input:require('./window-virtual-input.cjs').validateInput(args.input)};}
         if(tool === 'switched_input') {allowed.push('observationId','input');required.push('observationId','input');str(args.observationId);if(!switchedInput)throw windowError('unsupported_action','Switched input runtime is unavailable');args={...args,input:require('./window-switched-input.cjs').validateInput(args.input)};}
         if(tool === 'inspect') { allowed.push('mode','query','scope','limit','observationId','elementId','fields','textRange','baseObservationId'); validateInspect(args); }
         if (ACTIONS.includes(action) || action === 'pressKey') { allowed.push('observationId', 'elementId'); required.push('observationId', 'elementId'); if (action === 'setValue' || action === 'scroll') { allowed.push('value'); required.push('value'); } }
@@ -429,7 +428,7 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
         try {
         if(b.operationPermission === 'control') {
           try {await showOverlay(b, thread, generation, tool);}
-          catch(error) {if(tool==='virtual_input'||tool==='switched_input') {b.generation++;pause(b,'error');await releaseVirtual(thread);}throw error;}
+          catch(error) {if(tool==='switched_input') {b.generation++;pause(b,'error');await releaseSwitched(thread);}throw error;}
         }
         if (tool === 'run_task_macro') {
           const stored = args.definition ? null : await taskStore.read(); const snapshot = args.definition || stored.macros.find(m => m.id === args.macroId);if(!snapshot) fail('Unknown task macro');
@@ -439,18 +438,18 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
         await ready(b, thread, generation, false);
         if (tool === 'capture') return await observe(b, thread, generation);
         if (tool === 'inspect') { const {windowId,...options}=args; return await inspect(b,thread,generation,options); }
-        if (tool === 'virtual_input' || tool === 'switched_input') {
+        if (tool === 'switched_input') {
           const observation=b.observation;
           if(!observation || observation.kind!=='image' || observation.generation!==generation || observation.id!==args.observationId) throw windowError('state_changed','Fresh image capture required');
-          if(virtualReleases.has(thread)) await virtualReleases.get(thread);
+          if(switchedReleases.has(thread)) await switchedReleases.get(thread);
           const check=async()=>{await guard(b,thread,generation);await request(b,thread,generation,'status');if(b.state==='paused') fail('Selected window paused');};
           b.observation=null;
           try {
             await check();
-            const result=await (tool==='switched_input'?switchedInput:virtualInput).input(thread,{...b.identity},args.input,check);
+            const result=await switchedInput.input(thread,{...b.identity},args.input,check);
             await check();b.used=true;
-            return {...view(b),delivery:tool==='switched_input'?'switchedInput':'virtualInput',verified:false,observationRequired:true,...(tool==='switched_input'?{inputResult:result}:{}),...(typeof result?.delivered==='boolean'?{delivered:result.delivered}:{})};
-          } catch(error) {if(bindings.get(thread)===b) {b.generation++;pause(b,'error');}await releaseVirtual(thread);throw error;}
+            return {...view(b),delivery:'switchedInput',verified:false,observationRequired:true,inputResult:result,...(typeof result?.delivered==='boolean'?{delivered:result.delivered}:{})};
+          } catch(error) {if(bindings.get(thread)===b) {b.generation++;pause(b,'error');}await releaseSwitched(thread);throw error;}
         }
         if (ACTIONS.includes(action) || action === 'pressKey') {
           const observation = b.observation;

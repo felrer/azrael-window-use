@@ -95,7 +95,7 @@ function main() {
     fs.copyFileSync(path.join(run, 'cargo-target/x86_64-pc-windows-msvc/release/azrael-window-control.exe'), path.join(windowDir, 'azrael-window-control.exe'));
     fs.copyFileSync(path.join(frozen, 'window-control/THIRD_PARTY_NOTICES.md'), path.join(windowDir, 'THIRD_PARTY_NOTICES.md'));
     fs.copyFileSync(path.join(cppBuild, 'Release/azrael-multi-pointer.exe'), path.join(pointerDir, 'azrael-multi-pointer.exe'));
-    fs.writeFileSync(path.join(pointerDir, 'THIRD_PARTY_NOTICES.md'), '# Third-party notices\n\nJSON for Modern C++ v3.11.3\n\n' + fs.readFileSync(path.join(frozen, 'virtual-input/vendor/json/LICENSE.MIT'), 'utf8') + '\n\n' + fs.readFileSync(path.join(frozen, 'multi-pointer/CURSOR-NOTICES.md'), 'utf8'));
+    fs.writeFileSync(path.join(pointerDir, 'THIRD_PARTY_NOTICES.md'), '# Third-party notices\n\nJSON for Modern C++ v3.11.3\n\n' + fs.readFileSync(path.join(frozen, 'vendor/json/LICENSE.MIT'), 'utf8') + '\n\n' + fs.readFileSync(path.join(frozen, 'multi-pointer/CURSOR-NOTICES.md'), 'utf8'));
     const files = inventory(windowDir);
     json(path.join(windowDir, 'manifest.json'), { schema: 1, kind: 'azrael-window-control', platform: 'win32', arch: 'x64', source: { directory: path.join(root, 'native/window-control'), sourceSha256, executableSha256: files.find(file => file.path.endsWith('.exe')).sha256, builder: 'cargo --locked --release' }, files });
     json(path.join(pointerDir, 'manifest.json'), { schema: 1, kind: 'azrael-multi-pointer', platform: 'win32', arch: 'x64', sourceSha256, files: inventory(pointerDir) });

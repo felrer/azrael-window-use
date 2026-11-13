@@ -8,3 +8,4 @@
 - `window-control-errors.cjs` retains bounded interference counters, event categories and activation metadata for diagnosing interrupted input. It does not expose typed keys, text, device identifiers or raw pointer tags.
 
 The read adjustment preserves bounded field retrieval and prevents a future host refactor from rejecting valid partial native descriptors or exposing password fields. Release verification exercises the real native `fields:["value"]` path.
+- Removed unreachable DLL `virtual_input` policy/schema branches; Switched shared-foreground input and its release/stop guards remain the sole cooperative input provider. JSON headers and notices now live under `native/vendor/json`; `SOURCE.json` retains the original import paths and hashes.
