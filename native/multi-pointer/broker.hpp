@@ -260,6 +260,12 @@ class Broker {
         if (!reservationOwned) return true;
         reservationOwned=false;
         const bool released=releaseHeld();
+        // Hook/RAW receipts acknowledge insertion, not application dispatch.
+        // Give the last click/key packet time to leave the target input queue
+        // before restoring focus, otherwise its delayed focus change can undo
+        // restoration. Keep the UI hook pumping and physical keys buffered.
+        // This bounded settling interval is not proof of application effects.
+        if (delivered || activationDelivered) std::this_thread::sleep_for(std::chrono::milliseconds(50));
         try { keyboardResult=ui.endKeyboardReservation(); }
         catch (...) { keyboardResult=ui.keyboardReservationState(); return false; }
         return released;
@@ -864,6 +870,7 @@ class Broker {
             const auto button = params.at("button").get<std::string>();
             const int b = button == "left" ? 0 : button == "right" ? 1 : button == "middle" ? 2 : -1;
             require(b >= 0, "invalid_params", "Unsupported mouse button");
+            if (signals.collaborationRequested.load()) beginKeyboard(1000);
             prepare(p); require(!heldButtons[static_cast<size_t>(b)], "held_state", "Button already synthetically held");
             send(p,mouseInput(downFlags[b]),p.position); heldButtons[static_cast<size_t>(b)]=true;
             send(p,mouseInput(upFlags[b]),p.position); heldButtons[static_cast<size_t>(b)]=false;
@@ -881,6 +888,9 @@ class Broker {
                 p.position=path.start;
             }
             const POINT end = curved?path.end:point(params); target(p).point(end);
+            // Reserve before activation, after validating the entire path. Leave
+            // room for bounded foreground preparation as well as the full drag.
+            if (signals.collaborationRequested.load()) beginKeyboard(duration+1000);
             prepare(p); require(std::none_of(heldButtons.begin(),heldButtons.end(),[](bool held) { return held; }), "held_state", "A synthetic button is already held");
             send(p,mouseInput(MOUSEEVENTF_LEFTDOWN),p.position); heldButtons[0]=true;
             const POINT start = p.position; const auto began = std::chrono::steady_clock::now();
@@ -904,6 +914,7 @@ class Broker {
             ui.move(id,stored.position,true);
         } else if (method == "scroll") {
             const int delta = integer(params,"delta",-12000,12000); require(delta != 0,"invalid_params","Scroll delta must be nonzero");
+            if (signals.collaborationRequested.load()) beginKeyboard(1000);
             prepare(p); send(p,mouseInput(MOUSEEVENTF_WHEEL,static_cast<DWORD>(delta)),p.position);
         } else if (method == "press") {
             require(params.contains("keys") && params.at("keys").is_array() && !params.at("keys").empty() && params.at("keys").size()<=8,

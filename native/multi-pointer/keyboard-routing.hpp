@@ -118,7 +118,9 @@ public:
     void begin(unsigned maxMs) {
         require(!active(),"keyboard_reservation","A keyboard reservation is already active");
         require(!deliveryUncertain && !buffer.overflow && buffer.delivered==buffer.count,"keyboard_reservation","Undelivered keyboard input prevents a new reservation");
-        require(maxMs>0 && maxMs<=1000,"invalid_params","Keyboard reservation must be between 1 and 1000 ms");
+        // Public batches remain capped at 1000ms. Mouse drags can run for 2000ms
+        // and additionally need their bounded foreground-preparation allowance.
+        require(maxMs>0 && maxMs<=3000,"invalid_params","Keyboard reservation must be between 1 and 3000 ms");
         checkDesktop();
         origin.hwnd=GetForegroundWindow();
         require(origin.hwnd && GetAncestor(origin.hwnd,GA_ROOT)==origin.hwnd,"keyboard_reservation","Cannot pin original foreground root");
