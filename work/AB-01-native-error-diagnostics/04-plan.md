@@ -2,6 +2,22 @@
 
 # Agent 로고 배치 조정
 
+## 2026-11-16 GitHub 레포 이미지 맞춤
+
+- 승인: 레포 이미지와 앱 이미지 일치. 이름 변경은 가능 여부 질문이므로
+  실제 rename은 사용자 확인 후 진행합니다. 권장 URL 이름은 azrael-window-use.
+- 확인: GitHub felrer/azrael-window-use-mcp는 private, viewerPermission ADMIN,
+  custom social preview 없음. GitHub 공식 문서는 첫 이미지 업로드를 public
+  레포 또는 이미 업로드한 이력이 있는 private 레포에 한정합니다. 실제
+  설정 화면에도 Social preview 항목이 없습니다. 공개 범위는 변경하지 않습니다.
+  https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/customizing-your-repositorys-social-media-preview
+- README에 앱 PNG256을 그대로 참조하는96px 로고를 추가합니다. 새 복제 이미지나
+  런타임 변경 없이 기존 src/assets/app-icon-256.png를 사용합니다.
+- 현재 원격 master는2789752이고 로컬에는 미게시 기능 커밋16개가 있습니다.
+  README/아이콘 두 파일만 원격 parent에서 만든 전용 commit으로 게시하고,
+  그 결과를 로컬에 merge하여 다른 기능을 이번 이미지 요청으로 게시하지 않습니다.
+  불필요한 작업 복제/검증 프로필/임시 파일은 생성하지 않습니다.
+
 ## 2026-11-16 실제 적용 후속 승인
 
 - 사진의 앞 중심 (118,146), 높이139, 뒤 중심 (170,103), 상대크기100%,

@@ -1,3 +1,5 @@
+<img src="src/assets/app-icon-256.png" width="96" height="96" alt="Window Use 앱 아이콘">
+
 # Window Use MCP
 
 Windows x64에서 창을 관찰하고 제어하는 독립 MCP 프로그램입니다. Azrael의 창 제어 엔진과 보호 앱 정책을 재사용하며, Azrael·VS Code·별도 Node.js 설치 없이 배포 패키지를 실행할 수 있습니다.
