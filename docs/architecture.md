@@ -4,6 +4,8 @@ Status: implemented for Windows x64. The independent package, permission UI, rea
 
 ## Product boundary
 
+The MCP initialize server identity is `az_window_use`. Default client examples use the same registration key; the client key determines callable namespaces. Azrael reserves that key for its built-in server and preserves a conflicting external registration under the first free numbered alias. Other clients must configure unique connection keys; equal `serverInfo.name` values do not merge servers or grant shared authority.
+
 An independent Windows x64 interactive-desktop MCP server ships with its native window-control engine, cooperative input broker and Electron runtime. MCP clients launch the executable with `--mcp` using stdio. Launching it without that flag opens settings. Azrael, VS Code and a separately installed Node runtime are not required. No network listener is exposed.
 
 A console launcher owns Windows standard input/output and relays messages through a random current-user named pipe to the GUI host. The host authenticates with a one-time random token before any protocol bytes are forwarded. The pipe does not grant app authority. Electron's GUI process does not own public stdio. The launcher removes inherited Node-mode environment settings, and the packaged host disables RunAsNode. EOF closes the pipe, cancels pending approvals and releases owned input.

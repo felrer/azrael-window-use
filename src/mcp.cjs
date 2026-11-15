@@ -16,7 +16,7 @@ class SocketTransport {
   async close() { this.socket.end(); }
 }
 async function startMcp({ runtime, log, onClient, onClose, transport }) {
-  const server = new Server({ name: 'azrael-window-use-mcp', version: '0.1.0' }, { capabilities: { tools: {} } });
+  const server = new Server({ name: 'az_window_use', version: '0.1.0' }, { capabilities: { tools: {} } });
   const definitions = toolDefinitions();
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: definitions }));
   server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {

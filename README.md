@@ -29,7 +29,7 @@ npm start
 ```json
 {
   "mcpServers": {
-    "window-use": {
+    "az_window_use": {
       "command": "C:\\Program Files\\nodejs\\node.exe",
       "args": ["C:\\Projects\\azrael-window-use-mcp\\scripts\\launch.cjs", "--mcp"]
     }
@@ -50,7 +50,7 @@ npm start
 ```json
 {
   "mcpServers": {
-    "window-use": {
+    "az_window_use": {
       "command": "C:\\Tools\\WindowUseMCP\\WindowUseMCP.exe",
       "args": ["--mcp"]
     }
@@ -59,6 +59,8 @@ npm start
 ```
 
 설정 파일 형식과 등록 위치는 MCP 클라이언트별로 다릅니다. 위 예시는 `mcpServers` 형식을 사용하는 클라이언트용입니다.
+
+기본 MCP 등록 이름과 서버 자체 이름은 `az_window_use`입니다. 모델에 보이는 namespace는 서버의 자체 이름이 아닌 클라이언트의 등록 키로 정해집니다. Azrael 내장판과 함께 연결할 때는 두 설정을 같은 키에 넣지 마세요. Azrael은 내장판에 `az_window_use`를 사용하고, 같은 키에 있던 외부 설정은 비어 있는 `az_window_use_2`, `az_window_use_3` 등의 별칭으로 보존합니다. 다른 클라이언트에서는 직접 고유한 등록 키를 지정해야 합니다.
 
 ## 권한
 
