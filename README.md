@@ -1,4 +1,4 @@
-<img src="src/assets/app-icon-256.png" width="96" height="96" alt="Window Use ? ???">
+<img src="src/assets/app-icon-256.png" width="96" height="96" alt="Window Use 앱 아이콘">
 
 # Window Use MCP
 
