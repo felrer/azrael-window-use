@@ -1,4 +1,4 @@
-상태: 후속 실행 중 · 승인된 배치의 실제 아이콘과 반경 1.2 Agent 커서를 적용합니다.
+상태: 완료 · 승인된 아이콘과 반경1.2 Agent 커서를 독립 MCP에 적용·재연결했고 검증 및 임시 자료 삭제를 마쳤습니다.
 
 # Agent 로고 배치 조정
 
@@ -37,10 +37,21 @@
 - 새 런타임은 기존 검증된 window-control을 그대로 재사용하며 변경된 C++만
   컴파일했습니다. 컴파일 이후 README/저작권 고지만 갱신했으며 코드 동일성을
   검증했습니다. 전체 배포 ZIP/클린 머신과 Azrael 본체 내장 설치는 미검증입니다.
+- 최종 JS34개 pass/0 fail/exit0. 실제 launcher에서32px 새 아이콘을 추출해
+  확인했습니다. 적용 커밋 `ad1cb68`, active runtime
+  artifacts/local/agent-icon-connected 및 content-addressed dev launcher를
+  agent-icon-runtime-ad1cb68 그룹으로 등록했습니다. 최소 검증은 해당 버전의
+  build-evidence.json/cursor-frames.png에 유지합니다.
+- config.toml의 독립 MCP runtime 인자만 교체해 az_window_use 재연결 ready:true,
+  context available:true를 확인했습니다. 전체 reload ready:false는 기존 laio
+  연결 실패입니다. 다른 세션의 이전 런타임 프로세스는 임의 종료하지 않았습니다.
+- 임시 그룹 agent-icon-run-20261116, 42,794,904 logical bytes를 소유 도구로
+  삭제했습니다. decision c6c39514181a2eac5b1a4fb4cf0fb99f1b62934336a6de4c1c4dad9073e1da20,
+  remaining:false/error:null 및 실제 경로 부재를 확인했습니다.
 
 - 승인: 1번 배치, 보라색 앞 커서와 반투명 민트 뒤 커서. 자리·크기의
   근접 후보 비교, 슬라이더 미세 조정, 실제 16/24/32px 및 밝고 어두운 배경,
-  타일/투명 배경 전환. 앱 아이콘 실제 변경은 이번 범위가 아닙니다.
+  타일/투명 배경 전환. 초기 HTML 단계 이후 위 후속 승인으로 실제 아이콘까지 적용했습니다.
 - 결과물: docs/visualizations/agent-logo-lab.html. 네트워크·새 의존성 없이
   네이티브 modelBody 좌표와 0.9 source unit 테두리를 재사용합니다.
 - SVG와 PNG 저장, 설정 복사 및 로컬 브라우저 설정 보존을 제공합니다.
