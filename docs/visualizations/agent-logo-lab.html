@@ -50,8 +50,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 const root=document.getElementById('logo-lab'),$=id=>root.querySelector('#'+id);
 const PATH='M4.00195 2.998859805C4.00195 2.605886307 4.232112588 2.24934094 4.590234161 2.087547527C4.948355734 1.925754114 5.368041488 1.988708731 5.662930136 2.248456407L12.661012404 8.412598761C12.973184911 8.687570632 13.082516131 9.127087122 12.935554421 9.516270189C12.788592711 9.905453256 12.416038522 10.163002159 12.000032268 10.163002159L8.588736558 10.163002159C8.251127991 10.163002159 7.936311679 10.333350833 7.751627583 10.615965994L5.839058974 13.542698176C5.597069027 13.913006337 5.14053205 14.080319692 4.716563398 13.954074494C4.292594745 13.827829296 4.00195 13.438027549 4.00195 12.995662012Z';
 const SOURCE_SHA='8a6140099433cff964723ef5e0ee144f1fea28d610cd289fddc3954da86149e4';
-const baseline={dx:46,dy:-42,front:132,back:92,alpha:32,zoom:100};
-const fields=[['dx','뒤 커서 가로 간격',18,76,1,'px'],['dy','뒤 커서 세로 간격',-76,-12,1,'px'],['front','앞 커서 높이',100,154,1,'px'],['back','뒤 커서 상대 크기',70,115,1,'%'],['alpha','뒤 커서 불투명도',10,70,1,'%'],['zoom','전체 크기',75,115,1,'%']];
+const baseline={dx:46,dy:-42,front:132,back:92,alpha:32,zoom:100,offsetX:0};
+const fields=[['dx','뒤 커서 가로 간격',18,76,1,'px'],['dy','뒤 커서 세로 간격',-76,-12,1,'px'],['front','앞 커서 높이',100,154,1,'px'],['back','뒤 커서 상대 크기',70,115,1,'%'],['alpha','뒤 커서 불투명도',10,70,1,'%'],['zoom','전체 크기',75,115,1,'%'],['offsetX','전체 가로 이동',-48,48,1,'px']];
 // Labels describe the rear cursor relative to the front; negative y means up.
 const LICENSE='Copyright (c) 2020 Microsoft Corporation. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.';
 let state={...baseline};
@@ -60,7 +60,7 @@ try{const saved=JSON.parse(localStorage.getItem('az-window-use-logo-study-v1'));
 function svg(s,{size=256,tile=$('tile').checked,label='Agent 커서 로고'}={}){
  const unit=s.front/12.8,back=unit*s.back/100;
  const cursor=(x,y,k,color,opacity)=>`<g opacity="${opacity}" transform="translate(${x} ${y}) scale(${k}) translate(-8.5 -8)"><path d="${PATH}" fill="${color}" stroke="#fff" stroke-width="0.9" stroke-linejoin="round"/></g>`;
- return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 256 256" role="img" aria-label="${label}"><metadata>Agent modelBody; Microsoft Fluent UI System Icons derivative; MIT; Copyright (c) 2020 Microsoft Corporation. ${LICENSE} Source SHA256 ${SOURCE_SHA}. Settings ${JSON.stringify(s)}</metadata>${tile?'<rect width="256" height="256" rx="56" fill="#242426"/>':''}<g transform="translate(128 128) scale(${s.zoom/100}) translate(-128 -128)">${cursor(128+s.dx/2,128+s.dy/2,back,'#34D399',s.alpha/100)}${cursor(128-s.dx/2,128-s.dy/2,unit,'#A78BFA',1)}</g></svg>`;
+ return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 256 256" role="img" aria-label="${label}"><metadata>Agent modelBody; Microsoft Fluent UI System Icons derivative; MIT; Copyright (c) 2020 Microsoft Corporation. ${LICENSE} Source SHA256 ${SOURCE_SHA}. Settings ${JSON.stringify(s)}</metadata>${tile?'<rect width="256" height="256" rx="56" fill="#242426"/>':''}<g transform="translate(${128+s.offsetX} 128) scale(${s.zoom/100}) translate(-128 -128)">${cursor(128+s.dx/2,128+s.dy/2,back,'#34D399',s.alpha/100)}${cursor(128-s.dx/2,128-s.dy/2,unit,'#A78BFA',1)}</g></svg>`;
 }
 function persist(){try{localStorage.setItem('az-window-use-logo-study-v1',JSON.stringify(state));}catch{}}
 function status(message){$('status').textContent=message;}
@@ -81,7 +81,7 @@ function render(){
  for(const [key]of fields){$(key).value=state[key];$(key+'-number').value=state[key];}
  $('hero').innerHTML=svg(state);
  const unit=state.front/12.8,z=state.zoom/100;
- const boxes=[[128-state.dx/2,128-state.dy/2,unit],[128+state.dx/2,128+state.dy/2,unit*state.back/100]].map(([x,y,k])=>[x+(3.55-8.5)*k,y+(1.47-8)*k,x+(13.54-8.5)*k,y+(14.54-8)*k].map(v=>128+(v-128)*z));
+ const boxes=[[128-state.dx/2,128-state.dy/2,unit],[128+state.dx/2,128+state.dy/2,unit*state.back/100]].map(([x,y,k])=>[x+(3.55-8.5)*k,y+(1.47-8)*k,x+(13.54-8.5)*k,y+(14.54-8)*k].map((v,i)=>128+(v-128)*z+(i%2===0?state.offsetX:0)));
  const margin=Math.min(...boxes.flatMap(b=>[b[0],b[1],256-b[2],256-b[3]]));
  $('bounds').dataset.clipped=String(margin<0);$('bounds').textContent=margin<0?'일부가 아이콘 경계 밖에 있습니다. 전체 크기나 간격을 줄여주세요.':'외곽 최소 여백 약 '+Math.floor(margin)+'px · 256px 기준';
  for(const id of ['sizes-light','sizes-dark'])$(id).innerHTML=[16,20,24,32,48,64].map(size=>`<div class="sample">${svg(state,{size,tile:$('tray-tile').checked})}<span>${size}px</span></div>`).join('');
