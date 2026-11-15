@@ -9,6 +9,7 @@ struct CursorTween {
     float from = 0, to = 0;
     uint64_t began = 0, duration = 0;
     float value(uint64_t now) const {
+        if (now < began) return from;
         const float t = duration ? std::clamp(static_cast<float>(now - std::min(now,began)) / duration,0.f,1.f) : 1.f;
         const float ease = t*t*(3-2*t);
         return from+(to-from)*ease;
@@ -29,7 +30,7 @@ struct CursorFrame {
 class CursorPresentation {
     bool user, reduced;
     uint64_t born, entered=0, exitAt=0, clickAt=0;
-    bool exiting=false, didEnter=false, clicked=false;
+    bool exiting=false, didEnter=false, clicked=false, modelActive=false;
     CursorTween activity, drag, waiting;
     static float progress(uint64_t now,uint64_t start,uint64_t duration) {
         const float t=std::clamp(static_cast<float>(now-std::min(now,start))/duration,0.f,1.f);
@@ -42,7 +43,11 @@ public:
     void enter(uint64_t now) { if (!didEnter) { entered=now; didEnter=true; } }
     void setWaiting(bool value,uint64_t now) { waiting.set(value?1.f:0.f,now,reduced?0:120); }
     void setActive(bool active,bool dragging,uint64_t now) {
-        activity.set(active?1.f:.32f,now,reduced?0:200);
+        // Show even a sub-frame semantic operation immediately. Holding the
+        // presentation after completion never holds an input reservation.
+        if (active) activity.set(1.f,now,0);
+        else if (modelActive) activity.set(.32f,now+1000,reduced?0:200);
+        modelActive=active;
         drag.set(dragging?1.f:0.f,now,reduced?0:(dragging?180:140));
     }
     void click(uint64_t now) { clicked=true; clickAt=now; }

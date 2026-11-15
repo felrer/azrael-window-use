@@ -26,6 +26,18 @@ Every own executable identity is an immutable entry in the same protected-app li
 
 ## Reused execution
 
+Semantic UIA actions and each freshly resolved task-macro mutation use the existing
+`actionPoint` / `present_pointer` route to position the connection's Agent cursor
+at the target element's current visible center. This is cosmetic only: semantic
+actions remain UIA/window-message operations and do not become mouse clicks or
+move the physical user cursor. Existing observation, identity and authorization
+checks remain in place. Model activity becomes opaque immediately and stays
+opaque for 1000ms after completion, then fades over 200ms to 32% idle opacity.
+New activity replaces the pending idle deadline; repeated idle does not extend
+it. Reduced motion skips the fade while retaining the hold. Removal/Stop and
+disconnect still dismiss the cursor. The hold adds no input suppression, focus
+reservation, artificial tool delay or application-effect guarantee.
+
 Concurrent native cursor overlays use locale-independent `Agent N` labels and distinct reserved colors across participating MCP processes in the same Windows logon session. A white physical cursor is labelled `User`. Windows named-object handles retain the lowest free number and a color through exit fading, and release on destruction or process termination. Automatic colors reuse the 72 registered palette entries (different hue families first); exhaustion or an explicitly requested color already in use fails instead of duplicating. Numbers may be reused after release and grant no authority. Older running binaries must reconnect to participate.
 
 Control overlays remain recordable (`WDA_NONE`, without capture-exclusion flags) for compatibility with desktop recorders. Borders, status text and Stop UI may appear in recordings. This does not remove MCP protected-app masking or control restrictions; external recording software has its own capture policy.

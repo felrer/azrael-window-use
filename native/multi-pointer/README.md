@@ -79,8 +79,12 @@ allocation supports the 72 registered colors and fails explicitly on exhaustion.
 Older running binaries do not participate and need a reconnect to adopt this.
 A user gesture waiting in the real
 FIFO queue adds a save badge without changing white fill. Model actuation makes
-the model opaque; dragging fades/shrinks it in place into a dot. Idle is 32%
-opacity. Explicit logical moves change coordinates immediately and leave a soft,
+the model opaque immediately; dragging fades/shrinks it in place into a dot.
+After activity completes, the model stays opaque for 1000ms, then fades over
+200ms to 32% idle opacity. Repeated idle notifications do not extend the hold;
+new activity starts a new hold on completion. Reduced motion retains the hold
+and skips the fade. This visual timer never prolongs input suppression, focus
+ownership or a tool response. Explicit logical moves change coordinates immediately and leave a soft,
 body-only 180ms ghost at the prior position. Removal fades/shrinks for 220ms;
 stop/shutdown destroy overlays immediately. Proven cooperation activation
 crossfades from the native arrow and grows the user arrow from a dot. Physical
