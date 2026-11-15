@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent cursor · 로고 조정</title>
+<style>
+:root{color-scheme:light;--bg:#fff;--ink:#202124;--muted:#68686b;--line:#e5e5e7;--surface:#f7f7f8;--accent:#7852c6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}#logo-lab{max-width:1120px;margin:auto;padding:42px 32px 60px}h1{font-size:28px;letter-spacing:-.8px;margin:4px 0 8px;font-weight:600}h2{font-size:17px;font-weight:600;margin:0}p{margin:0;color:var(--muted)}.eyebrow{font-size:12px;letter-spacing:1.4px;color:var(--muted)}header{padding-bottom:28px;border-bottom:1px solid var(--line)}.editor{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:48px;padding:32px 0}.stage{background:#f2f2f3;border-radius:16px;min-height:340px;display:grid;place-items:center;position:relative;overflow:hidden}.stage.dark{background:#19191b}.stage.checker{background-color:#fff;background-image:conic-gradient(#e9e9eb 25%,transparent 0 50%,#e9e9eb 0 75%,transparent 0);background-size:20px 20px}.hero-icon{width:min(280px,78%);aspect-ratio:1;display:block}.stage-label{position:absolute;bottom:14px;left:18px;font-size:11px;color:#737378}.stage.dark .stage-label{color:#aaa}.stage-options{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0}.stage-options label{color:var(--muted);font-size:12px}button,select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer}button:hover{background:var(--surface)}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.control{margin:19px 0}.control-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.control-head label{font-size:13px}.number{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:11px}.number input{width:66px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:13px system-ui;text-align:right}input[type=range]{width:100%;accent-color:var(--accent);margin:8px 0 0}.note{font-size:12px}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:20px}.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}.primary:hover{background:#444}.size-section{border-top:1px solid var(--line);padding:24px 0}.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}.size-strip{display:flex;flex-wrap:wrap;align-items:flex-end;gap:26px;padding:22px;min-height:132px;border-radius:10px;background:#f3f3f4}.size-strip.dark{background:#202124;color:#e5e5e5;margin-top:10px}.sample{display:flex;align-items:center;flex-direction:column;gap:12px;min-width:24px}.sample span{font-size:11px;color:#777}.dark .sample span{color:#aaa}.sample svg{display:block;flex-shrink:0}.candidates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.candidate{padding:16px 10px 12px;background:var(--surface);border:1px solid transparent;border-radius:10px;text-align:center}.candidate.current{border-color:var(--accent)}.candidate:hover{border-color:#b8a2dd}.candidate svg{width:110px;max-width:90%;display:block;margin:0 auto 12px}.candidate .mini{display:flex;align-items:center;justify-content:center;gap:10px;background:#252527;border-radius:5px;padding:8px;margin:auto auto 8px;width:86px}.candidate .mini svg{margin:0;width:24px;height:24px}.candidate small{display:block;font-size:11px;line-height:1.5;color:var(--muted)}.candidate b{font-size:12px;font-weight:500}.foot{overflow-wrap:anywhere;border-top:1px solid var(--line);padding-top:20px;margin-top:16px;font-size:12px;color:var(--muted)}details{margin-top:14px}summary{cursor:pointer}pre{font:12px/1.6 Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);padding:14px;border-radius:8px}#status{min-height:22px;margin-top:10px;font-size:12px;color:var(--muted)}.check{display:inline-flex;align-items:center;gap:6px;font-size:12px}
+.candidate .mini{width:min(86px,100%)}.candidate>svg{height:auto;aspect-ratio:1}.hero-icon>svg{display:block;width:100%;height:100%}#bounds{margin-top:8px}#bounds[data-clipped=true]{color:#bb5427}
+@media(max-width:720px){#logo-lab{padding:24px 18px}.editor{grid-template-columns:1fr;gap:12px}.stage{min-height:290px}.controls{padding-top:10px}.size-strip{gap:17px;padding:20px 12px}.candidates{gap:8px}.candidate{padding:12px 4px}.candidate svg{width:85px}.section-head select{max-width:100%}h1{font-size:25px}}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#202022;--ink:#ececee;--muted:#a2a2a8;--line:#3a3a3e;--surface:#2a2a2d;--accent:#b397ef}.stage-options select,.number input{background:var(--bg)}.primary{background:#ececee;color:#202022}.size-strip:not(.dark){color:#202124}}
+@media print{#logo-lab{padding:12px}.actions,.stage-options,.controls input[type=range]{display:none}.editor{gap:20px}.size-section{break-inside:avoid}.candidate{break-inside:avoid}}
+</style>
+</head>
+<body><main id="logo-lab">
+<header><div class="eyebrow">AZ WINDOW USE · ICON STUDY</div><h1>두 커서, 하나의 아이콘</h1><p>앞은 보라색 활성 커서, 뒤는 반투명 민트 커서. 실제 Agent 벡터로 배치를 조정합니다.</p></header>
+<section class="editor" aria-label="로고 조정">
+<div><div class="stage dark" id="stage"><div id="hero" class="hero-icon"></div><span class="stage-label">256 × 256 기준 · 확대 미리보기</span></div>
+<div class="stage-options"><label for="background">미리보기 배경</label><select id="background"><option value="dark">어둡게</option><option value="light">밝게</option><option value="checker">투명도 격자</option></select><label class="check"><input id="tile" type="checkbox" checked> 앱 타일 포함</label></div>
+<p class="note">뒤 커서의 채움과 흰색 테두리를 하나로 묶어 투명도를 적용합니다.</p>
+<p class="note" id="bounds" role="status"></p>
+</div>
+<div class="controls"><h2>배치 미세 조정</h2><div id="controls"></div><div class="actions"><button id="reset">기준 배치로</button><button id="copy">설정 복사</button></div><div class="actions"><button id="svg" class="primary">SVG 저장</button><button id="png">PNG 256 저장</button></div><p id="status" role="status" aria-live="polite"></p></div>
+</section>
+<section class="size-section"><div class="section-head"><h2>실제 크기에서 보기</h2><label class="check"><input id="tray-tile" type="checkbox"> 작은 크기에도 타일 표시</label></div><div id="sizes-light" class="size-strip" aria-label="밝은 배경 실제 크기"></div><div id="sizes-dark" class="size-strip dark" aria-label="어두운 배경 실제 크기"></div><p class="note" style="margin-top:12px">16–64 CSS px · 브라우저 확대 100% 기준입니다. Windows 배율에 따라 실제 픽셀 수는 달라집니다.</p></section>
+<section class="size-section"><div class="section-head"><h2>가까운 배치 비교</h2><select id="compare" aria-label="비교할 변수"><option value="position">가로·세로 간격 ±6</option><option value="scale">뒤 크기 ±4% · 전체 크기 ±4%</option><option value="opacity">뒤 투명도 ±8% · 가로 간격 ±6</option></select></div><div id="candidates" class="candidates"></div><p class="note" style="margin-top:12px">가운데가 현재 값입니다. 후보를 누르면 그 값을 기준으로 다시 비교합니다.</p></section>
+<footer class="foot"><p>커서 모양: <code>native/multi-pointer/cursor-assets.hpp · modelBody</code> / 흰색 테두리 0.9 source unit / Violet #A78BFA · Emerald #34D399.</p><p>이 페이지는 디자인 조정용입니다. 앱·트레이 아이콘이나 MCP 설정은 변경하지 않습니다. SVG·PNG에는 현재 타일 설정이 적용됩니다.</p><details><summary>현재 설정과 출처</summary><pre id="settings"></pre><p>네이티브 벡터에서 좌표를 그대로 변환했습니다. 기존 커서의 진입·클릭 애니메이션과 이름표는 포함하지 않습니다.</p><p>Microsoft Fluent UI System Icons에서 파생된 커서 · MIT License · Copyright (c) 2020 Microsoft Corporation.</p></details></footer>
+</main>
+<script>
+/* Microsoft Fluent UI System Icons derived cursor, MIT License.
+Copyright (c) 2020 Microsoft Corporation
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+(() => {
+'use strict';
+const root=document.getElementById('logo-lab'),$=id=>root.querySelector('#'+id);
+const PATH='M4.00195 2.998859805C4.00195 2.605886307 4.232112588 2.24934094 4.590234161 2.087547527C4.948355734 1.925754114 5.368041488 1.988708731 5.662930136 2.248456407L12.661012404 8.412598761C12.973184911 8.687570632 13.082516131 9.127087122 12.935554421 9.516270189C12.788592711 9.905453256 12.416038522 10.163002159 12.000032268 10.163002159L8.588736558 10.163002159C8.251127991 10.163002159 7.936311679 10.333350833 7.751627583 10.615965994L5.839058974 13.542698176C5.597069027 13.913006337 5.14053205 14.080319692 4.716563398 13.954074494C4.292594745 13.827829296 4.00195 13.438027549 4.00195 12.995662012Z';
+const SOURCE_SHA='8a6140099433cff964723ef5e0ee144f1fea28d610cd289fddc3954da86149e4';
+const baseline={dx:46,dy:-42,front:132,back:92,alpha:32,zoom:100};
+const fields=[['dx','뒤 커서 가로 간격',18,76,1,'px'],['dy','뒤 커서 세로 간격',-76,-12,1,'px'],['front','앞 커서 높이',100,154,1,'px'],['back','뒤 커서 상대 크기',70,115,1,'%'],['alpha','뒤 커서 불투명도',10,70,1,'%'],['zoom','전체 크기',75,115,1,'%']];
+// Labels describe the rear cursor relative to the front; negative y means up.
+const LICENSE='Copyright (c) 2020 Microsoft Corporation. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.';
+let state={...baseline};
+function clamp(key,value){const f=fields.find(f=>f[0]===key);return Math.max(f[2],Math.min(f[3],Math.round(value)));}
+try{const saved=JSON.parse(localStorage.getItem('az-window-use-logo-study-v1'));if(saved)for(const f of fields)if(Number.isFinite(saved[f[0]]))state[f[0]]=clamp(f[0],saved[f[0]]);}catch{}
+function svg(s,{size=256,tile=$('tile').checked,label='Agent 커서 로고'}={}){
+ const unit=s.front/12.8,back=unit*s.back/100;
+ const cursor=(x,y,k,color,opacity)=>`<g opacity="${opacity}" transform="translate(${x} ${y}) scale(${k}) translate(-8.5 -8)"><path d="${PATH}" fill="${color}" stroke="#fff" stroke-width="0.9" stroke-linejoin="round"/></g>`;
+ return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 256 256" role="img" aria-label="${label}"><metadata>Agent modelBody; Microsoft Fluent UI System Icons derivative; MIT; Copyright (c) 2020 Microsoft Corporation. ${LICENSE} Source SHA256 ${SOURCE_SHA}. Settings ${JSON.stringify(s)}</metadata>${tile?'<rect width="256" height="256" rx="56" fill="#242426"/>':''}<g transform="translate(128 128) scale(${s.zoom/100}) translate(-128 -128)">${cursor(128+s.dx/2,128+s.dy/2,back,'#34D399',s.alpha/100)}${cursor(128-s.dx/2,128-s.dy/2,unit,'#A78BFA',1)}</g></svg>`;
+}
+function persist(){try{localStorage.setItem('az-window-use-logo-study-v1',JSON.stringify(state));}catch{}}
+function status(message){$('status').textContent=message;}
+for(const [key,label,min,max,step,unit]of fields){
+ const row=document.createElement('div');row.className='control';
+ row.innerHTML=`<div class="control-head"><label for="${key}">${label}</label><span class="number"><input type="number" id="${key}-number" aria-label="${label} 수치" min="${min}" max="${max}" step="${step}"><span>${unit}</span></span></div><input type="range" id="${key}" min="${min}" max="${max}" step="${step}">`;
+ row.querySelector('input[type=number]').setAttribute('aria-label',label+' 수치');
+ $('controls').append(row);
+ for(const el of [$(key),$(key+'-number')])el.addEventListener('input',()=>{if(!Number.isFinite(el.valueAsNumber))return;state[key]=clamp(key,el.valueAsNumber);render();persist();});
+}
+function variants(){const result=[];for(let r=-1;r<=1;r++)for(let c=-1;c<=1;c++){
+ const s={...state},mode=$('compare').value;
+ if(mode==='position'){s.dx=clamp('dx',s.dx+c*6);s.dy=clamp('dy',s.dy+r*6);}
+ if(mode==='scale'){s.back=clamp('back',s.back+c*4);s.zoom=clamp('zoom',s.zoom+r*4);}
+ if(mode==='opacity'){s.dx=clamp('dx',s.dx+c*6);s.alpha=clamp('alpha',s.alpha+r*8);}
+ result.push({s,current:r===0&&c===0});}return result;}
+function render(){
+ for(const [key]of fields){$(key).value=state[key];$(key+'-number').value=state[key];}
+ $('hero').innerHTML=svg(state);
+ const unit=state.front/12.8,z=state.zoom/100;
+ const boxes=[[128-state.dx/2,128-state.dy/2,unit],[128+state.dx/2,128+state.dy/2,unit*state.back/100]].map(([x,y,k])=>[x+(3.55-8.5)*k,y+(1.47-8)*k,x+(13.54-8.5)*k,y+(14.54-8)*k].map(v=>128+(v-128)*z));
+ const margin=Math.min(...boxes.flatMap(b=>[b[0],b[1],256-b[2],256-b[3]]));
+ $('bounds').dataset.clipped=String(margin<0);$('bounds').textContent=margin<0?'일부가 아이콘 경계 밖에 있습니다. 전체 크기나 간격을 줄여주세요.':'외곽 최소 여백 약 '+Math.floor(margin)+'px · 256px 기준';
+ for(const id of ['sizes-light','sizes-dark'])$(id).innerHTML=[16,20,24,32,48,64].map(size=>`<div class="sample">${svg(state,{size,tile:$('tray-tile').checked})}<span>${size}px</span></div>`).join('');
+ $('settings').textContent=JSON.stringify({schema:1,...state,tile:$('tile').checked,source:'native/multi-pointer/cursor-assets.hpp:modelBody',sourceSha256:SOURCE_SHA},null,2);
+ $('candidates').replaceChildren();
+ variants().forEach(({s,current},i)=>{const button=document.createElement('button');button.className='candidate'+(current?' current':'');button.type='button';button.setAttribute('aria-label',`배치 ${i+1} 선택, 가로 ${s.dx}, 세로 ${s.dy}, 뒤 크기 ${s.back}%, 불투명도 ${s.alpha}%`);button.innerHTML=svg(s)+`<div class="mini">${svg(s,{size:24,tile:false})}</div><b>${current?'현재 배치':String(i+1).padStart(2,'0')}</b><small>x ${s.dx} · y ${s.dy}<br>뒤 ${s.back}% · 불투명도 ${s.alpha}% · 전체 ${s.zoom}%</small>`;button.addEventListener('click',()=>{state={...s};render();persist();status('선택한 배치를 적용했습니다.');});$('candidates').append(button);});
+}
+$('background').addEventListener('change',()=>{$('stage').className='stage '+$('background').value;});
+for(const id of ['tile','tray-tile','compare'])$(id).addEventListener('change',render);
+$('reset').addEventListener('click',()=>{state={...baseline};render();persist();status('기준 배치로 돌아왔습니다.');});
+$('copy').addEventListener('click',async()=>{const text=$('settings').textContent;try{await navigator.clipboard.writeText(text);status('현재 설정을 복사했습니다.');}catch{const range=document.createRange();range.selectNodeContents($('settings'));const selection=getSelection();selection.removeAllRanges();selection.addRange(range);$('settings').closest('details').open=true;status('설정 텍스트를 선택했습니다. Ctrl+C로 복사하세요.');}});
+function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+$('svg').addEventListener('click',()=>{download(new Blob([svg(state)],{type:'image/svg+xml;charset=utf-8'}),'az-window-use-logo.svg');status('현재 배치의 SVG를 저장했습니다.');});
+$('png').addEventListener('click',async()=>{const source=URL.createObjectURL(new Blob([svg(state)],{type:'image/svg+xml;charset=utf-8'}));try{const img=new Image();img.src=source;await img.decode();const canvas=document.createElement('canvas');canvas.width=canvas.height=256;canvas.getContext('2d').drawImage(img,0,0);const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw Error('PNG encoding failed');download(blob,'az-window-use-logo-256.png');status('256px PNG를 저장했습니다.');}catch{status('PNG 저장에 실패했습니다. SVG 저장을 사용해주세요.');}finally{URL.revokeObjectURL(source);}});
+render();
+})();
+</script></body></html>
