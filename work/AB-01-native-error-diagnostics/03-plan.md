@@ -55,4 +55,18 @@ Preserve the pre-existing diagnostics changes in shared files.
   and generated light/dark frame evidence remain with this deliverable. Raw build
   material will be removed after registration and reference reconciliation.
 
-Status: verification passed; commit, MCP refresh and disposable-run cleanup pending.
+- Implementation commit: `848676eb9777ad364dfdcc74351b24587f3cde56`.
+- Changed only the exact standalone runtime argument in
+  C:/Users/felre/.azrael-ex/config.toml to uia-cursor-connected. Reconnected
+  az_window_use; server readiness and context availability were true. Overall
+  reload readiness remained false because the unrelated laio server is unavailable.
+- Active deliverable registered as uia-cursor-runtime-848676e,
+  1,895,918 bytes, with explicit MCP consumer and verification references.
+- Disposable group uia-cursor-run-20261116 (11,886,357 logical bytes) was reviewed
+  and deleted through project_cleanup_apply. Decision
+  bad962e9e205051179d2fb5790f1ab44378cc558f030f623873dafb9b5531df6
+  reports deleted, remaining:false, no error. Physical root absence also checked.
+- Builtin Azrael and clean-machine packaged acceptance were not exercised.
+  Older pre-existing protected artifacts and diagnostics changes were preserved.
+
+Status: implementation, verification, independent MCP refresh and cleanup complete.
