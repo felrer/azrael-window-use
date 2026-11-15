@@ -3,6 +3,7 @@
 #include "mouse-routing.hpp"
 #include "keyboard-routing.hpp"
 #include "system-cursor.hpp"
+#include "input-safety.hpp"
 #include "cursor-renderer.hpp"
 #include <oleacc.h>
 #include <exception>
@@ -175,6 +176,13 @@ class Ui {
         }
     }
     void tickKeyboardReservation() {
+        inputSafety.tick();
+        if (inputSafety.unavailable()) {
+            signals.emergency.store(true);
+            signals.explicitStop.store(true);
+            routing.fail(MouseRouting::Fault::staleIntent);
+            keyboardReservation.requestAbort("input_safety_stop");
+        }
         if (keyboardReservation.expired(GetTickCount64())) keyboardReservation.requestAbort("budget_expired");
         if (signals.disconnected.load() || signals.explicitStop.load() || signals.emergency.load())
             keyboardReservation.requestAbort("stop_or_disconnect");
@@ -220,6 +228,9 @@ class Ui {
         if (code == HC_ACTION && instance) {
             const auto& e = *reinterpret_cast<const KBDLLHOOKSTRUCT*>(lp);
             auto& s = instance->signals;
+            // Fallback if another hook changes ordering. Never enqueue Esc for
+            // replay, and consume its release even after the reservation ends.
+            if (instance->inputSafety.consumeEscape(e)) return 1;
             if (e.dwExtraInfo == s.tag) { instance->keyboardReservation.observeOwn(e); s.observeOwn(false); }
             else {
                 const bool injected=(e.flags & LLKHF_INJECTED)!=0;
@@ -331,6 +342,7 @@ class Ui {
 public:
     MouseRouting routing;
     SystemCursor systemCursor;
+    InputSafety inputSafety;
     void refreshUserOverlay() {
         const auto user=overlays.find("@user");
         if (user==overlays.end()) return;
@@ -356,6 +368,8 @@ public:
         }
     }
     bool syncSystemCursor() {
+        // Only clear a mouse lease here. Arming happens before beginModel.
+        if (!routing.capture.load()) inputSafety.setGate(2,false);
         systemCursor.tick();
         const auto brokerTick=signals.brokerHeartbeat.load();
         if (routing.capture.load() && brokerTick && GetTickCount64()-brokerTick>1500)
@@ -384,15 +398,17 @@ public:
     Ui(Signals& s, std::vector<Target>& t) : signals(s), targets(t), keyboardReservation(s.keyboardReserved,s.tag) {}
     json beginKeyboardReservation(unsigned maxMs=1000) {
         json result; invoke([&] {
+            inputSafety.setGate(1,true);
             try { keyboardReservation.begin(maxMs); }
-            catch (...) { notifyKeyboardAbort(); throw; }
+            catch (...) { if (!keyboardReservation.active()) inputSafety.setGate(1,false); notifyKeyboardAbort(); throw; }
             refreshUserOverlay(); result=keyboardReservation.status();
         }); return result;
     }
     json endKeyboardReservation() {
         json result; invoke([&] {
             try { keyboardReservation.end(); }
-            catch (const Failure& e) { refreshUserOverlay(); throw Failure(e.code,e.what(),keyboardReservation.status()); }
+            catch (const Failure& e) { if (!keyboardReservation.active()) inputSafety.setGate(1,false); refreshUserOverlay(); throw Failure(e.code,e.what(),keyboardReservation.status()); }
+            inputSafety.setGate(1,false);
             refreshUserOverlay(); result=keyboardReservation.status();
         }); return result;
     }
@@ -415,6 +431,7 @@ public:
         mouse = SetWindowsHookExW(WH_MOUSE_LL, mouseHook, GetModuleHandleW(nullptr), 0);
         keyboard = SetWindowsHookExW(WH_KEYBOARD_LL, keyboardHook, GetModuleHandleW(nullptr), 0);
         require(mouse && keyboard, "hook_unavailable", "Both low-level interference hooks are required");
+        inputSafety.start(signals.tag);
         events = SetWinEventHook(EVENT_OBJECT_DESTROY, EVENT_OBJECT_DESTROY, nullptr, windowEvent, 0, 0, WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
         require(events != nullptr, "hook_unavailable", "Window destruction tracking is required");
         hotkey = RegisterHotKey(controller, 1, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_PAUSE) != FALSE;
@@ -482,6 +499,9 @@ public:
     void endModel() {
         invoke([&] { routing.endModel(); for (auto& item : overlays) if (!item.second->userPointer) item.second->presentation.setActive(false,false,GetTickCount64()); });
     }
+    void beginModel() {
+        invoke([&] { inputSafety.setGate(2,true); routing.beginModel(); });
+    }
     void remove(const std::string& id) {
         invoke([&] { auto i=overlays.find(id); if (i!=overlays.end()) {
             auto o=std::move(i->second); overlays.erase(i); if (o->ghost) ShowWindow(o->ghost,SW_HIDE);
@@ -504,7 +524,7 @@ public:
         });
     }
     json collaborationState() {
-        json result; invoke([&] { result=routing.status(); result["systemCursor"]=systemCursor.status(); }); return result;
+        json result; invoke([&] { result=routing.status(); result["systemCursor"]=systemCursor.status(); result["inputSafety"]=inputSafety.status(); }); return result;
     }
     void clear() { invoke([&] { routing.disable(); signals.collaborationRequested.store(false); const bool restored=syncSystemCursor(); overlays.clear(); retiring.clear(); require(restored,"cursor_visibility","System cursor restoration failed"); }); }
     void close() { PostMessageW(controller, WM_CLOSE, 0, 0); }

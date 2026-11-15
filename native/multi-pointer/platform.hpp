@@ -14,6 +14,15 @@
 
 namespace mp {
 using json = nlohmann::json;
+inline void diagnostic(const char* level, const char* event, const std::string& code = {}) {
+    SYSTEMTIME t{}; GetSystemTime(&t); char utc[40]{};
+    sprintf_s(utc, "%04u-%02u-%02uT%02u:%02u:%02u.%03uZ", t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds);
+    json j{{"time",utc},{"level",level},{"component","multi-pointer"},{"event",event},{"version","prototype-1"},{"platform","win32-x64"}};
+    if (!code.empty()) j["code"] = code;
+    j["win32Error"] = GetLastError();
+    const std::string line = j.dump() + "\n"; DWORD written = 0;
+    WriteFile(GetStdHandle(STD_ERROR_HANDLE), line.data(), static_cast<DWORD>(line.size()), &written, nullptr);
+}
 struct Failure : std::runtime_error {
     std::string code;
     json details = nullptr;

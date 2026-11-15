@@ -26,6 +26,7 @@ function switchedMetadata(value) {
     out.collaboration=project(c,['probeRemainingMs','rawPackets','suppressedMouseEvents','rawSuppressionPairs','queuedHumanOperations','queuedInputOperations','pendingLogicalMoves','failureCount','lastRawEventTime','lastSuppressedEventTime','completedHumanOperations','skippedHumanOperations','lastHumanApplicationInputs'],['requested','enabled','capability_pending','failed','suppression','modelActive','lastHumanObserveRequired','rawConsumerAppsVerified','pointerAccelerationEmulated'],['phase','lastFailure','lastHumanFailure','physicalKeyboard']);
     if(c.user&&Number.isSafeInteger(c.user.x)&&Number.isSafeInteger(c.user.y))out.collaboration.user={x:c.user.x,y:c.user.y};
     if(c.systemCursor)out.collaboration.systemCursor=project(c.systemCursor,['visibilityCommands'],['supported','hidden','restorePending','guardReady'],['lastError']);
+    if(c.inputSafety)out.collaboration.inputSafety=project(c.inputSafety,['hardLimitMs','abortReason'],['ready','suppressionActive'],[]);
     if(c.deviceDiagnostics){
       const d=c.deviceDiagnostics;
       const safe=project(d,['snapshotMouseCount','allowedInitialArrivals','rejectedDeviceChanges','ignoredOwnRawPackets'],['mouseSnapshotReady'],['snapshotReason','preparationWaitReason']);

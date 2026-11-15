@@ -4,6 +4,42 @@ namespace mp {
 // Retained because later hook-interruption simplifications can accidentally
 // reinstate keyboard epoch cancellation inside an explicit reservation.
 inline int keyboardReservationSelftest() {
+    // Later hook consolidation must preserve the physical/injected distinction
+    // and must not refresh the independent, union-of-gates hard deadline.
+    InputSafety::Shared safety{};
+    KBDLLHOOKSTRUCT esc{}; esc.vkCode=VK_ESCAPE;
+    require(!InputSafety::escape(safety,esc,1000),"selftest","Idle Esc must reach the application");
+    InputSafety::gate(safety,1,true,1000);
+    InputSafety::gate(safety,2,true,2000);
+    InputSafety::gate(safety,1,false,3000);
+    InputSafety::gate(safety,2,true,4000);
+    require(InputSafety::read64(safety.started)==1000,"selftest","Overlapping gates must not extend hard deadline");
+    esc.flags=LLKHF_INJECTED;
+    require(!InputSafety::escape(safety,esc,4000) && !InputSafety::read(safety.abort),"selftest","Model Esc must not cancel");
+    esc.flags=0;
+    require(InputSafety::escape(safety,esc,4000) && InputSafety::read(safety.abort)==1,"selftest","Physical Esc must cancel and be consumed");
+    safety.tag=123;
+    KBDLLHOOKSTRUCT release{}; release.vkCode=VK_ESCAPE; release.flags=LLKHF_INJECTED|LLKHF_UP; release.dwExtraInfo=123;
+    require(!InputSafety::protectKeyboardRelease(safety,release,true),"selftest","Consumed emergency Esc must not retain a model Esc down");
+    release.vkCode=VK_LCONTROL;
+    require(InputSafety::protectKeyboardRelease(safety,release,true),"selftest","Recovery must preserve physically held modifiers");
+    require(!InputSafety::protectKeyboardRelease(safety,release,false),"selftest","Unheld model modifiers must be released");
+    release.dwExtraInfo=456;
+    require(!InputSafety::protectKeyboardRelease(safety,release,true),"selftest","Recovery must not filter another injector");
+    InputSafety::gate(safety,2,false,4100);
+    require(InputSafety::escape(safety,esc,4200),"selftest","Held Esc repeats must remain consumed after cleanup");
+    esc.flags=LLKHF_UP;
+    require(InputSafety::escape(safety,esc,4300) && !InputSafety::read(safety.escapeHeld),"selftest","Matching Esc release must be consumed");
+    esc.flags=0;
+    require(!InputSafety::escape(safety,esc,4400),"selftest","Next idle Esc must pass through");
+    InputSafety::Shared expiry{};
+    InputSafety::gate(expiry,1,true,1000);
+    InterlockedExchange64(&expiry.heartbeat,10749);
+    InputSafety::check(expiry,10749);
+    require(!InputSafety::read(expiry.abort),"selftest","Hard-limit cancellation must not fire early");
+    InterlockedExchange64(&expiry.heartbeat,10750);
+    InputSafety::check(expiry,10750);
+    require(InputSafety::read(expiry.abort)==2,"selftest","Hard-limit cleanup must start before ten seconds even with healthy heartbeat");
     Signals signals;
     signals.tag=123;
     KeyboardReservation reservation(signals.keyboardReserved,signals.tag);
@@ -37,6 +73,36 @@ inline int keyboardReservationSelftest() {
     reservation.buffer.reset();
     require(reservation.buffer.count==0 && reservation.buffer.delivered==0 && !reservation.buffer.overflow,
         "selftest","New buffer resets progress and overflow");
+    return 0;
+}
+
+// Exercise the actual guard process against an owned stalled injector. Retained
+// because future startup/handle-list changes can leave pure state tests passing.
+inline int inputSafetyLiveSelftest() {
+    {
+        InputSafety guard; guard.start(0x314159);
+        guard.setGate(1,true); guard.setGate(2,true);
+        guard.setGate(1,false); guard.setGate(2,false);
+        Sleep(1700);
+        require(guard.healthy(),"selftest","Idle guard must not terminate a normally released helper");
+        guard.setGate(1,true); guard.setGate(1,false);
+    }
+    wchar_t executable[32768]{};
+    require(GetModuleFileNameW(nullptr,executable,32768)!=0,"selftest","Cannot locate fixture executable");
+    for (const bool heartbeat:{false,true}) {
+        std::wstring command=L"\""+std::wstring(executable)+L"\" --input-safety-selftest-victim "+(heartbeat?L"heartbeat":L"stalled");
+        STARTUPINFOW startup{}; startup.cb=sizeof(startup); PROCESS_INFORMATION process{};
+        require(CreateProcessW(executable,command.data(),nullptr,nullptr,FALSE,CREATE_NO_WINDOW,nullptr,nullptr,&startup,&process)!=FALSE,
+            "selftest","Cannot start owned input safety fixture");
+        Handle victim(process.hProcess), thread(process.hThread);
+        const auto began=GetTickCount64();
+        const DWORD waited=WaitForSingleObject(victim.value,12500);
+        DWORD exit=STILL_ACTIVE; GetExitCodeProcess(victim.value,&exit);
+        if (waited!=WAIT_OBJECT_0) { TerminateProcess(victim.value,75); WaitForSingleObject(victim.value,1000); }
+        const auto elapsed=GetTickCount64()-began;
+        require(waited==WAIT_OBJECT_0 && exit==74 && elapsed<(heartbeat?11500:3500) && (!heartbeat || elapsed>=9750),
+            "selftest","Independent guard must recover a stalled fixture and enforce ten seconds despite heartbeat");
+    }
     return 0;
 }
 

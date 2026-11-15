@@ -318,12 +318,22 @@ Results expose counts/restoration/pending/failure, not key contents. Batch progr
 uses completedSteps, zero-based failedStep, totalSteps, completed and budgetMs.
 
 At 3072 events or budget expiry, the UI thread requests abort; synchronized broker
-cleanup owns replay. A permanently hung broker can retain suppression until exit.
+cleanup owns replay. The independent input-safety guard recovers hung suppression as described below.
 Overflow, destroyed original focus, rejected activation, uncertain insertion or
 focus-changing user shortcuts can leave unresolved input; no blind redirection or
 replay is allowed. This is cooperative scheduling on shared Windows input, not
 independent per-window keyboards or virtualized IME. Physical concurrency and
 third-party drivers require separate real-device acceptance.
+
+## Independent input safety
+
+Before any cooperative suppression, an independently responsive process installs a physical-Esc hook and watches an inherited handle to this exact helper. Esc-down, repeat and matching up are consumed only for an emergency started during suppression; model/injected Esc and idle Esc pass through. A hook fallback in the UI uses the same shared Esc latch before keyboard buffering; either hook can consume the down and the other can consume the matching up.
+
+The union of keyboard and mouse gates has an absolute 10000ms ceiling from its first arm. Overlapping gates and heartbeat never extend it. Existing operation budgets remain shorter. The guard requests cancellation at 9750ms, or after 1500ms without a UI heartbeat, or immediately on Esc. Cleanup has at most 250ms; if suppression remains, it terminates only the inherited input-owning helper, waits for process exit, and releases the model key/button ledger. Downs are published before insertion and ups cleared only after confirmed insertion; releases are never application-action retries. Guard failure or a latched cancellation refuses further suppression in that native helper. Normal adapter error cleanup retires the helper; a fresh helper is required for later input. A forced/unknown exit is not automatically retried. Recovery writes bounded metadata to the existing stderr channel; no key contents or buffer are logged.
+
+Normal cancellation retains validated focus restoration and buffered-key replay. During emergency releases, guardian hooks track non-injected physical key/button edges and filter own-tag injected UP events if the same physical key/button is held. Ordinary physical input is not newly suppressed during cleanup. Forced termination removes the helper hooks but loses its in-memory user buffer and may leave focus unresolved. No independent process blindly replays those events. Cursor visibility has its existing separate guard. OS-wide stalls and third-party hooks/drivers remain outside this guarantee. A consumed Esc release remains swallowed after normal cleanup; the separate guard can wait up to ten seconds for that release after helper exit.
+
+`--input-safety-live-selftest` verifies normal disarm, a stalled owned helper, and the ten-second deadline despite continued heartbeat; it does not synthesize physical keyboard input.
 
 ## Operation identity and bounded recovery
 

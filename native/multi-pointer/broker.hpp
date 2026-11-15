@@ -12,15 +12,6 @@
 #include <thread>
 
 namespace mp {
-inline void diagnostic(const char* level, const char* event, const std::string& code = {}) {
-    SYSTEMTIME t{}; GetSystemTime(&t); char utc[40]{};
-    sprintf_s(utc, "%04u-%02u-%02uT%02u:%02u:%02u.%03uZ", t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds);
-    json j{{"time",utc},{"level",level},{"component","multi-pointer"},{"event",event},{"version","prototype-1"},{"platform","win32-x64"}};
-    if (!code.empty()) j["code"] = code;
-    j["win32Error"] = GetLastError();
-    const std::string line = j.dump() + "\n"; DWORD written = 0;
-    WriteFile(GetStdHandle(STD_ERROR_HANDLE), line.data(), static_cast<DWORD>(line.size()), &written, nullptr);
-}
 inline Target pinTarget(const json& item, const std::string& id, bool outerWindow = false) {
     require(item.is_object(), "invalid_targets", "Target entry must be an object");
     Target t; t.id = id; t.outerWindow = outerWindow;
@@ -171,9 +162,12 @@ class Broker {
         return e;
     }
     bool sendRelease(INPUT e) {
-        return SendInput(1, &e, sizeof(e)) == 1;
+        const bool sent=SendInput(1, &e, sizeof(e)) == 1;
+        if (sent) ui.inputSafety.record(e,false);
+        return sent;
     }
-    void trackDelivery(const INPUT& e) {
+    void trackDelivery(const INPUT& e,bool reconcileSafety=true) {
+        if (reconcileSafety) ui.inputSafety.record(e,false);
         if (e.type==INPUT_MOUSE) {
             for (size_t i=0;i<3;++i) { if (e.mi.dwFlags&downFlags[i]) heldButtons[i]=true; if (e.mi.dwFlags&upFlags[i]) heldButtons[i]=false; }
         } else if (e.type==INPUT_KEYBOARD) {
@@ -215,7 +209,7 @@ class Broker {
             INPUT e{}; e.type = INPUT_KEYBOARD; e.ki.wScan = *it; e.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP; e.ki.dwExtraInfo = signals.tag;
             if (sendRelease(e)) it = heldUnicode.erase(it); else { ok = false; ++it; }
         }
-        if (ok) owner.clear();
+        if (ok) { owner.clear(); ui.inputSafety.clearModel(); }
         cleanupFailed = !ok;
         return ok;
     }
@@ -292,8 +286,12 @@ class Broker {
         const auto before=signals.ownKeyboard.load();
         // One Windows insertion keeps a chord/text packet contiguous and avoids
         // a UI round-trip for every UTF-16 unit. This does not prove app effect.
+        for (const auto& input:inputs) ui.inputSafety.record(input,true);
         const UINT sent=SendInput(static_cast<UINT>(inputs.size()),const_cast<INPUT*>(inputs.data()),sizeof(INPUT));
-        for (UINT i=0;i<sent;++i) trackDelivery(inputs[i]);
+        // Keep the conservative entire-packet down ledger on partial insertion:
+        // repeated Unicode units can otherwise clear a later inserted down.
+        for (UINT i=0;i<sent;++i) trackDelivery(inputs[i],false);
+        if (sent==inputs.size()) for (const auto& input:inputs) ui.inputSafety.record(input,false);
         delivered+=sent; actionExecuted=actionExecuted || sent>0;
         if (operation) {
             operation->deliveredInputs+=sent; operation->applicationInputs+=sent;
@@ -309,6 +307,7 @@ class Broker {
         checkHit(p, point);
         ui.requireSystemCursor(); boundary();
         const auto before=e.type==INPUT_MOUSE?signals.ownMouse.load():signals.ownKeyboard.load();
+        ui.inputSafety.record(e,true);
         require(SendInput(1, &e, sizeof(e)) == 1, "send_input", "SendInput did not deliver the event (possible UIPI or desktop change)");
         trackDelivery(e);
         ++delivered; actionExecuted = true;
@@ -383,6 +382,7 @@ class Broker {
         boundary(); physicalGate(); boundary();
         require(std::chrono::steady_clock::now() < deadline, "foreground", "Caption activation budget expired before input; no replay");
         const auto before=signals.ownMouse.load();
+        ui.inputSafety.record(e,true);
         require(SendInput(1, &e, sizeof(e)) == 1, "send_input", "SendInput did not deliver caption activation input"); trackDelivery(e);
         ++delivered; ++activationDelivered; actionExecuted = true;
         if (operation) { ++operation->deliveredInputs; ++operation->activationInputs; operation->actionExecuted=true; operation->captionAttempted=true; }
@@ -467,7 +467,7 @@ class Broker {
         }
         if (owner != p.id) require(releaseHeld(), "cleanup_failed", "Cannot release previous pointer synthetic state");
         boundary(); physicalGate(); owner = p.id;
-        if (signals.collaborationRequested.load() && !ui.routing.modelActive.load()) ui.invoke([&] { ui.routing.beginModel(); });
+        if (signals.collaborationRequested.load() && !ui.routing.modelActive.load()) ui.beginModel();
         ui.requireSystemCursor(); boundary();
         foregroundAttempted = true;
         activationPath = "already_foreground";

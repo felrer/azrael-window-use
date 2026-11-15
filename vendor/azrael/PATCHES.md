@@ -18,3 +18,5 @@ The read adjustment preserves bounded field retrieval and prevents a future host
 - Autonomous startup removes physical-motion waiting and suppressed-Raw probing entirely. Device registration and cursor/guard initialization return ready synchronously without user events; actual runtime faults, Stop and explicit disable remain enforced. Initialization does not fabricate physical Raw Input survival evidence.
 
 - Optional capture includeUIA (default false) reuses bounded UIA summary retrieval and retains pixel geometry and semantic references under one fresh observation; no change to input consumption, protected targets or geometry guards.
+
+- Add an independent suppression guard with a non-extendable ten-second ceiling, shared physical-Esc consumption, exact-helper termination fallback and conservative model-input release; preserve shorter operation budgets and no replay of uncertain user buffers.

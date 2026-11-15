@@ -9,6 +9,14 @@
 
 int wmain(int argc, wchar_t** argv) {
     try {
+        if (argc>1 && std::wstring(argv[1])==L"--input-safety-guard") return mp::InputSafety::guardMain(argc,argv);
+        if (argc==2 && std::wstring(argv[1])==L"--input-safety-live-selftest") return mp::inputSafetyLiveSelftest();
+        if (argc==3 && std::wstring(argv[1])==L"--input-safety-selftest-victim") {
+            mp::InputSafety guard; guard.start(0x314159); guard.setGate(1,true);
+            const auto until=GetTickCount64()+12000;
+            while (GetTickCount64()<until) { if (std::wstring(argv[2])==L"heartbeat") guard.tick(); Sleep(5); }
+            return 76;
+        }
         if (argc==2 && std::wstring(argv[1])==L"--curve-selftest") return mp::curveSelftest();
         if (argc==2 && std::wstring(argv[1])==L"--batch-selftest") return mp::batchSelftest();
         if (argc==2 && std::wstring(argv[1])==L"--keyboard-reservation-selftest") return mp::keyboardReservationSelftest();
