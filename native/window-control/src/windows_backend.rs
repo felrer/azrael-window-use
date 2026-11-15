@@ -103,8 +103,8 @@ impl Backend {
             }
             "listWindows" => list_windows(),
             "observe" => {
-                let p: protocol::Target = protocol::params(params)?;
-                self.observe(&p.window)
+                let p: protocol::Capture = protocol::params(params)?;
+                self.observe(&p.window, p.include_uia)
             }
             "inspect" => {
                 let p: protocol::Inspect = protocol::params(params)?;
@@ -143,7 +143,7 @@ impl Backend {
         }
         result
     }
-    fn observe(&mut self, requested: &Window) -> Result<Value> {
+    fn observe(&mut self, requested: &Window, include_uia: bool) -> Result<Value> {
         self.observation = None;
         let current = verify(requested)?;
         ensure_not_minimized(&current)?;
@@ -172,6 +172,17 @@ impl Backend {
                 || geometry["heightPx"].as_i64() != Some(frame.height as i64) {
                 return Err(Error::new("capture-size-changed", "Capture pixels do not match physical frame bounds"));
             }
+            let (descriptors, elements, retrieval) = if include_uia {
+                let request: protocol::Inspect = protocol::params(json!({"window": after_capture}))?;
+                uia::retrieve(&self.automation, hwnd, &request, None)?
+            } else {
+                (Vec::new(), HashMap::new(), json!({"mode":"image","coverage":"image-only","returnedCount":0}))
+            };
+            let after = verify(requested)?;
+            ensure_capture_geometry(&after_capture, &after)?;
+            if geometry != capture_geometry(hwnd, after.dpi)? {
+                return Err(Error::new("capture-size-changed", "Window moved during combined observation; observe again"));
+            }
             self.sequence = self
                 .sequence
                 .checked_add(1)
@@ -179,13 +190,13 @@ impl Backend {
             let id = format!("observation-{}", self.sequence);
             self.last_frames.insert(identity, frame.timestamp);
             self.observation = Some(Observation {
-                id: id.clone(), window: after_capture.clone(), elements: HashMap::new(),
-                descriptors: Vec::new(), coverage: json!("image-only"), signature: Value::Null,
+                id: id.clone(), window: after.clone(), elements,
+                descriptors: descriptors.clone(), coverage: retrieval["coverage"].clone(), signature: Value::Null,
             });
             Ok(
-                json!({ "window": after_capture, "observationId": id, "frameTimestamp": frame.timestamp.to_string(),
-                "widthPx": frame.width, "heightPx": frame.height, "dpi": after_capture.dpi, "captureProtection": frame.protection, "captureGeometry": geometry,
-                "elements": [], "elementsTruncated": false, "retrieval": {"mode":"image","coverage":"image-only","returnedCount":0}, "image": { "mimeType": "image/png", "data": frame.data } }),
+                json!({ "window": after, "observationId": id, "frameTimestamp": frame.timestamp.to_string(),
+                "widthPx": frame.width, "heightPx": frame.height, "dpi": after.dpi, "captureProtection": frame.protection, "captureGeometry": geometry,
+                "elements": descriptors, "elementsTruncated": retrieval["coverage"] == "partial", "retrieval": retrieval, "image": { "mimeType": "image/png", "data": frame.data } }),
             )
         })();
         work

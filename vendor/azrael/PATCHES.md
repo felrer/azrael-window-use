@@ -16,3 +16,5 @@ The read adjustment preserves bounded field retrieval and prevents a future host
 - `window-switched-input.cjs` requests collaboration enabled by default once per real input session, including replacements after errors or release. Explicit session opt-out is preserved; cosmetic-only rendering never enables interception. Readiness and keyboard limitations remain native runtime behavior.
 - Native virtualized mouse operations observe physical keyboard input without routing failure or epoch interruption; model keyboard operations, foreign injection and explicit Stop retain interruption semantics.
 - Autonomous startup removes physical-motion waiting and suppressed-Raw probing entirely. Device registration and cursor/guard initialization return ready synchronously without user events; actual runtime faults, Stop and explicit disable remain enforced. Initialization does not fabricate physical Raw Input survival evidence.
+
+- Optional capture includeUIA (default false) reuses bounded UIA summary retrieval and retains pixel geometry and semantic references under one fresh observation; no change to input consumption, protected targets or geometry guards.

@@ -210,8 +210,9 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
     }
     b.state = 'ready'; delete b.pauseReason;
   }
-  async function observe(b, thread, generation) {
-    const r = await requestObservation(b, thread, generation, 'observe');
+  async function observe(b, thread, generation, options = {}) {
+    b.observation = null;
+    const r = await requestObservation(b, thread, generation, 'observe', options);
     str(r.observationId); str(r.frameTimestamp);
     const frameDimension = value => Number.isInteger(value) && value > 0 && value <= 16384;
     if (r.window.minimized || !frameDimension(r.widthPx) || !frameDimension(r.heightPx) || r.dpi !== b.window.dpi || !Array.isArray(r.elements) || !plain(r.image) || r.image.mimeType !== 'image/png' || typeof r.image.data !== 'string' || !r.image.data.length || !/^[A-Za-z0-9+/]*={0,2}$/.test(r.image.data)) fail('Invalid selected-window observation');
@@ -219,7 +220,7 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
     const geometry=r.captureGeometry;
     if(!geometry || !['originX','originY','widthPx','heightPx','dpi'].every(k=>Number.isSafeInteger(geometry[k])) || geometry.widthPx!==r.widthPx || geometry.heightPx!==r.heightPx || geometry.dpi!==r.dpi)fail('Invalid capture coordinate mapping');
     b.observation = { lease:b.requestLease || leases.observation(b.identity,thread), id: r.observationId, kind:'image', geometry:{...geometry}, generation, ids: new Set(elements.map(e => e.id)) }; b.used = true;
-    return { ...view(b), observationId: r.observationId, frameTimestamp: r.frameTimestamp, widthPx: r.widthPx, heightPx: r.heightPx, dpi: r.dpi, coordinateSpace:{type:'capture-image',originX:0,originY:0,widthPx:r.widthPx,heightPx:r.heightPx,screenBounds:{...geometry},scaleX:1,scaleY:1}, elementsTruncated: r.elementsTruncated, elements, image: { mimeType: 'image/png', data: r.image.data } };
+    return { ...view(b), observationId: r.observationId, frameTimestamp: r.frameTimestamp, widthPx: r.widthPx, heightPx: r.heightPx, dpi: r.dpi, coordinateSpace:{type:'capture-image',originX:0,originY:0,widthPx:r.widthPx,heightPx:r.heightPx,screenBounds:{...geometry},scaleX:1,scaleY:1}, elementsTruncated: r.elementsTruncated, elements, ...(r.retrieval ? {retrieval:r.retrieval} : {}), image: { mimeType: 'image/png', data: r.image.data } };
   }
   function elementsOf(r, partial = false) {
     if (!Array.isArray(r.elements)) fail('Invalid elements');
@@ -374,6 +375,7 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
       const action = tool === 'set_value' ? 'setValue' : tool === 'press_key' ? 'pressKey' : tool;
       try {
         const allowed = ['windowId']; const required = ['windowId'];
+        if(tool === 'capture') {allowed.push('includeUIA');if(Object.hasOwn(args,'includeUIA') && typeof args.includeUIA !== 'boolean') throw windowError('invalid_request','includeUIA must be boolean');}
         if(tool === 'switched_input') {allowed.push('observationId','input');required.push('observationId','input');str(args.observationId);if(!switchedInput)throw windowError('unsupported_action','Switched input runtime is unavailable');args={...args,input:normalizeInput(args.input)};}
         if(tool === 'inspect') { allowed.push('mode','query','scope','limit','observationId','elementId','fields','textRange','baseObservationId'); validateInspect(args); }
         if (ACTIONS.includes(action) || action === 'pressKey') { allowed.push('observationId', 'elementId'); required.push('observationId', 'elementId'); if (action === 'setValue' || action === 'scroll') { allowed.push('value'); required.push('value'); } }
@@ -439,7 +441,7 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
           return {...result,occupancy:occupancyOf(b.identity,thread),...(stored ? {revision:stored.revision,macroId:args.macroId} : {})};
         }
         await ready(b, thread, generation, false);
-        if (tool === 'capture') return await observe(b, thread, generation);
+        if (tool === 'capture') return await observe(b, thread, generation, Object.hasOwn(args,'includeUIA') ? {includeUIA:args.includeUIA} : {});
         if (tool === 'inspect') { const {windowId,...options}=args; return await inspect(b,thread,generation,options); }
         if (tool === 'switched_input') {
           const observation=b.observation;

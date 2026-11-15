@@ -97,6 +97,13 @@ pub struct Target {
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct Capture {
+    pub window: Window,
+    #[serde(default, rename = "includeUIA")]
+    pub include_uia: bool,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct WindowAtPoint {
     pub x: i32,
     pub y: i32,
@@ -336,6 +343,11 @@ mod tests {
     }
     #[test]
     fn retrieval_defaults_and_bounds() {
+        let window = serde_json::to_value(inspection(serde_json::json!({})).window).unwrap();
+        assert!(!params::<Capture>(serde_json::json!({"window":window})).unwrap().include_uia);
+        assert!(params::<Capture>(serde_json::json!({"window":window,"includeUIA":true})).unwrap().include_uia);
+        assert!(params::<Capture>(serde_json::json!({"window":window,"includeUIA":"true"})).is_err());
+        assert!(params::<Capture>(serde_json::json!({"window":window,"extra":false})).is_err());
         let p = inspection(serde_json::json!({}));
         assert_eq!(p.mode(), "summary"); assert_eq!(p.limit(),20); assert!(p.validate().is_ok());
         for invalid in [serde_json::json!({"limit":0}),serde_json::json!({"limit":101}),serde_json::json!({"mode":"all"}),
