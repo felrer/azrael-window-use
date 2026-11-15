@@ -75,7 +75,7 @@ async function packageMain() {
       const compiler = 'C:/Windows/Microsoft.NET/Framework64/v4.0.30319/csc.exe';
       const launcher = path.join(run, 'WindowUseMCP.exe');
       report.tools.launcherCompiler = { path: compiler, sha256: await fileHash(compiler), target: 'x64 .NET Framework console' };
-      step('compile-launcher', compiler, ['/nologo', '/target:exe', '/platform:x64', '/optimize+', '/out:' + launcher, path.join(snapshot, 'launcher/Program.cs')], run);
+      step('compile-launcher', compiler, ['/nologo', '/target:exe', '/platform:x64', '/optimize+', '/win32icon:' + path.join(snapshot, 'src/assets/app-icon.ico'), '/out:' + launcher, path.join(snapshot, 'launcher/Program.cs')], run);
       report.launcher = { sourceSha256: sha(fs.readFileSync(path.join(snapshot, 'launcher/Program.cs'))), executableSha256: await fileHash(launcher) };
       for (const name of ['src', 'vendor']) fs.cpSync(path.join(snapshot, name), path.join(app, name), { recursive: true, force: false, errorOnExist: true });
       for (const name of ['package.json', 'package-lock.json', 'LICENSE', 'README.md']) fs.copyFileSync(path.join(snapshot, name), path.join(app, name));
@@ -113,7 +113,7 @@ async function packageMain() {
       report.electronZip = { path: electronZip, sha256: expectedZipSha256, checksumSource: 'node_modules/electron/checksums.json', checksumSourceSha256: sha(fs.readFileSync(checksumsFile)) };
       json(reportPath, report);
       fs.mkdirSync(release, { recursive: true });
-      const paths = await packager({ dir: app, out: release, name: 'WindowUseHost', executableName: 'WindowUseHost', appVersion: pkg.version, buildVersion: pkg.version, electronVersion: installedElectron.version, electronZipDir: path.dirname(electronZip), platform: 'win32', arch: 'x64', asar: true, prune: false, overwrite: false, quiet: true, junk: false, ignore: () => false, sanitizePackageJson: [value => value], tmpdir: path.join(run, 'packager-tmp'), extraResource: [path.join(snapshot, 'artifacts/runtime')] });
+      const paths = await packager({ dir: app, out: release, name: 'WindowUseHost', executableName: 'WindowUseHost', appVersion: pkg.version, buildVersion: pkg.version, electronVersion: installedElectron.version, electronZipDir: path.dirname(electronZip), platform: 'win32', arch: 'x64', icon: path.join(app, 'src/assets/app-icon.ico'), asar: true, prune: false, overwrite: false, quiet: true, junk: false, ignore: () => false, sanitizePackageJson: [value => value], tmpdir: path.join(run, 'packager-tmp'), extraResource: [path.join(snapshot, 'artifacts/runtime')] });
       fs.writeSync(log, JSON.stringify({ packagedPaths: paths }) + '\n');
       const unpacked = path.join(release, 'WindowUseMCP-win32-x64');
       const hostOutput = path.join(release, 'WindowUseHost-win32-x64');

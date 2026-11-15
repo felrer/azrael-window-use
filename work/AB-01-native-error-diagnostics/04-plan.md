@@ -1,6 +1,42 @@
-상태: 완료 · HTML 조정 도구 구현·검증·임시 자료 정리를 마쳤습니다. 사용자가 배치를 조정할 수 있습니다.
+상태: 후속 실행 중 · 승인된 배치의 실제 아이콘과 반경 1.2 Agent 커서를 적용합니다.
 
 # Agent 로고 배치 조정
+
+## 2026-11-16 실제 적용 후속 승인
+
+- 사진의 앞 중심 (118,146), 높이139, 뒤 중심 (170,103), 상대크기100%,
+  불투명도50%, 전체100%, 어두운 둥근 타일을 채택합니다. 뒤 중심은 앞서
+  확인한 배치를 유지합니다. 브라우저의 개인 저장값을 덮어쓰지 않습니다.
+- Windows x64 독립 MCP의 트레이·창·launcher/packaged host 아이콘 및
+  모든 Agent 색상/상태가 공유하는 네이티브 modelBody를 교체합니다.
+  Azrael 본체의 별도 내장 런타임 빌드/설치는 범위에 포함하지 않습니다.
+- 원호/외곽선 경계의 패임을 재현 비교하고, 접선이 연속인 단일 cubic
+  경로를 SVG와 GDI+가 공유하도록 생성합니다. 원래 다리 각도는 유지합니다.
+- 재사용: 네이티브 GDI+ renderer, 기존 CMake, Electron nativeImage/packager,
+  .NET /win32icon, 설치된 Chrome/Playwright. 새 라이브러리를 추가하지 않습니다.
+- JS 자산/회귀 검사, 크기별 아이콘·확대 연결부의 실제 렌더 확인,
+  frozen C++ build/render selftest 후 새 독립 런타임을 연결합니다.
+- 임시 build/profile/log는 artifacts/agent-icon-run-20261116 소유로 생성하고
+  검증 후 owner 도구로 삭제합니다. 새 연결 runtime과 최소 검증 근거는
+  artifacts/local/agent-icon-connected에 유지합니다. 기존 변경은 보존합니다.
+
+### 실제 적용 검증
+
+- 반경1.2, 원래 다리 각도, 45도 이하 cubic 43점이 SVG/native에서 동일합니다.
+  접선 연속성과 원호 중심거리 수치 검사를 통과했습니다. 실제 PNG 확대 및
+  작은 아이콘을 확인했고 상단 보라색 경계 240행에서 역방향 패임0입니다.
+  HTML 원호를 cubic 단일 경로로 교체해 연결부 렌더 결함을 회피했습니다.
+- frozen C++ configure/compile exit0; render86검증, curve/cursor-guard/
+  autonomous-startup/keyboard-reservation/batch 모두 exit0. 입력전송0,
+  foreground/cursor 위치 불변, light/dark 실제 painter 이미지 확인.
+- 실제 Electron main을 격리 프로필로 시작해 ICO/PNG nativeImage 비어있지 않음,
+  제목표시줄 PNG32 로드와 실제 창을 확인했습니다. 검증용 앱은 종료했습니다.
+- HTML 검사 초회 실패는 닫힌 details의 innerText가 빈 값이어서 생긴
+  테스트 문제였고 textContent로 고쳐 재검증했습니다. Electron 초회 테스트는
+  evaluate 안 require가 없어서 실패했으며 경로를 인자로 전달해 통과했습니다.
+- 새 런타임은 기존 검증된 window-control을 그대로 재사용하며 변경된 C++만
+  컴파일했습니다. 컴파일 이후 README/저작권 고지만 갱신했으며 코드 동일성을
+  검증했습니다. 전체 배포 ZIP/클린 머신과 Azrael 본체 내장 설치는 미검증입니다.
 
 - 승인: 1번 배치, 보라색 앞 커서와 반투명 민트 뒤 커서. 자리·크기의
   근접 후보 비교, 슬라이더 미세 조정, 실제 16/24/32px 및 밝고 어두운 배경,

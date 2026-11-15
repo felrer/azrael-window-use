@@ -8,3 +8,4 @@ The independent product targets Windows x64 interactive desktop sessions. Azrael
 
 - [Architecture and permissions](architecture.md)
 - [Distribution and operation](distribution.md)
+- [Icon and Agent cursor assets](icon-assets.md)

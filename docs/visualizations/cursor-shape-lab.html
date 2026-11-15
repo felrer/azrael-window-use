@@ -31,7 +31,9 @@ function shape(s){
  let factor=1;for(let i=0;i<4;i++){const sum=corners[i].d+corners[(i+1)%4].d;if(sum>0)factor=Math.min(factor,length(sub(vertices[(i+1)%4],vertices[i]))*.98/sum);}
  const r=s.radius*factor;
  const rounded=corners.map(c=>({...c,start:c.p.map((p,i)=>p+c.u[i]*c.d*factor),end:c.p.map((p,i)=>p+c.v[i]*c.d*factor)}));
- let d;if(r<1e-7)d='M'+vertices.map(fmt).join('L')+'Z';else d=rounded.map((c,i)=>(i?'L':'M')+fmt(c.start)+'A'+n(r)+' '+n(r)+' 0 0 '+c.sweep+' '+fmt(c.end)).join('')+'Z';
+ // A single tangent-continuous cubic contour avoids arc/stroke raster seams.
+ const cubic=c=>{const sign=c.sweep?1:-1,incoming=c.u.map(v=>-v),center=c.start.map((v,i)=>v+[-incoming[1],incoming[0]][i]*sign*r);let a=Math.atan2(c.start[1]-center[1],c.start[0]-center[0]),delta=Math.atan2(c.end[1]-center[1],c.end[0]-center[0])-a;if(sign>0&&delta<0)delta+=2*Math.PI;if(sign<0&&delta>0)delta-=2*Math.PI;const count=Math.ceil(Math.abs(delta)/(Math.PI/4)),step=delta/count;let result='';for(let j=0;j<count;j++){const b=a+step,k=4/3*Math.tan(step/4),p0=j?center.map((v,i)=>v+r*[Math.cos(a),Math.sin(a)][i]):c.start,p3=j===count-1?c.end:center.map((v,i)=>v+r*[Math.cos(b),Math.sin(b)][i]);result+='C'+fmt([p0[0]-r*k*Math.sin(a),p0[1]+r*k*Math.cos(a)])+' '+fmt([p3[0]+r*k*Math.sin(b),p3[1]-r*k*Math.cos(b)])+' '+fmt(p3);a=b;}return result;};
+ let d;if(r<1e-7)d='M'+vertices.map(fmt).join('L')+'Z';else d=rounded.map((c,i)=>(i?'L':'M')+fmt(c.start)+cubic(c)).join('')+'Z';
  return {d,r,C};
 }
 function cursor(d,color='#A78BFA',opacity=1){return `<g opacity="${opacity}"><path d="${d}" fill="${color}" stroke="#fff" stroke-width="0.9" stroke-linejoin="round"/></g>`;}

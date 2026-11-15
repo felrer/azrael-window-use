@@ -9,8 +9,11 @@ The adopted model body in cursor-assets.hpp derives from Microsoft Fluent UI Sys
 [Upstream license](https://github.com/microsoft/fluentui-system-icons/blob/9eb184e96268d3293462f9d9d19225b4c7b07774/LICENSE).
 
 Modifications: approved preview variant `fluent16-w90-white` reconstructs the body
-with 90% width and circular corner radius 1; its circular arcs are converted offline
-to cubic Beziers with sweeps at most 90 degrees. Native rendering supplies the
+with 90% width. The approved 2026-11-16 derivative increases circular corner
+radius to 1.2 while preserving the straight-edge directions and leg angle.
+`src/assets/cursor-geometry.cjs` converts circular fillets to tangent-continuous
+cubic Beziers with sweeps at most 45 degrees for both native and logo assets.
+Native rendering supplies the
 preview's white outline and uniform scale separately.
 
 ### MIT license

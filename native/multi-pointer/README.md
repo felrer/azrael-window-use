@@ -68,6 +68,12 @@ LAIO Sky Blue Bright `#38BDF8` and contrasting hue families.
 `create_pointer.color` can select any of the 72 registered palette colors; the
 label uses the matching family's Pastel/Clear colors. Custom HEX still works,
 but a color already reserved by a visible cursor is rejected.
+Agent corners use radius 1.2 with the original leg angle. `src/assets/cursor-geometry.cjs`
+and `scripts/generate-cursor-assets.cjs` generate the same tangent-continuous cubic
+contour for the logo SVG and native `modelBody`; segments span at most 45 degrees
+to avoid arc/stroke join artifacts. Every Agent color/state uses this shared body.
+The user/system pointer silhouette, routing and hotspot transform are unchanged.
+
 Vector and palette data live in `cursor-assets.hpp`; attribution and the complete
 upstream license are in `CURSOR-NOTICES.md` and copied to runtime notices.
 

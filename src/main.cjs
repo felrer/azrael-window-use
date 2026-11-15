@@ -35,7 +35,7 @@ function createWindow(view) {
   const window = new BrowserWindow({
     width: 440, height: view === 'approval' ? 420 : 640, minWidth: 400, minHeight: view === 'approval' ? 380 : 520,
     frame: false, autoHideMenuBar: true, resizable: true, show: false, backgroundColor: nativeTheme.shouldUseDarkColors ? '#171717' : '#ffffff',
-    title: 'Window Use', roundedCorners: true,
+    title: 'Window Use', roundedCorners: true, icon: path.join(__dirname, 'assets/app-icon-256.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true, devTools: !app.isPackaged }
   });
   const contentsId = window.webContents.id;
@@ -121,14 +121,7 @@ function setupIPC() {
   });
 }
 function trayIcon() {
-  // Local generated RGBA PNG; no asset downloads or remote content.
-  const zlib = require('node:zlib');
-  const crc = data => { let value = 0xffffffff; for(const byte of data){value ^= byte;for(let bit=0;bit<8;bit++)value=(value>>>1)^((value&1)?0xedb88320:0);}return (value^0xffffffff)>>>0; };
-  const chunk = (name,data) => {const type=Buffer.from(name),length=Buffer.alloc(4),sum=Buffer.alloc(4);length.writeUInt32BE(data.length);sum.writeUInt32BE(crc(Buffer.concat([type,data])));return Buffer.concat([length,type,data,sum]);};
-  const header=Buffer.alloc(13);header.writeUInt32BE(32,0);header.writeUInt32BE(32,4);header[8]=8;header[9]=6;
-  const pixels=Buffer.alloc(32*(1+32*4));
-  for(let y=0;y<32;y++)for(let x=0;x<32;x++){const offset=y*129+1+x*4;const inside=Math.abs(x-15.5)+Math.abs(y-15.5)<13&&Math.abs(x-15.5)+Math.abs(y-15.5)>6;pixels[offset]=pixels[offset+1]=pixels[offset+2]=nativeTheme.shouldUseDarkColors?240:45;pixels[offset+3]=inside?255:0;}
-  return nativeImage.createFromBuffer(Buffer.concat([Buffer.from('89504e470d0a1a0a','hex'),chunk('IHDR',header),chunk('IDAT',zlib.deflateSync(pixels)),chunk('IEND',Buffer.alloc(0))]));
+  return nativeImage.createFromPath(path.join(__dirname, 'assets/app-icon.ico'));
 }
 async function shutdown() {
   if (closing) return; closing = true;
