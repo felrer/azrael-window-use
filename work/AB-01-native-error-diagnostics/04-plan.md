@@ -17,6 +17,18 @@
   README/아이콘 두 파일만 원격 parent에서 만든 전용 commit으로 게시하고,
   그 결과를 로컬에 merge하여 다른 기능을 이번 이미지 요청으로 게시하지 않습니다.
   불필요한 작업 복제/검증 프로필/임시 파일은 생성하지 않습니다.
+- 완료: 원격 이미지 게시0941d21(선행0a07b50), 로컬 이미지 변경a741be8과
+  원격 결과 merge3f624e6. 원격 baseline2789752 대비 변경은 README.md 및
+  src/assets/app-icon-256.png 두 파일뿐입니다. 기존 미게시 기능/dirty 파일 보존.
+- 검증 exit0: GitHub API 이미지 bytes가 로컬 앱 PNG와 완전히 같고11316bytes,
+  SHA256 8f0671649a4f2924ad8c38be83553d9918d75b821d5931b49f54a102a3ac0e40.
+  실제 GitHub README에서 complete:true/naturalWidth256/displayWidth96을 확인했습니다.
+  private:true와 UTF-8 대체 텍스트를 재확인했습니다. 첫 전송의 PowerShell
+  인코딩 때문에 대체 텍스트가 손상돼, 로컬 UTF-8 파일 bytes를 직접 읽는
+  후속 이미지 전용 commit으로 수정했습니다. merge는 로컬 최신 README를 보존합니다.
+- 이름 변경은 질문에 답하는 단계이며 아직 실행하지 않았습니다. UI 소셜
+  미리보기 변경도 지원 조건에 맞지 않아 실행하지 않았습니다. 새 일회성
+  산출물은 없습니다. 이전 내장 커서 검증의 정리/보관 확인 문제는 별개로 남습니다.
 
 ## 2026-11-16 실제 적용 후속 승인
 
