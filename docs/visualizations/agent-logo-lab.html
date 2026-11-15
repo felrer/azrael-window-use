@@ -27,7 +27,7 @@
 </section>
 <section class="size-section"><div class="section-head"><h2>실제 크기에서 보기</h2><label class="check"><input id="tray-tile" type="checkbox"> 작은 크기에도 타일 표시</label></div><div id="sizes-light" class="size-strip" aria-label="밝은 배경 실제 크기"></div><div id="sizes-dark" class="size-strip dark" aria-label="어두운 배경 실제 크기"></div><p class="note" style="margin-top:12px">16–64 CSS px · 브라우저 확대 100% 기준입니다. Windows 배율에 따라 실제 픽셀 수는 달라집니다.</p></section>
 <section class="size-section"><div class="section-head"><h2>가까운 배치 비교</h2><select id="compare" aria-label="비교할 변수"><option value="position">가로·세로 간격 ±6</option><option value="scale">뒤 크기 ±4% · 전체 크기 ±4%</option><option value="opacity">뒤 투명도 ±8% · 가로 간격 ±6</option></select></div><div id="candidates" class="candidates"></div><p class="note" style="margin-top:12px">가운데가 현재 값입니다. 후보를 누르면 그 값을 기준으로 다시 비교합니다.</p></section>
-<footer class="foot"><p>커서 모양: <code>native/multi-pointer/cursor-assets.hpp · modelBody</code> / 흰색 테두리 0.9 source unit / Violet #A78BFA · Emerald #34D399.</p><p>이 페이지는 디자인 조정용입니다. 앱·트레이 아이콘이나 MCP 설정은 변경하지 않습니다. SVG·PNG에는 현재 타일 설정이 적용됩니다.</p><details><summary>현재 설정과 출처</summary><pre id="settings"></pre><p>네이티브 벡터에서 좌표를 그대로 변환했습니다. 기존 커서의 진입·클릭 애니메이션과 이름표는 포함하지 않습니다.</p><p>Microsoft Fluent UI System Icons에서 파생된 커서 · MIT License · Copyright (c) 2020 Microsoft Corporation.</p></details></footer>
+<footer class="foot"><p>커서 모양: <code>native/multi-pointer/cursor-assets.hpp · modelBody</code> / 모서리 반경 1.2 · 원본 다리 각도 / 흰색 테두리 0.9 source unit / Violet #A78BFA · Emerald #34D399.</p><p>이 페이지는 디자인 조정용입니다. 앱·트레이 아이콘이나 MCP 설정은 변경하지 않습니다. SVG·PNG에는 현재 타일 설정이 적용됩니다.</p><details><summary>현재 설정과 출처</summary><pre id="settings"></pre><p>네이티브 벡터의 직선부와 다리 각도를 유지하고 모서리 반경만 1.2로 재계산했습니다. 기존 커서의 진입·클릭 애니메이션과 이름표는 포함하지 않습니다.</p><p>Microsoft Fluent UI System Icons에서 파생된 커서 · MIT License · Copyright (c) 2020 Microsoft Corporation.</p></details></footer>
 </main>
 <script>
 /* Microsoft Fluent UI System Icons derived cursor, MIT License.
@@ -50,7 +50,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 (() => {
 'use strict';
 const root=document.getElementById('logo-lab'),$=id=>root.querySelector('#'+id);
-const PATH='M4.00195 2.998859805C4.00195 2.605886307 4.232112588 2.24934094 4.590234161 2.087547527C4.948355734 1.925754114 5.368041488 1.988708731 5.662930136 2.248456407L12.661012404 8.412598761C12.973184911 8.687570632 13.082516131 9.127087122 12.935554421 9.516270189C12.788592711 9.905453256 12.416038522 10.163002159 12.000032268 10.163002159L8.588736558 10.163002159C8.251127991 10.163002159 7.936311679 10.333350833 7.751627583 10.615965994L5.839058974 13.542698176C5.597069027 13.913006337 5.14053205 14.080319692 4.716563398 13.954074494C4.292594745 13.827829296 4.00195 13.438027549 4.00195 12.995662012Z';
+const PATH="M4.00195 3.4415497A1.2 1.2 0 0 1 5.9951262 2.5410657L12.2635697 8.0625181A1.2 1.2 0 0 1 11.4703935 10.1630022L8.6969576 10.1630022A1.2 1.2 0 0 0 7.6924268 10.7065588L6.2064808 12.9804464A1.2 1.2 0 0 1 4.00195 12.324003Z";
+const CURSOR_SHAPE={"radius":1.2,"angle":56.836081904164104};
 const SOURCE_SHA='8a6140099433cff964723ef5e0ee144f1fea28d610cd289fddc3954da86149e4';
 const offsets=['frontOffsetX','frontOffsetY','backOffsetX','backOffsetY'];
 const baseline={dx:46,dy:-42,front:132,back:92,alpha:32,zoom:100,offsetX:0,frontOffsetX:0,frontOffsetY:0,backOffsetX:0,backOffsetY:0};
@@ -66,7 +67,7 @@ function place(who,x,y){const current=position(state,who);state[who+'OffsetX']+=
 function svg(s,{size=256,tile=$('tile').checked,label='Agent 커서 로고'}={}){
  const unit=s.front/12.8*s.zoom/100,back=unit*s.back/100;
  const cursor=(who,k,color,opacity)=>{const p=position(s,who);return `<g data-cursor="${who}" opacity="${opacity}" transform="translate(${p.x} ${p.y}) scale(${k}) translate(-8.5 -8)"><path d="${PATH}" fill="${color}" stroke="#fff" stroke-width="0.9" stroke-linejoin="round"/></g>`;};
- return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 256 256" role="img" aria-label="${label}"><metadata>Agent modelBody; Microsoft Fluent UI System Icons derivative; MIT; Copyright (c) 2020 Microsoft Corporation. ${LICENSE} Source SHA256 ${SOURCE_SHA}. Settings ${JSON.stringify(s)}</metadata>${tile?'<rect width="256" height="256" rx="56" fill="#242426"/>':''}${cursor('back',back,'#34D399',s.alpha/100)}${cursor('front',unit,'#A78BFA',1)}</svg>`;
+ return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 256 256" role="img" aria-label="${label}"><metadata>Agent modelBody; Microsoft Fluent UI System Icons derivative; MIT; Copyright (c) 2020 Microsoft Corporation. ${LICENSE} Base source SHA256 ${SOURCE_SHA}. Shape ${JSON.stringify(CURSOR_SHAPE)}. Settings ${JSON.stringify(s)}</metadata>${tile?'<rect width="256" height="256" rx="56" fill="#242426"/>':''}${cursor('back',back,'#34D399',s.alpha/100)}${cursor('front',unit,'#A78BFA',1)}</svg>`;
 }
 function persist(){try{localStorage.setItem('az-window-use-logo-study-v1',JSON.stringify(state));}catch{}}
 function status(message){$('status').textContent=message;}
@@ -92,7 +93,7 @@ function render(){
  const margin=Math.min(...boxes.flatMap(b=>[b[0],b[1],256-b[2],256-b[3]]));
  $('bounds').dataset.clipped=String(margin<0);$('bounds').textContent=margin<0?'일부가 아이콘 경계 밖에 있습니다. 전체 크기나 간격을 줄여주세요.':'외곽 최소 여백 약 '+Math.floor(margin)+'px · 256px 기준';
  for(const id of ['sizes-light','sizes-dark'])$(id).innerHTML=[16,20,24,32,48,64].map(size=>`<div class="sample">${svg(state,{size,tile:$('tray-tile').checked})}<span>${size}px</span></div>`).join('');
- $('settings').textContent=JSON.stringify({schema:1,...state,tile:$('tile').checked,source:'native/multi-pointer/cursor-assets.hpp:modelBody',sourceSha256:SOURCE_SHA},null,2);
+ $('settings').textContent=JSON.stringify({schema:1,...state,cursorShape:CURSOR_SHAPE,tile:$('tile').checked,source:'native/multi-pointer/cursor-assets.hpp:modelBody',sourceSha256:SOURCE_SHA},null,2);
  $('candidates').replaceChildren();
  variants().forEach(({s,current},i)=>{const button=document.createElement('button'),p=position(s,'front'),q=position(s,'back');button.className='candidate'+(current?' current':'');button.type='button';button.setAttribute('aria-label',`배치 ${i+1} 선택, 앞 중심 ${Math.round(p.x)}, ${Math.round(p.y)}, 뒤 중심 ${Math.round(q.x)}, ${Math.round(q.y)}`);button.innerHTML=svg(s)+`<div class="mini">${svg(s,{size:24,tile:false})}</div><b>${current?'현재 배치':String(i+1).padStart(2,'0')}</b><small>앞 (${Math.round(p.x)}, ${Math.round(p.y)}) · 뒤 (${Math.round(q.x)}, ${Math.round(q.y)})<br>뒤 ${s.back}% · 불투명도 ${s.alpha}% · 전체 ${s.zoom}%</small>`;button.addEventListener('click',()=>{state={...s};render();persist();status('선택한 배치를 적용했습니다.');});$('candidates').append(button);});
 }
