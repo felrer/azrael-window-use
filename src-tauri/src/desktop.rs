@@ -3,7 +3,10 @@ use serde_json::{json, Value};
 use std::{
     collections::HashMap,
     ffi::OsString,
-    sync::{atomic::Ordering, Arc, Mutex},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
+    },
     time::{Duration, Instant},
 };
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
@@ -13,6 +16,55 @@ pub struct Desktop {
     pub worker: Arc<Worker>,
     pub overlays: Mutex<Overlays>,
     health: Mutex<HashMap<String, Instant>>,
+    stop_shortcut_available: AtomicBool,
+    tray_status: Mutex<String>,
+}
+
+const STOP_SHORTCUT: &str = "CommandOrControl+Alt+F12";
+const STOP_LABEL: &str = "중지 (Ctrl/Cmd+Alt+F12)";
+const STOP_UNAVAILABLE_LABEL: &str = "중지 (전역 단축키 사용 불가)";
+
+fn refresh_tray_tooltip(app: &AppHandle) {
+    let state = app.state::<Desktop>();
+    let status = state.tray_status.lock().unwrap().clone();
+    let tooltip = if state.stop_shortcut_available.load(Ordering::Acquire) {
+        status
+    } else {
+        format!("{status} · 전역 중지 단축키 사용 불가")
+    };
+    if let Some(tray) = app.tray_by_id("window-use") {
+        let _ = tray.set_tooltip(Some(tooltip));
+    }
+}
+
+fn register_stop_shortcut(
+    app: &AppHandle,
+    stop_item: &tauri::menu::MenuItem<tauri::Wry>,
+    initial: bool,
+) {
+    // is_registered only reports this application's ownership. Another host may
+    // own the chord during coexistence/drain; registration remains authoritative.
+    let shortcuts = app.global_shortcut();
+    let result = if shortcuts.is_registered(STOP_SHORTCUT) {
+        Ok(())
+    } else {
+        shortcuts.register(STOP_SHORTCUT)
+    };
+    let available = result.is_ok();
+    app.state::<Desktop>()
+        .stop_shortcut_available
+        .store(available, Ordering::Release);
+    let _ = stop_item.set_text(if available {
+        STOP_LABEL
+    } else {
+        STOP_UNAVAILABLE_LABEL
+    });
+    refresh_tray_tooltip(app);
+    match result {
+        Err(error) if initial => eprintln!("Window Use global Stop shortcut unavailable; tray/UI Stop remain available; retrying every 5 seconds: {error}"),
+        Ok(()) if !initial => eprintln!("Window Use global Stop shortcut registration recovered"),
+        _ => (),
+    }
 }
 
 fn local_ui(url: &tauri::Url) -> bool {
@@ -239,13 +291,17 @@ fn on_message(app: &AppHandle, message: Value) {
                     _ => None,
                 };
                 let _ = window.set_theme(theme);
-                let _ = window.emit("window-use:changed", snapshot);
+                let _ = window.emit_to(
+                    tauri::EventTarget::webview_window(view),
+                    "window-use:changed",
+                    snapshot,
+                );
                 if view == "approval" && snapshot["approvals"].as_array().is_some_and(Vec::is_empty)
                 {
                     let _ = window.hide();
                 }
             }
-            if let Some(tray) = app.tray_by_id("window-use") {
+            {
                 let snapshot = &message["snapshot"];
                 let tooltip = if snapshot["connection"]["stopped"] == true {
                     "Azrael Window Use · 중지됨"
@@ -254,7 +310,8 @@ fn on_message(app: &AppHandle, message: Value) {
                 } else {
                     "Azrael Window Use"
                 };
-                let _ = tray.set_tooltip(Some(tooltip));
+                *app.state::<Desktop>().tray_status.lock().unwrap() = tooltip.into();
+                refresh_tray_tooltip(app);
             }
         }
         Some("show") => {
@@ -322,17 +379,14 @@ pub fn run(layout: Layout, arguments: Vec<OsString>) -> Result<(), String> {
             worker: worker.clone(),
             overlays: Mutex::new(Overlays::default()),
             health: Mutex::new(HashMap::new()),
+            stop_shortcut_available: AtomicBool::new(false),
+            tray_status: Mutex::new("Azrael Window Use".into()),
         })
         .setup(move |app| {
             let settings =
                 tauri::menu::MenuItem::with_id(app, "settings", "설정", true, None::<&str>)?;
-            let stop_item = tauri::menu::MenuItem::with_id(
-                app,
-                "stop",
-                "중지 (Ctrl/Cmd+Alt+F12)",
-                true,
-                None::<&str>,
-            )?;
+            let stop_item =
+                tauri::menu::MenuItem::with_id(app, "stop", STOP_LABEL, true, None::<&str>)?;
             let quit = tauri::menu::MenuItem::with_id(app, "quit", "종료", true, None::<&str>)?;
             let menu = tauri::menu::Menu::with_items(app, &[&settings, &stop_item, &quit])?;
             tauri::tray::TrayIconBuilder::with_id("window-use")
@@ -366,8 +420,28 @@ pub fn run(layout: Layout, arguments: Vec<OsString>) -> Result<(), String> {
                     }
                 })
                 .build(app)?;
-            app.global_shortcut().register("CommandOrControl+Alt+F12")?;
             let handle = app.handle().clone();
+            register_stop_shortcut(&handle, &stop_item, true);
+            let shortcut_handle = handle.clone();
+            tauri::async_runtime::spawn(async move {
+                loop {
+                    tokio::time::sleep(Duration::from_secs(5)).await;
+                    if shortcut_handle
+                        .state::<Desktop>()
+                        .worker
+                        .stopping
+                        .load(Ordering::Acquire)
+                    {
+                        break;
+                    }
+                    if !shortcut_handle
+                        .global_shortcut()
+                        .is_registered(STOP_SHORTCUT)
+                    {
+                        register_stop_shortcut(&shortcut_handle, &stop_item, false);
+                    }
+                }
+            });
             let reader_handle = handle.clone();
             let reader_worker = setup_worker.clone();
             let output = output.take().ok_or("Worker output already consumed")?;

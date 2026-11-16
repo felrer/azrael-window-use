@@ -1,16 +1,17 @@
 'use strict';
 (() => {
   const api = window.__TAURI__;
-  if (!api?.core?.invoke || !api?.event?.listen) return;
+  if (!api?.core?.invoke || !api?.event?.listen || !api?.webviewWindow?.getCurrentWebviewWindow) return;
   const subscribers = new Set();
   let disposed = false;
   let failed = false;
   const invoke = (command, args) => api.core.invoke(command, args);
   const health = () => invoke('ui_health', { failed }).catch(() => {});
   const failClosed = () => { failed = true; void health(); };
+  const target = { kind: 'WebviewWindow', label: api.webviewWindow.getCurrentWebviewWindow().label };
   const listening = api.event.listen('window-use:changed', event => {
     if (!disposed) for (const subscriber of [...subscribers]) subscriber(event.payload);
-  });
+  }, { target });
   listening.catch(failClosed);
   Object.defineProperty(window, 'windowUse', { value: Object.freeze({
     snapshot: async () => { await listening; return invoke('snapshot'); },
