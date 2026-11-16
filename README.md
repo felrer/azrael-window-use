@@ -18,8 +18,8 @@ Windows x64에서 창을 관찰하고 제어하는 독립 MCP 프로그램입니
 이 저장소는 소스 코드입니다. 실행 파일이나 배포 ZIP이 게시되어 있다고 가정하지 마세요. 개발 실행에는 Windows x64 대화형 데스크톱, Node.js/npm, Rust MSVC 도구 체인, Visual Studio C++·CMake 및 .NET Framework C# 컴파일러가 필요합니다.
 
 ```powershell
-git clone https://github.com/felrer/azrael-window-use-mcp.git
-cd azrael-window-use-mcp
+git clone https://github.com/felrer/azrael-window-use.git
+cd azrael-window-use
 npm ci
 npm run build:native
 npm test
@@ -33,7 +33,7 @@ npm start
   "mcpServers": {
     "window-use": {
       "command": "C:\\Program Files\\nodejs\\node.exe",
-      "args": ["C:\\Projects\\azrael-window-use-mcp\\scripts\\launch.cjs", "--mcp"]
+      "args": ["C:\\Projects\\azrael-window-use\\scripts\\launch.cjs", "--mcp"]
     }
   }
 }
