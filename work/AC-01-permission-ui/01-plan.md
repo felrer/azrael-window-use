@@ -72,7 +72,7 @@ Status: design preview; runtime approval UI unchanged.
 
 ## Production integration
 
-Status: implementation and checks complete; MCP refresh and user acceptance request pending.
+Status: implementation committed; independent MCP refreshed; real approval shown; awaiting user visual acceptance.
 
 - User authorized applying the agreed preview to production, all-app icon extraction, MCP refresh and a real approval request for user verification.
 - Applied naming, approval copy/layout/footer gear, independent settings UI, mode ordering/custom picker, thin scrollbar, text-only reset and whitelist/protected list editing. Preserved real expiry, fail-closed approvals, self-protection, theme and Stop/resume.
@@ -80,3 +80,8 @@ Status: implementation and checks complete; MCP refresh and user acceptance requ
 - Existing unrelated local edits in architecture/distribution/logger/MCP/vendor diagnostics are preserved and excluded from this unit's commit.
 - Verification: node --check main and renderer exit 0; npm test 36 passed, 0 failed, exit 0. Icon cache tests retained to prevent duplicate/unbounded extraction or post-shutdown callbacks during future UI changes. Native binaries unchanged; no native compilation needed.
 - Detailed contract: docs/permission-ui.md. No publication/push or GPUI migration authorized by this step.
+- Integration commit: 6d982f5. Production renderer DOM simulation also passed (exit 0): approval/settings snapshots, PNG source, mode command, icon-refresh draft preservation, real expiry footer and open-settings command. This does not substitute for user visual acceptance.
+- Reconnected only configured az_window_use_2 (standalone). It reports ready:true and context enabled:true/control:ask. Overall reload ready:false is from unrelated laio:false, not this MCP.
+- Opened a blank Paint for requested user verification. Requested resize to its existing 1689x1284 physical size / 144 DPI (1126x856 DIP), to trigger app approval without changing its content or size. Product log confirms approval_window_created and approval_window_shown with no renderer failure in the observed tail.
+- Live request ended approval_timeout after the normal 50-second window, actionExecuted:false. No approval was granted and no resize executed; no automatic retry. User visual acceptance remains pending.
+- No task-owned build, profile, backup or disposable file was created. Product's regular bounded logs remain under its existing owner; preview sources/assets remain the requested editable design artifacts. Earlier primary-checkout maintenance cleanup blockage is separate and unchanged.
