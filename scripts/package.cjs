@@ -25,7 +25,7 @@ function prepareAppPackage(pkg) {
   return {packageJson};
 }
 function selectedInputs() {
-  const files=['package.json','package-lock.json','LICENSE','README.md','scripts/package.cjs','scripts/package-unix.cjs','scripts/package-inventory.cjs','scripts/package-archive.cjs','scripts/build-native.cjs','scripts/launch.cjs'];
+  const files=['package.json','package-lock.json','LICENSE','README.md','scripts/package.cjs','scripts/package-unix.cjs','scripts/package-inventory.cjs','scripts/package-archive.cjs','scripts/stage-tauri-macos.cjs','scripts/build-native.cjs','scripts/launch.cjs'];
   for(const name of ['Cargo.toml','Cargo.lock','build.rs','tauri.conf.json'])files.push('src-tauri/'+name);
   const result=files.map(file=>({path:file,bytes:fs.statSync(path.join(root,file)).size,sha256:hash(path.join(root,file))}));
   for(const directory of ['src','vendor/azrael','src-tauri/src','src-tauri/capabilities','src-tauri/permissions','artifacts/runtime'])for(const member of inventory(path.join(root,directory)))result.push({...member,path:directory+'/'+member.path});
