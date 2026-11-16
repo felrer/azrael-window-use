@@ -1,6 +1,6 @@
 # Shared Window Use service
 
-Status: `partial` — shared-service and connection-adapter source integration is implemented. Portable-package production, installed Azrael UI and real-input takeover acceptance are separate outstanding gates. Windows x64 interactive desktop only. This contract does not activate additional Azrael platforms.
+Status: `partial` — shared-service and connection-adapter source integration is implemented. Windows x64 has the standalone 0.1.0 release; installed Azrael UI and real-input takeover acceptance remain separate gates. Standalone Unix transport and platform backends are described in [platform support](platforms.md), with native GUI acceptance tracked separately. This contract does not activate additional Azrael built-in platforms.
 
 ## Identity and ownership
 

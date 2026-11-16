@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { EventEmitter } = require('node:events');
-const { normalizeExecutable } = require('../vendor/azrael/use-control-settings.cjs');
+const { normalizeExecutable, executableName } = require('./platform-paths.cjs');
 const fail = (code, message) => Object.assign(new Error(message), { code, actionExecuted: false });
 const MODES = ['ask', 'observe', 'full'];
 function executableList(list) {
@@ -109,7 +109,7 @@ class PermissionService extends EventEmitter {
     const id = crypto.randomUUID(), generation = this.generation;
     let resolve, reject;
     const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
-    const record = { id, key, permission, app: { name: executable ? path.win32.basename(executable) : '전체 데스크톱', executable: executable || '' }, expiresAt: this.now() + this.approvalTimeoutMs, generation, promise, resolve, reject };
+    const record = { id, key, permission, app: { name: executable ? executableName(executable) : '전체 데스크톱', executable: executable || '' }, expiresAt: this.now() + this.approvalTimeoutMs, generation, promise, resolve, reject };
     record.signal = signal;
     record.abort = () => this.finish(id, fail('cancelled', '요청이 취소되었습니다.'));
     record.timer = setTimeout(() => this.finish(id, fail('approval_timeout', '승인 대기 시간이 만료되었습니다.')), this.approvalTimeoutMs);
@@ -160,7 +160,7 @@ class PermissionService extends EventEmitter {
   stop() { this.setStopped(true); }
   resume() { this.setStopped(false); }
   snapshot() {
-    const app = executable => ({ executable, label: path.win32.basename(executable), locked: this.selfApps.has(executable) });
+    const app = executable => ({ executable, label: executableName(executable), locked: this.selfApps.has(executable) });
     return { enabled: this.state.enabled, mode: this.state.mode, protectedApps: this.protectedExecutables().map(app), allowedApps: this.state.allowedApps.map(app) };
   }
   approvals() { return [...this.pending.values()].map(({ id,permission,app,expiresAt }) => ({ id,permission,app,expiresAt })); }

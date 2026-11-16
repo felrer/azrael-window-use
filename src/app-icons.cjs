@@ -2,6 +2,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const {normalizeExecutable}=require('./platform-paths.cjs');
 const MAX_ICON_BYTES = 96 * 1024, MAX_CACHE_BYTES = 8 * 1024 * 1024;
 const validIcon = url => typeof url === 'string' && url.length <= MAX_ICON_BYTES && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(url);
 // Persistent cache is an optional optimization, never a source of authority.
@@ -45,7 +46,8 @@ function createAppIcons({ getFileIcon, changed, directory, maxEntries = 512, con
       const hit=await disk.get(key,signature(before));if(hit){entry.url=hit;return;}
     }
     entry.url=null;
-    const icon=await getFileIcon(executable,{size:'normal'});
+    const bundle=process.platform==='darwin'?/^(.*?\.app)(?:\/|$)/.exec(executable)?.[1]:null;
+    const icon=await getFileIcon(bundle||executable,{size:'normal'});
     if(disposed||icon.isEmpty())return;
     const url=icon.toDataURL();if(!validIcon(url))return;
     if(directory){const after=await stat(executable);if(disposed||signature(before)!==signature(after))return;disk.put(key,signature(after),url);}
@@ -65,8 +67,8 @@ function createAppIcons({ getFileIcon, changed, directory, maxEntries = 512, con
     }
   }
   function get(executable,priority=false){
-    if(disposed||typeof executable!=='string'||!/^[a-z]:[\\/].*\.exe$/i.test(executable))return null;
-    executable=path.win32.normalize(executable).toLowerCase();
+    if(disposed)return null;
+    try{executable=normalizeExecutable(executable);}catch{return null;}
     let entry=cache.get(executable);
     if(entry&&entry.done&&directory&&now()-entry.checked>=revalidateMs){cache.delete(executable);entry=null;}
     if(entry){if(priority&&!entry.started&&!entry.priority){entry.priority=true;schedule();}return entry.url;}
@@ -75,7 +77,7 @@ function createAppIcons({ getFileIcon, changed, directory, maxEntries = 512, con
   }
   return {
     get,
-    state(executable){if(!executable)return 'unavailable';const entry=cache.get(path.win32.normalize(executable).toLowerCase());return !entry?'unavailable':entry.url?'ready':entry.done?'unavailable':'loading';},
+    state(executable){try{executable=normalizeExecutable(executable);}catch{return 'unavailable';}const entry=cache.get(executable);return !entry?'unavailable':entry.url?'ready':entry.done?'unavailable':'loading';},
     flush(){return disk.flush();},
     dispose(){disposed=true;queue.length=0;cache.clear();}
   };

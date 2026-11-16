@@ -2,7 +2,7 @@
 if(process.argv.includes('--mcp-pipe')) {
   require('./adapter.cjs').run().catch(error=>{process.stderr.write('Window Use adapter failed: '+error.message+'\n');require('electron').app.exit(1);});
 } else {
-const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, dialog, globalShortcut, nativeTheme } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, dialog, globalShortcut, nativeTheme, screen } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
@@ -14,7 +14,8 @@ const { createSharedService } = require('./shared-service.cjs');
 const { createServiceClient } = require('./shared-client.cjs');
 const registry = require('./service-registry.cjs');
 const { createCandidate } = require('./service-candidate.cjs');
-const { normalizeExecutable } = require('../vendor/azrael/use-control-settings.cjs');
+const { normalizeExecutable } = require('./platform-paths.cjs');
+let agentOverlay;
 const pipeIndex = process.argv.indexOf('--mcp-pipe');
 const isMcp = process.argv.includes('--mcp') || pipeIndex >= 0;
 const profileIndex = process.argv.indexOf('--user-data-dir');
@@ -120,13 +121,13 @@ function setupIPC() {
         if (Object.keys(payload).length) { fields(payload,['executable']); selected = payload.executable; }
         else {
           fields(payload,[]);
-          const result = await dialog.showOpenDialog(entry.window, { title:action === 'addAllowedApp' ? '허용할 앱 선택' : '보호할 앱 선택', properties:['openFile'], filters:[{name:'Windows 앱',extensions:['exe']}] });
+          const result = await dialog.showOpenDialog(entry.window, { title:action === 'addAllowedApp' ? '허용할 앱 선택' : '보호할 앱 선택', properties:['openFile'], ...(process.platform==='win32'?{filters:[{name:'Windows 앱',extensions:['exe']}]}:{}) });
           if (!result.canceled && result.filePaths.length === 1) selected = result.filePaths[0];
         }
         if (!selected) break;
         const executable = normalizeExecutable(selected);
         // Never probe a network location from a typed path or icon lookup.
-        if (!/^[a-z]:[\\/]/i.test(executable)) throw fail('invalid_arguments','로컬 실행 파일을 선택해주세요.');
+        if (!(process.platform==='win32'?/^[a-z]:[\\/]/i.test(executable):executable.startsWith('/'))) throw fail('invalid_arguments','로컬 실행 파일을 선택해주세요.');
         if (!(await fs.promises.stat(executable)).isFile()) throw fail('invalid_arguments','실행 파일이 아닙니다.');
         if (action === 'addAllowedApp') {
           if (permissions.blocked({executable})) throw fail('security_app_blocked','보호된 앱은 허용할 수 없습니다.');
@@ -152,11 +153,13 @@ function setupIPC() {
   });
 }
 function trayIcon() {
-  return nativeImage.createFromPath(path.join(__dirname, 'assets/app-icon.ico'));
+  const icon = nativeImage.createFromPath(path.join(__dirname, process.platform==='win32'?'assets/app-icon.ico':'assets/app-icon-64.png'));
+  return process.platform==='win32' ? icon : icon.resize({width:process.platform==='darwin'?18:24,height:process.platform==='darwin'?18:24});
 }
 async function shutdown(fromService=false) {
   if (closing) return; closing = true;
   globalShortcut.unregisterAll();
+  agentOverlay?.dispose();
   icons.dispose();
   await icons.flush();
   if(!fromService)await service?.close();
@@ -170,8 +173,9 @@ async function shutdown(fromService=false) {
 app.on('window-all-closed', () => {});
 app.on('before-quit', event => { if(!closing){event.preventDefault();void shutdown();} });
 app.whenReady().then(async () => {
-  if(process.platform!=='win32'||process.arch!=='x64')throw Error('Windows x64 is required');
+  if(!(['win32','darwin','linux'].includes(process.platform))||!['x64','arm64'].includes(process.arch)||process.platform==='win32'&&process.arch!=='x64')throw Error('Unsupported Window Use platform');
   const directory = app.getPath('userData');
+  if(process.platform!=='win32')agentOverlay=require('./agent-overlay.cjs').createAgentOverlay({BrowserWindow,screen});
   log = createLogger(path.join(directory,'logs'),app.getVersion());
   log('info','app','startup');
   const runtimeIndex=process.argv.indexOf('--runtime-directory');
@@ -199,7 +203,7 @@ app.whenReady().then(async () => {
       try { runtime=createRuntime({runtimeDirectory,directory,permissions:sessionPermissions,log,sessionId:id,
         authorize:options.authorizationRequired===true?authorize:undefined,
         workspacePath:options.workspacePath,workspaceName:options.workspaceName,codexHome:options.codexHome,
-        emit}); } catch(error) {sessionPermissions.dispose();throw error;}
+        emit,visualizer:agentOverlay}); } catch(error) {sessionPermissions.dispose();throw error;}
       sessionPermissions.on('change',broadcast);sessionPermissions.on('approval',()=>show('approval'));
       const entry={permissions:sessionPermissions,call:(method,args,signal,context)=>runtime.call(method,args,signal,context),async dispose(){sessions.delete(id);try{await runtime.dispose();}finally{sessionPermissions.dispose();broadcast();}}};
       sessions.set(id,entry);broadcast();return entry;

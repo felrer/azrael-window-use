@@ -49,8 +49,8 @@ function relayMetadata(meta) {
   return selected;
 }
 function toolDefinitions() {
-  // Retain Unix backends without advertising them until platform acceptance resumes.
-  if (process.platform !== 'win32') return [];
+  // Backends report actual availability and limits through context capabilities.
+  if (!['win32','darwin','linux'].includes(process.platform)) return [];
   const selector = {type:'object',properties:{name:{type:'string'},automationId:{type:'string'},controlType:{type:'string'}},anyOf:[{required:['name']},{required:['automationId']}],additionalProperties:false};
   const fullSelector = {...selector,properties:{...selector.properties,ancestor:selector}};
   const parameter = {type:'object',properties:{parameter:{type:'string'}},required:['parameter'],additionalProperties:false};

@@ -9,11 +9,11 @@ const { verifyRuntime } = require('../vendor/azrael/window-control-runtime.cjs')
 const { createSwitchedInputProvider } = require('../vendor/azrael/window-switched-input.cjs');
 const { fail } = require('./permissions.cjs');
 const { CURVE_GUIDE, BATCH_GUIDE } = require('../vendor/azrael/window-input-guidance.cjs');
-const { normalizeExecutable } = require('../vendor/azrael/use-control-settings.cjs');
+const { normalizeExecutable } = require('./platform-paths.cjs');
 const same = (a, b) => !!a && !!b && ['hwnd','pid','processCreated','executable'].every(key => a[key] === b[key]);
-function createRuntime({ runtimeDirectory, directory, permissions, log, backend: injectedBackend, switchedInput: injectedInput, authorize: externalAuthorize, workspacePath, workspaceName, codexHome, sessionId, emit }) {
-  const declaration = injectedBackend ? null : verifyRuntime(runtimeDirectory);
-  const backend = injectedBackend || createBackend({ windowControl: declaration });
+function createRuntime({ runtimeDirectory, directory, permissions, log, backend: injectedBackend, switchedInput: injectedInput, authorize: externalAuthorize, workspacePath, workspaceName, codexHome, sessionId, emit, visualizer }) {
+  const declaration = injectedBackend || process.platform!=='win32' ? null : verifyRuntime(runtimeDirectory);
+  const backend = injectedBackend || (process.platform==='win32' ? createBackend({ windowControl: declaration }) : require('./platform-backend.cjs').createPlatformBackend(runtimeDirectory));
   let multiPointer;
   if (declaration) {
     const multiDirectory = path.join(path.dirname(runtimeDirectory), 'multi-pointer');
@@ -73,12 +73,14 @@ function createRuntime({ runtimeDirectory, directory, permissions, log, backend:
     context: async () => ({
       enabled: permissions.state.enabled, available: true,
       permissions: { observation: 'allowed-except-protected', control: permissions.state.mode, desktopControlGranted: desktopGranted() },
-      capabilities: { windowObservation: true, desktopCapture: true, windowUIAControl: true, desktopControl: !!input?.desktopInput },
+      capabilities: { windowObservation: true, desktopCapture: true, windowUIAControl: true, desktopControl: !!input?.desktopInput, ...(backend.capabilities||{}), ...(backend.getCapabilities?await backend.getCapabilities():{}), ...(visualizer?.available&&!visualizer.available()?{actionVisualization:false}:{}) },
       inputBackends: { switchedInput: !!input, desktopControlGranted: desktopGranted() },
       guideVersion: 'shared-window-use-1',
-      guide: 'Prefer inspect for text, values and control states, and supported element actions such as invoke or set_value for controls. Use capture and pointer input for visual judgment, drawing, dragging or targets not exposed by UIA. capture defaults to image-only; includeUIA:true also returns a bounded UIA summary under the same observationId for either input path. For known multi-step element workflows, run_task_macro resolves explicit selectors afresh inside the server; it reduces model round trips, not UIA queries. switched_input points use returned capture-image pixels with top-left (0,0); desktop_input points use absolute physical screen pixels. One point clicks, two drag straight, and 3..32 follow centripetal Catmull-Rom. Re-capture after window movement, resize or DPI change. Use list_windows for opaque windowId values; capture or inspect before acting with fresh observationId/elementId. App approvals are routed to the originating client approval UI, or the local Window Use approval window for standalone MCP clients. Permissions apply only to the isolated service session and its originating connection. Protected apps, including Window Use settings/approval UI, cannot be observed or controlled. capture_desktop masks protected apps. desktop_input requires explicit screen coordinates and separate permission; a gesture remains inside its verified app target. After permission changes, reacquire observations. Delivery does not prove the app effect: capture or inspect and assert it. Never replay unknown input. User Stop requires explicit resume from trusted user UI; global Stop requires the shared Window Use settings UI. Release input when done. Control automatically acquires window occupancy on first control and retains it until 30 seconds after the last owner window request completes. Read-only requests do not acquire occupancy. The runtime waits on conflicts or returns a typed failure; respect window_busy.' + ' ' + CURVE_GUIDE + ' ' + BATCH_GUIDE
+      guide: 'Prefer inspect for text, values and control states, and supported element actions such as invoke or set_value for controls. Use capture and pointer input for visual judgment, drawing, dragging or targets not exposed by UIA. capture defaults to image-only; includeUIA:true also returns a bounded UIA summary under the same observationId for either input path. For known multi-step element workflows, run_task_macro resolves explicit selectors afresh inside the server; it reduces model round trips, not UIA queries. switched_input points use returned capture-image pixels with top-left (0,0); desktop_input points use absolute physical screen pixels. One point clicks, two drag straight, and 3..32 follow centripetal Catmull-Rom. Re-capture after window movement, resize or DPI change. Use list_windows for opaque windowId values; capture or inspect before acting with fresh observationId/elementId. App approvals are routed to the originating client approval UI, or the local Window Use approval window for standalone MCP clients. Permissions apply only to the isolated service session and its originating connection. Protected apps, including Window Use settings/approval UI, cannot be observed or controlled. capture_desktop masks protected apps. desktop_input requires explicit screen coordinates and separate permission; a gesture remains inside its verified app target. After permission changes, reacquire observations. Delivery does not prove the app effect: capture or inspect and assert it. Never replay unknown input. User Stop requires explicit resume from trusted user UI; global Stop requires the shared Window Use settings UI. Release input when done. Control automatically acquires window occupancy on first control and retains it until 30 seconds after the last owner window request completes. Read-only requests do not acquire occupancy. The runtime waits on conflicts or returns a typed failure; respect window_busy.' + ' ' + CURVE_GUIDE + ' ' + BATCH_GUIDE,
+      ...(process.platform!=='win32'?{guide:'Use context capabilities and OS permission/session readiness before choosing tools. This backend uses macOS AX or Linux AT-SPI for inspect and supported semantic element actions. Use list_windows for opaque windowId values, then inspect for fresh observationId and elementId. run_task_macro resolves explicit selectors again at each step. capture is image-only by default; includeUIA:true also obtains a bounded accessibility summary when window capture is supported. Unix coordinate input, desktop capture/control and independent input pointers are not implemented. Cosmetic Agent cursors do not inject input. Unsupported operations fail explicitly; do not substitute unapproved foreground input. Protected apps and password content stay excluded. App approvals are connection-scoped and routed to the originating client UI. Respect window occupancy, reacquire observations after changes, verify action postconditions, never replay an unknown mutation, and resume after user Stop only from trusted UI.'}:{}),
     }),
     desktopCapture: async () => {
+      if(backend.capabilities?.desktopCapture===false)throw fail('unsupported_action','Protected desktop capture is unavailable on this platform; use selected-window capture or inspect.');
       active(); const generation = permissions.generation;
       if(!await authorizeTarget(null,'observation',false))throw fail('permission_denied','화면 관찰이 허용되지 않았습니다.');
       const result = await backend.request('captureDesktop', { blockedApps: [...new Set([...permissions.protectedExecutables(),...policy().blockedApps])].sort() });
@@ -102,17 +104,18 @@ function createRuntime({ runtimeDirectory, directory, permissions, log, backend:
       await authorize(); return input.desktopInput(thread, expected, packet, authorize);
     },
     releaseDesktopInput: () => input?.release(thread),
-    visualizeAction: input?.visualize ? async (_thread, window, args, tool, guard) => {
+    visualizeAction: input?.visualize || visualizer&&backend.capabilities?.actionVisualization ? async (_thread, window, args, tool, guard) => {
       active(); protectedTarget(window); await guard();
       const position = await backend.request('actionPoint', { window, observationId: args.observationId, ...(args.elementId ? { elementId: args.elementId } : {}) });
       await guard(); active();
-      await input.visualize(thread, window, { ...position, phase: 'active', click: tool === 'invoke' }, guard);
-      return () => input.visualize(thread, window, { ...position, phase: 'idle' }, guard);
+      if(input?.visualize){await input.visualize(thread, window, { ...position, phase: 'active', click: tool === 'invoke' }, guard);return () => input.visualize(thread, window, { ...position, phase: 'idle' }, guard);}
+      visualizer.visualize(thread,position,'active');
+      return ()=>{}; // The cosmetic cursor holds active for one second before fading.
     } : undefined,
     onUserStop: (_thread,value) => { permissions.stop();emit?.({type:'userStop',value}); },
     onOverlayError: error => log?.('warn', 'native', 'overlay_failed', { code: error.code })
   });
-  const invalidate = reason => { externalDesktopGranted=false;owner.invalidateObservation(thread); if (reason === 'user_stopped') owner.stop(thread); if (reason === 'user_resumed') owner.clear(thread); };
+  const invalidate = reason => { externalDesktopGranted=false;visualizer?.release(thread);owner.invalidateObservation(thread); if (reason === 'user_stopped') owner.stop(thread); if (reason === 'user_resumed') owner.clear(thread); };
   permissions.on('invalidate', invalidate);
   const notificationSubscription=backend.onApprovalNotificationActivated?.(event=>emit?.({type:'approvalNotificationActivated',requestId:event.requestId}));
   return {
@@ -144,6 +147,7 @@ function createRuntime({ runtimeDirectory, directory, permissions, log, backend:
     }),
     async dispose() {
       if (disposed) return; disposed = true;
+      visualizer?.release(thread);
       permissions.off('invalidate', invalidate);
       notificationSubscription?.dispose?.();
       let failure;

@@ -2,6 +2,8 @@
 
 # Azrael Window Use
 
+macOS·Linux용 플랫폼 백엔드가 소스에 추가되었습니다. 접근성 기반 작업과 공통 승인 UI를 제공하며, Windows의 독립 가상화 입력과 지원 범위는 다릅니다. 현재 게시된 `v0.1.0` ZIP은 **Windows x64 전용**입니다. 플랫폼별 빌드 방법과 검증 상태는 [플랫폼 안내](docs/platforms.md)를 확인하세요.
+
 Windows x64에서 창을 관찰하고 제어하는 독립 MCP 프로그램입니다. Azrael의 창 제어 엔진과 보호 앱 정책을 재사용하며, Azrael·VS Code·별도 Node.js 설치 없이 배포 패키지를 실행할 수 있습니다.
 
 ## 다운로드 — 0.1.0
