@@ -7,6 +7,56 @@ const {inventory}=require('./build-native.cjs');
 const root=path.resolve(__dirname,'..');
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 const json=(file,value)=>fs.writeFileSync(file,JSON.stringify(value,null,2)+'\n');
+// npm creates relative executable links on Unix. This inventory is only for
+// prepared app dependencies; native/source inventories still reject all links.
+function inventoryApp(directory) {
+  const base=fs.realpathSync(directory),files=[];
+  const relative=file=>path.relative(base,file).split(path.sep).join('/');
+  const contained=file=>file===base||(!path.relative(base,file).startsWith('..'+path.sep)&&path.relative(base,file)!=='..'&&!path.isAbsolute(path.relative(base,file)));
+  function resolveFile(file,seen=new Set()) {
+    if(!contained(file))throw Error('Application link escapes its root: '+file);
+    const parts=path.relative(base,file).split(path.sep);let current=base;
+    for(let index=0;index<parts.length;index++){
+      current=path.join(current,parts[index]);
+      const info=fs.lstatSync(current);
+      if(info.isSymbolicLink()){
+        if(seen.has(current))throw Error('Cyclic application link: '+current);
+        seen.add(current);
+        const target=fs.readlinkSync(current);
+        if(path.isAbsolute(target))throw Error('Absolute application link: '+current);
+        const targetPath=path.resolve(path.dirname(current),target);
+        if(!contained(targetPath))throw Error('Application link escapes its root: '+current);
+        return resolveFile(path.resolve(targetPath,...parts.slice(index+1)),seen);
+      }
+    }
+    if(!fs.lstatSync(current).isFile())throw Error('Application link must resolve to a regular file: '+file);
+    return current;
+  }
+  function walk(folder){
+    for(const entry of fs.readdirSync(folder,{withFileTypes:true}).sort((a,b)=>a.name.localeCompare(b.name,'en'))){
+      const file=path.join(folder,entry.name);
+      if(entry.isDirectory()){walk(file);continue;}
+      if(!entry.isFile()&&!entry.isSymbolicLink())throw Error('Non-regular application input: '+file);
+      const resolved=entry.isSymbolicLink()?resolveFile(file):file,bytes=fs.readFileSync(resolved);
+      files.push({path:relative(file),bytes:bytes.length,sha256:sha(bytes),...(entry.isSymbolicLink()?{linkTarget:fs.readlinkSync(file),resolvedPath:relative(resolved)}:{})});
+    }
+  }
+  walk(base);return files;
+}
+function restoreRelativeLinks(source,destination,prepared) {
+  if(JSON.stringify(inventoryApp(source))!==JSON.stringify(prepared))throw Error('Prepared application changed before copy verification');
+  for(const member of prepared.filter(file=>file.linkTarget!==undefined)){
+    const file=path.join(destination,member.path);
+    if(!fs.lstatSync(file).isSymbolicLink())throw Error('Packager replaced an application link: '+member.path);
+    const actual=fs.readlinkSync(file);
+    // Node fs.cp defaults to an absolute source target unless verbatimSymlinks
+    // is true; Packager exposes dereferencing but not that separate option.
+    const copiedTarget=path.resolve(path.dirname(path.join(source,member.path)),member.linkTarget);
+    if(actual!==member.linkTarget&&actual!==copiedTarget)throw Error('Packager changed an application link target: '+member.path);
+    if(actual!==member.linkTarget){fs.unlinkSync(file);fs.symlinkSync(member.linkTarget,file,'file');}
+  }
+  if(JSON.stringify(inventoryApp(destination))!==JSON.stringify(prepared))throw Error('Copied application contents or relative links differ');
+}
 function commandLauncher(platform) {
   const host=platform==='darwin'?'WindowUseHost.app/Contents/MacOS/WindowUseHost':'WindowUseHost';
   const resources=platform==='darwin'?'WindowUseHost.app/Contents/Resources':'resources';
@@ -53,7 +103,7 @@ async function main() {
     const {packager,defaultSanitizePackageJson}=await import('@electron/packager');
     json(path.join(app,'package.json'),defaultSanitizePackageJson(pkg));
     fs.unlinkSync(path.join(app,'package-lock.json'));
-    const prepared=inventory(app);
+    const prepared=inventoryApp(app);
     const iconSource=path.join(snapshot,'src/assets/app-icon-256.png');
     let icon=iconSource;
     report.icon={sourceSha256:sha(fs.readFileSync(iconSource)),steps:[]};
@@ -76,10 +126,10 @@ async function main() {
       } finally {fs.closeSync(iconFd);}
     }
     report.icon.path=icon;report.icon.sha256=sha(fs.readFileSync(icon));json(reportFile,report);
-    const paths=await packager({dir:app,out:release,name:'WindowUseHost',executableName:'WindowUseHost',appBundleId:'com.azrael.window-use',icon,appVersion:pkg.version,buildVersion:pkg.version,electronVersion:pkg.devDependencies.electron,platform:process.platform,arch:process.arch,asar:false,prune:false,overwrite:false,quiet:true,extraResource:[path.join(snapshot,'artifacts/runtime')]});
+    const paths=await packager({dir:app,out:release,name:'WindowUseHost',executableName:'WindowUseHost',appBundleId:'com.azrael.window-use',icon,appVersion:pkg.version,buildVersion:pkg.version,electronVersion:pkg.devDependencies.electron,platform:process.platform,arch:process.arch,asar:false,derefSymlinks:false,prune:false,overwrite:false,quiet:true,junk:false,ignore:()=>false,sanitizePackageJson:[value=>value],afterCopy:[async destination=>restoreRelativeLinks(app,destination,prepared)],tmpdir:path.join(run,'packager-tmp'),extraResource:[path.join(snapshot,'artifacts/runtime')]});
     if(paths.length!==1)throw Error('Unexpected packager output');
     const distribution=paths[0],resources=path.join(distribution,process.platform==='darwin'?'WindowUseHost.app/Contents/Resources':'resources');
-    for(const member of prepared)if(sha(fs.readFileSync(path.join(resources,'app',member.path)))!==member.sha256)throw Error('Packaged application differs: '+member.path);
+    if(JSON.stringify(inventoryApp(path.join(resources,'app')))!==JSON.stringify(prepared))throw Error('Packaged application contents or relative links differ');
     for(const member of inventory(path.join(snapshot,'artifacts/runtime')))if(sha(fs.readFileSync(path.join(resources,'runtime',member.path)))!==member.sha256)throw Error('Packaged runtime differs: '+member.path);
     if(verifyPlatformRuntime(path.join(resources,'runtime/window-control')).manifestSha256!==checkedRuntime.manifestSha256)throw Error('Packaged native manifest differs');
     const command=path.join(distribution,'WindowUseMCP');fs.writeFileSync(command,commandLauncher(process.platform),{mode:0o755,flag:'wx'});
@@ -89,6 +139,7 @@ async function main() {
     const fuses=await getCurrentFuseWire(host);
     if(fuses[FuseV1Options.RunAsNode]!==FuseState.ENABLE)throw Error('Bundled launcher requires Electron RunAsNode');
     if(sha(JSON.stringify(selectedInputs()))!==sourceSha256)throw Error('Source changed during packaging');
+    if(JSON.stringify(inventoryApp(app))!==JSON.stringify(prepared))throw Error('Prepared application changed during packaging');
     report.status='passed';report.activeReferences=['packaged-acceptance'];report.distribution=distribution;report.command=command;report.packagedBehaviorAcceptance='pending';report.fuses={runAsNode:fuses[FuseV1Options.RunAsNode]};report.appFiles=prepared;
     json(path.join(distribution,'build-info.json'),report);json(reportFile,report);
     process.stdout.write(JSON.stringify({distribution,command,report:reportFile,packagedBehaviorAcceptance:'pending'})+'\n');
@@ -96,4 +147,4 @@ async function main() {
   finally {fs.closeSync(fd);fs.unlinkSync(lock);}
 }
 if(require.main===module)main().catch(error=>{process.stderr.write(error.message+'\n');process.exitCode=1;});
-module.exports={commandLauncher,selectedInputs};
+module.exports={commandLauncher,selectedInputs,inventoryApp,restoreRelativeLinks};
