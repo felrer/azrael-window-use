@@ -1,5 +1,6 @@
 'use strict';
-const fs = require('node:fs/promises');
+// All registry and candidate paths identify physical files, including app.asar.
+const fs = process.versions.electron ? require('original-fs').promises : require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
 const crypto = require('node:crypto');

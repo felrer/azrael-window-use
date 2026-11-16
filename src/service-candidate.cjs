@@ -1,8 +1,10 @@
 'use strict';
 const fs=require('node:fs');
+// Candidate identities hash the physical archive, not Electron's virtual ASAR directory.
+const physicalFs=process.versions.electron?require('original-fs'):fs;
 const path=require('node:path');
 const crypto=require('node:crypto');
-const hash=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+const hash=file=>crypto.createHash('sha256').update(physicalFs.readFileSync(file)).digest('hex');
 function createCandidate({executable=process.execPath,appRoot=path.resolve(__dirname,'..'),runtimeDirectory,args}={}) {
   const pkg=JSON.parse(fs.readFileSync(path.join(appRoot,'package.json'),'utf8'));
   const files=[];
