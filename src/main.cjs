@@ -1,4 +1,7 @@
 'use strict';
+if(process.argv.includes('--mcp-pipe')) {
+  require('./adapter.cjs').run().catch(error=>{process.stderr.write('Window Use adapter failed: '+error.message+'\n');require('electron').app.exit(1);});
+} else {
 const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, dialog, globalShortcut, nativeTheme } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
@@ -7,7 +10,10 @@ const { PermissionService, fail } = require('./permissions.cjs');
 const { createAppIcons } = require('./app-icons.cjs');
 const { createLogger } = require('./logger.cjs');
 const { createRuntime } = require('./runtime.cjs');
-const { startMcp, SocketTransport } = require('./mcp.cjs');
+const { createSharedService } = require('./shared-service.cjs');
+const { createServiceClient } = require('./shared-client.cjs');
+const registry = require('./service-registry.cjs');
+const { createCandidate } = require('./service-candidate.cjs');
 const { normalizeExecutable } = require('../vendor/azrael/use-control-settings.cjs');
 const pipeIndex = process.argv.indexOf('--mcp-pipe');
 const isMcp = process.argv.includes('--mcp') || pipeIndex >= 0;
@@ -18,27 +24,32 @@ if (profileIndex >= 0) {
   app.setPath('userData', explicit);
 } else app.setPath('userData', path.join(app.getPath('appData'), 'Azrael Window Use MCP'));
 app.setName('Azrael Window Use');
-let settingsWindow, approvalWindow, tray, permissions, runtime, server, log, closing = false, connected = false, clientName = '';
+let settingsWindow, approvalWindow, tray, permissions, service, log, closing = false;
+const sessions=new Map();
+const hasPending=()=>[permissions,...[...sessions.values()].map(s=>s.permissions)].some(p=>p?.pending.size);
+const allApprovals=()=>[permissions,...[...sessions.values()].map(s=>s.permissions)].flatMap(p=>p?.approvals()||[]);
+function respond(id,decision) {const p=[permissions,...[...sessions.values()].map(s=>s.permissions)].find(p=>p?.pending.has(id));if(!p)throw fail('approval_expired','Approval expired');return p.respond(id,decision);}
+function denyPending() {for(const p of [permissions,...[...sessions.values()].map(s=>s.permissions)])for(const id of [...p.pending.keys()])p.finish(id,fail('approval_denied','Approval window closed'));}
 const windows = new Map();
 const html = path.join(__dirname, 'ui/index.html');
 const trustedURL = pathToFileURL(html).href;
 const icons = createAppIcons({ directory:path.join(app.getPath('userData'),'cache','app-icons'), getFileIcon: (...args) => app.getFileIcon(...args), changed: () => { if (!closing) broadcast(); } });
 function snapshot(view) {
   const describe = (identity, priority=false) => identity.locked ? {...identity,icon:null,iconState:'ready'} : ({ ...identity, icon: icons.get(identity.executable,priority), iconState: icons.state(identity.executable) });
-  const approvals = permissions.approvals().map(request => ({ ...request, app: describe(request.app,true) }));
+  const approvals = allApprovals().map(request => ({ ...request, app: describe(request.app,true) }));
   const settings = permissions.snapshot();
   settings.protectedApps = settings.protectedApps.map(identity=>describe(identity));
   settings.allowedApps = settings.allowedApps.map(identity=>describe(identity));
-  return { version: app.getVersion(), settings, connection: { id: runtime?.thread || '', clientName, connected, stopped: permissions.stopped }, approvals, theme: permissions.state.theme, view };
+  return { version: app.getVersion(), settings, connection: { id: '', clientName: '', connected:sessions.size>0, stopped: permissions.stopped }, approvals, theme: permissions.state.theme, view };
 }
 function broadcast() {
   if (!permissions) return;
   // Start before BrowserWindow/renderer creation, including when no UI is open.
-  for(const request of permissions.approvals())icons.get(request.app.executable,true);
+  for(const request of allApprovals())icons.get(request.app.executable,true);
   nativeTheme.themeSource = permissions.state.theme;
   for (const [id, { window, view }] of windows) if (!window.isDestroyed()) window.webContents.send('window-use:changed', snapshot(view));
-  if (approvalWindow && !approvalWindow.isDestroyed() && !permissions.pending.size) approvalWindow.hide();
-  if (tray) tray.setToolTip(permissions.stopped ? 'Azrael Window Use · 중지됨' : connected ? 'Azrael Window Use · 연결됨' : 'Azrael Window Use');
+  if (approvalWindow && !approvalWindow.isDestroyed() && !hasPending()) approvalWindow.hide();
+  if (tray) tray.setToolTip(permissions.stopped ? 'Azrael Window Use · 중지됨' : sessions.size ? 'Azrael Window Use · 연결됨' : 'Azrael Window Use');
 }
 function createWindow(view) {
   const window = new BrowserWindow({
@@ -56,7 +67,7 @@ function createWindow(view) {
   window.webContents.on('render-process-gone', () => { log('error','ui','renderer_exited'); permissions.stop(); });
   window.on('close', () => {
     if (closing) return;
-    if (view === 'approval') for (const id of [...permissions.pending.keys()]) permissions.finish(id, fail('approval_denied', '승인창을 닫아 요청이 취소되었습니다.'));
+    if(view==='approval')denyPending();
   });
   window.on('closed', () => {
     windows.delete(contentsId);
@@ -68,7 +79,7 @@ function createWindow(view) {
   return window;
 }
 function show(view) {
-  if (closing || view === 'approval' && !permissions.pending.size) return;
+  if (closing || view === 'approval' && !hasPending()) return;
   let window = view === 'approval' ? approvalWindow : settingsWindow;
   if (!window || window.isDestroyed()) {
     window = createWindow(view);
@@ -76,7 +87,7 @@ function show(view) {
     log('info','ui',view + '_window_created');
   }
   const reveal = () => {
-    if (window.isDestroyed() || closing || view === 'approval' && !permissions.pending.size) return;
+    if (window.isDestroyed() || closing || view === 'approval' && !hasPending()) return;
     if (window.isMinimized()) window.restore();
     window.show(); window.focus(); broadcast();
     log('info','ui',view + '_window_shown');
@@ -129,7 +140,7 @@ function setupIPC() {
         if (permissions.selfApps.has(normalizeExecutable(payload.executable))) throw fail('security_app_blocked','Window Use 자체 UI는 보호 해제할 수 없습니다.');
         permissions.save({protectedApps:permissions.state.protectedApps.filter(exe=>exe!==normalizeExecutable(payload.executable))}); break;
       case 'removeAllowedApp': fields(payload,['executable']); permissions.save({allowedApps:permissions.state.allowedApps.filter(exe=>exe!==normalizeExecutable(payload.executable))}); break;
-      case 'respondApproval': fields(payload,['id','decision']); if(entry.view!=='approval')throw fail('permission_denied','승인창에서 응답해주세요.'); permissions.respond(payload.id,payload.decision); break;
+      case 'respondApproval': fields(payload,['id','decision']); if(entry.view!=='approval')throw fail('permission_denied','승인창에서 응답해주세요.'); respond(payload.id,payload.decision); break;
       case 'stop': fields(payload,[]); permissions.stop(); break;
       case 'resume': fields(payload,[]); permissions.resume(); break;
       case 'minimize': fields(payload,[]); entry.window.minimize(); break;
@@ -143,17 +154,18 @@ function setupIPC() {
 function trayIcon() {
   return nativeImage.createFromPath(path.join(__dirname, 'assets/app-icon.ico'));
 }
-async function shutdown() {
+async function shutdown(fromService=false) {
   if (closing) return; closing = true;
   globalShortcut.unregisterAll();
   icons.dispose();
   await icons.flush();
+  if(!fromService)await service?.close();
   permissions?.dispose();
-  try { await runtime?.dispose(); await server?.close(); }
+  try { for(const session of [...sessions.values()])await session.dispose(); }
   catch(error){ log?.('error','runtime','shutdown_failed',{code:error.code}); }
   log?.('info','app','shutdown');
   for (const {window} of windows.values()) if (!window.isDestroyed()) window.destroy();
-  tray?.destroy(); app.quit();
+  tray?.destroy(); if(!fromService)app.quit();
 }
 app.on('window-all-closed', () => {});
 app.on('before-quit', event => { if(!closing){event.preventDefault();void shutdown();} });
@@ -162,11 +174,36 @@ app.whenReady().then(async () => {
   const directory = app.getPath('userData');
   log = createLogger(path.join(directory,'logs'),app.getVersion());
   log('info','app','startup');
+  const runtimeIndex=process.argv.indexOf('--runtime-directory');
+  if(runtimeIndex>=0&&(app.isPackaged||!path.isAbsolute(process.argv[runtimeIndex+1]||'')))throw Error('Absolute development-only --runtime-directory required');
+  const runtimeDirectory = runtimeIndex>=0?process.argv[runtimeIndex+1]:app.isPackaged ? path.join(process.resourcesPath,'runtime/window-control') : path.resolve(__dirname,'../artifacts/runtime/window-control');
+  const appRoot=path.resolve(__dirname,'..');
+  const candidateArgs=[...(app.isPackaged?[]:[appRoot]),'--shared-service',...(!app.isPackaged?['--runtime-directory',runtimeDirectory]:[]),...(profileIndex>=0?['--user-data-dir',directory]:[])];
+  const candidate=createCandidate({appRoot,runtimeDirectory,args:candidateArgs});
+  const sharedDirectory=process.env.AZ_WINDOW_USE_SHARED_DIRECTORY||(profileIndex>=0?path.join(directory,'shared'):registry.defaultDirectory());
+  if(!process.argv.includes('--shared-service')) {
+    const client=createServiceClient({directory:sharedDirectory,candidate});
+    try { await client.ensure();await client.call('settings-'+require('node:crypto').randomUUID(),'service.showSettings',{}); }
+    finally { await client.dispose(); }
+    await shutdown();return;
+  }
   permissions = new PermissionService({directory,selfExecutables:[process.execPath]});
   log('info','permissions','initialized');
   permissions.on('change',broadcast);
   permissions.on('approval',()=>show('approval'));
   permissions.on('invalidate',reason=>log('info','permissions','invalidated',{code:reason}));
+  service=await createSharedService({directory:sharedDirectory,candidate,
+    createSession:({id,authorize,options={},emit})=>{
+      const sessionPermissions=permissions.fork();
+      let runtime;
+      try { runtime=createRuntime({runtimeDirectory,directory,permissions:sessionPermissions,log,sessionId:id,
+        authorize:options.authorizationRequired===true?authorize:undefined,
+        workspacePath:options.workspacePath,workspaceName:options.workspaceName,codexHome:options.codexHome,
+        emit}); } catch(error) {sessionPermissions.dispose();throw error;}
+      sessionPermissions.on('change',broadcast);sessionPermissions.on('approval',()=>show('approval'));
+      const entry={permissions:sessionPermissions,call:(method,args,signal,context)=>runtime.call(method,args,signal,context),async dispose(){sessions.delete(id);try{await runtime.dispose();}finally{sessionPermissions.dispose();broadcast();}}};
+      sessions.set(id,entry);broadcast();return entry;
+    },shutdown:()=>shutdown(true),onClosed:()=>app.quit(),showSettings:()=>show('settings'),log});
   setupIPC();
   tray = new Tray(trayIcon()); tray.setToolTip('Azrael Window Use');
   tray.setContextMenu(Menu.buildFromTemplate([
@@ -177,29 +214,16 @@ app.whenReady().then(async () => {
   tray.on('click',()=>show('settings'));
   log('info','ui','initialized');
   if(!globalShortcut.register('CommandOrControl+Alt+F12',()=>permissions.stop())) log('warn','app','stop_shortcut_unavailable');
-  const runtimeIndex=process.argv.indexOf('--runtime-directory');
-  if(runtimeIndex>=0&&(app.isPackaged||!path.isAbsolute(process.argv[runtimeIndex+1]||'')))throw Error('Absolute development-only --runtime-directory required');
-  const runtimeDirectory = runtimeIndex>=0?process.argv[runtimeIndex+1]:app.isPackaged ? path.join(process.resourcesPath,'runtime/window-control') : path.resolve(__dirname,'../artifacts/runtime/window-control');
-  runtime = createRuntime({runtimeDirectory,directory,permissions,log});
-  log('info','runtime','initialized');
-  if (isMcp) {
-    const pipeName=process.argv[pipeIndex+1], token=process.env.WINDOW_USE_PIPE_TOKEN;
-    delete process.env.WINDOW_USE_PIPE_TOKEN;
-    if(pipeIndex<0||!/^[A-Za-z0-9_-]{1,128}$/.test(pipeName||'')||!/^[a-f0-9]{64}$/.test(token||''))throw Error('Start MCP using the WindowUseMCP launcher');
-    const socket=require('node:net').createConnection('\\\\.\\pipe\\'+pipeName);
-    await new Promise((resolve,reject)=>{socket.once('connect',resolve);socket.once('error',reject);});
-    await new Promise((resolve,reject)=>socket.write(token+'\n',error=>error?reject(error):resolve()));
-    server = await startMcp({runtime,log,transport:new SocketTransport(socket),onClient:name=>{clientName=String(name).slice(0,128);connected=true;broadcast();},onClose:()=>{connected=false;void shutdown();}});
-  }
-  else show('settings');
   log('info','app','ready');
 }).catch(async error => {
   log?.('error','app','startup_failed',{code:error.code||'startup_error'});
   process.stderr.write('Window Use startup failed: '+error.message+'\n');
-  if(!isMcp)dialog.showErrorBox('Window Use',error.message);
+  if(!isMcp&&!process.argv.includes('--shared-service'))dialog.showErrorBox('Window Use',error.message);
   await shutdown(); process.exitCode=1;
 });
 process.on('uncaughtException',error=>{log?.('error','app','uncaught_exception',{code:error.code});permissions?.stop();void shutdown();});
 process.on('unhandledRejection',error=>{log?.('error','app','unhandled_rejection',{code:error?.code});permissions?.stop();void shutdown();});
 process.on('SIGINT',()=>void shutdown());
 process.on('SIGTERM',()=>void shutdown());
+
+}

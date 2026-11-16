@@ -150,12 +150,13 @@ internal static class Program
                 var hostExit = Task.Run(() => owned.Process.WaitForExit());
                 var finished = Task.WhenAny(fromClient, toClient, hostExit).GetAwaiter().GetResult();
                 bool failed = finished.IsFaulted;
-                // Closing the sole duplex pipe sends EOF to the host. Its normal shutdown
-                // releases native helpers; closing our Job is the bounded fallback.
+                // EOF closes this adapter session, leaving the shared service and
+                // other clients alive. The bounded fallback targets this adapter only.
                 pipe.Dispose();
                 if (!owned.Process.WaitForExit(ShutdownTimeoutMs))
                 {
-                    Console.Error.WriteLine("[Window Use] Host shutdown timed out; closing the owned process job.");
+                    Console.Error.WriteLine("[Window Use] Adapter shutdown timed out; stopping this adapter only.");
+                    owned.Process.Kill();
                     return 3;
                 }
                 return owned.Process.ExitCode != 0 ? owned.Process.ExitCode : failed ? 2 : 0;
@@ -194,11 +195,12 @@ internal static class Program
     private sealed class OwnedHost : IDisposable
     {
         internal Process Process;
-        internal IntPtr Job;
         public void Dispose()
         {
-            if (Job != IntPtr.Zero) { CloseHandle(Job); Job = IntPtr.Zero; }
-            if (Process != null) { Process.Dispose(); Process = null; }
+            if (Process != null) {
+                try { if (!Process.HasExited) Process.Kill(); }
+                finally { Process.Dispose(); Process = null; }
+            }
         }
     }
 
@@ -209,18 +211,8 @@ internal static class Program
         IntPtr environment = IntPtr.Zero;
         try
         {
-            owned.Job = CreateJobObject(IntPtr.Zero, null);
-            if (owned.Job == IntPtr.Zero) throw new System.ComponentModel.Win32Exception();
-            var limits = new JOBOBJECT_EXTENDED_LIMIT_INFORMATION();
-            limits.BasicLimitInformation.LimitFlags = 0x00002000; // JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
-            int size = Marshal.SizeOf(typeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
-            IntPtr settings = Marshal.AllocHGlobal(size);
-            try
-            {
-                Marshal.StructureToPtr(limits, settings, false);
-                if (!SetInformationJobObject(owned.Job, 9, settings, (uint)size)) throw new System.ComponentModel.Win32Exception();
-            }
-            finally { Marshal.FreeHGlobal(settings); }
+            // Adapters must not own the shared host's process tree. The pipe EOF
+            // closes only this client session; timeout fallback kills this adapter.
             var values = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (DictionaryEntry pair in Environment.GetEnvironmentVariables()) values[(string)pair.Key] = (string)pair.Value;
             values.Remove("ELECTRON_RUN_AS_NODE");
@@ -233,7 +225,6 @@ internal static class Program
             var command = new StringBuilder(Quote(options.Host) + " " + HostArguments(options, pipeName));
             // No inherited standard handles: the GUI host talks only through our pipe.
             if (!CreateProcess(options.Host, command, IntPtr.Zero, IntPtr.Zero, false, 0x08000404, environment, Path.GetDirectoryName(options.Host), ref startup, out info)) throw new System.ComponentModel.Win32Exception();
-            if (!AssignProcessToJobObject(owned.Job, info.hProcess)) throw new System.ComponentModel.Win32Exception();
             owned.Process = Process.GetProcessById((int)info.dwProcessId);
             // Retain a process handle before resuming: a fast EOF exit must still
             // expose its terminal status through .NET's Process wrapper.

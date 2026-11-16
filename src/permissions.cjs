@@ -11,7 +11,7 @@ function executableList(list) {
   return [...new Set(list.map(normalizeExecutable))].sort();
 }
 class PermissionService extends EventEmitter {
-  constructor({ directory, selfExecutables, approvalTimeoutMs = 60000, now = Date.now }) {
+  constructor({ directory, selfExecutables, approvalTimeoutMs = 60000, now = Date.now, sharedPolicy }) {
     super();
     this.directory = directory;
     this.file = path.join(directory, 'permissions.json');
@@ -20,10 +20,23 @@ class PermissionService extends EventEmitter {
     this.approvalTimeoutMs = approvalTimeoutMs;
     this.grants = new Set(); this.pending = new Map(); this.stopped = false; this.generation = 0;
     this.state = this.read();
+    this.sharedPolicy = sharedPolicy;
+    this.stopFile = path.join(directory, 'stopped.json');
+    if (sharedPolicy) {
+      Object.defineProperty(this, 'state', { get: () => sharedPolicy.state, set: () => {} });
+      Object.defineProperty(this, 'stopped', { get: () => sharedPolicy.stopped, set: () => {} });
+      this.sharedInvalidation = reason => this.invalidate(reason);
+      sharedPolicy.on('invalidate', this.sharedInvalidation);
+    } else {
+      try { const info=fs.lstatSync(this.stopFile);if(!info.isFile()||info.isSymbolicLink()||info.size>1024)throw Error('Invalid Stop state');const value=JSON.parse(fs.readFileSync(this.stopFile, 'utf8'));this.stopped = value.schema!==1 || value.stopped !== false; }
+      catch (error) { this.stopped = error.code !== 'ENOENT'; }
+    }
     this.watcher = () => this.synchronize();
-    fs.watchFile(this.file, { persistent: false, interval: 300 }, this.watcher);
+    if (!sharedPolicy) fs.watchFile(this.file, { persistent: false, interval: 300 }, this.watcher);
   }
+  fork() { return new PermissionService({ directory:this.directory, selfExecutables:[...this.selfApps], approvalTimeoutMs:this.approvalTimeoutMs, now:this.now, sharedPolicy:this }); }
   synchronize() {
+    if (this.sharedPolicy) return this.sharedPolicy.synchronize();
     if (this.synchronizing) return;
     this.synchronizing = true;
     try {
@@ -44,6 +57,7 @@ class PermissionService extends EventEmitter {
     return state;
   }
   save(patch) {
+    if (this.sharedPolicy) return this.sharedPolicy.save(patch);
     const allowed = ['enabled','mode','protectedApps','allowedApps','theme'];
     if (!patch || Object.keys(patch).some(key => !allowed.includes(key))) throw fail('invalid_settings', '지원하지 않는 설정입니다.');
     if ('enabled' in patch && typeof patch.enabled !== 'boolean' || 'mode' in patch && !MODES.includes(patch.mode) || 'theme' in patch && !['system','light','dark'].includes(patch.theme)) throw fail('invalid_settings', '설정 값이 잘못되었습니다.');
@@ -133,13 +147,23 @@ class PermissionService extends EventEmitter {
     for (const id of [...this.pending.keys()]) this.finish(id, fail(reason, '권한 상태가 변경되어 요청이 취소되었습니다.'));
     this.emit('invalidate', reason); this.emit('change');
   }
-  stop() { this.stopped = true; this.invalidate('user_stopped'); }
-  resume() { this.stopped = false; this.invalidate('user_resumed'); }
+  setStopped(stopped) {
+    if (this.sharedPolicy) return this.sharedPolicy.setStopped(stopped);
+    // Stop is durable across host upgrades; a failed write must never resume input.
+    if (stopped) { this.stopped = true;this.invalidate('user_stopped'); }
+    fs.mkdirSync(this.directory, {recursive:true});
+    const temp=this.stopFile+'.'+crypto.randomUUID()+'.tmp';
+    try { fs.writeFileSync(temp,JSON.stringify({schema:1,stopped})+'\n',{flag:'wx',mode:0o600}); fs.renameSync(temp,this.stopFile); }
+    finally { if(fs.existsSync(temp))fs.unlinkSync(temp); }
+    this.stopped=stopped; if(!stopped)this.invalidate('user_resumed');
+  }
+  stop() { this.setStopped(true); }
+  resume() { this.setStopped(false); }
   snapshot() {
     const app = executable => ({ executable, label: path.win32.basename(executable), locked: this.selfApps.has(executable) });
     return { enabled: this.state.enabled, mode: this.state.mode, protectedApps: this.protectedExecutables().map(app), allowedApps: this.state.allowedApps.map(app) };
   }
   approvals() { return [...this.pending.values()].map(({ id,permission,app,expiresAt }) => ({ id,permission,app,expiresAt })); }
-  dispose() { fs.unwatchFile(this.file, this.watcher); this.invalidate('disconnected'); this.removeAllListeners(); }
+  dispose() { if(this.sharedPolicy)this.sharedPolicy.off('invalidate',this.sharedInvalidation); else fs.unwatchFile(this.file, this.watcher); this.invalidate('disconnected'); this.removeAllListeners(); }
 }
 module.exports = { PermissionService, fail };
