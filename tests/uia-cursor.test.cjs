@@ -1,4 +1,5 @@
 'use strict';
+const { fixtureExecutable } = require('./fixture-paths.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -12,9 +13,9 @@ test('UIA actions and macro steps visualize their current element without pointe
   const root = path.resolve(__dirname, '../artifacts/verification/unit');
   fs.mkdirSync(root, { recursive: true });
   const directory = fs.mkdtempSync(path.join(root, 'uia-cursor-'));
-  const permissions = new PermissionService({ directory, selfExecutables: ['C:\\WindowUse\\WindowUse.exe'] });
+  const permissions = new PermissionService({ directory, selfExecutables: [fixtureExecutable("WindowUse/WindowUse.exe")] });
   permissions.save({ mode: 'full' });
-  const window = { hwnd:'1234', pid:100, processCreated:'abcd', executable:'C:\\Apps\\Editor.exe', title:'fixture', minimized:false, widthPx:300, heightPx:200, dpi:144 };
+  const window = { hwnd:'1234', pid:100, processCreated:'abcd', executable:fixtureExecutable("Apps/Editor.exe"), title:'fixture', minimized:false, widthPx:300, heightPx:200, dpi:144 };
   const geometry = { originX:-300, originY:200, widthPx:300, heightPx:200, dpi:144 };
   const events = [];
   let sequence = 0, failAction = false;

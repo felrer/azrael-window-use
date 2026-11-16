@@ -1,4 +1,5 @@
 'use strict';
+const { fixtureExecutable, expectedExecutable } = require('./fixture-paths.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -8,10 +9,10 @@ const { PermissionService } = require('../src/permissions.cjs');
 
 // Retain these checks against future edits that reorder protected-app guards,
 // broaden grant persistence, or omit cancellation when policy/connections change.
-const SELF = 'C:\\WindowUse\\WindowUse.exe';
-const SELF_ALIAS = 'c:/WINDOWUSE/child/../WINDOWUSE.EXE';
-const APP = { executable: 'C:\\Apps\\Editor.exe' };
-const PROTECTED = { executable: 'C:\\Apps\\Private.exe' };
+const SELF = fixtureExecutable("WindowUse/WindowUse.exe");
+const SELF_ALIAS = process.platform === 'win32' ? 'c:/WINDOWUSE/child/../WINDOWUSE.EXE' : '/WindowUse/child/../WindowUse.exe';
+const APP = { executable: fixtureExecutable("Apps/Editor.exe") };
+const PROTECTED = { executable: fixtureExecutable("Apps/Private.exe") };
 const code = expected => error => error.code === expected && error.actionExecuted === false;
 function fixture(t, options = {}) {
   const root = path.resolve(__dirname, '../artifacts/verification/unit');
@@ -42,7 +43,7 @@ test('self identity stays normalized and locked; no mode or grant bypasses prote
   const f = fixture(t); const service = f.open();
   service.save({ protectedApps: [PROTECTED.executable], allowedApps: [PROTECTED.executable] });
   assert.deepEqual(service.snapshot().protectedApps.find(app => app.locked), {
-    executable: 'c:\\windowuse\\windowuse.exe', label: 'windowuse.exe', locked: true
+    executable: expectedExecutable("WindowUse/WindowUse.exe"), label: process.platform === 'win32' ? 'windowuse.exe' : 'WindowUse.exe', locked: true
   });
   assert.throws(() => service.save({ allowedApps: [SELF_ALIAS] }), code('security_app_blocked'));
   for (const mode of ['ask', 'observe', 'full']) {
@@ -66,7 +67,7 @@ test('self identity stays normalized and locked; no mode or grant bypasses prote
 
   // Even a schema-valid edited file cannot turn the app's own UI into an allowed app.
   const saved = JSON.parse(fs.readFileSync(service.file, 'utf8'));
-  fs.writeFileSync(service.file, JSON.stringify({ ...saved, allowedApps: ['c:\\windowuse\\windowuse.exe'] }));
+  fs.writeFileSync(service.file, JSON.stringify({ ...saved, allowedApps: [expectedExecutable("WindowUse/WindowUse.exe")] }));
   service.dispose(); const reopened = f.open();
   assert.equal(reopened.allowed({ executable: SELF_ALIAS }), false);
   await assert.rejects(reopened.request({ executable: SELF_ALIAS }), code('security_app_blocked'));
@@ -97,7 +98,7 @@ test('policy change and Stop cancel pending approvals and revoke connection gran
     const granted = pending(service);
     service.respond(granted.id, 'session'); await granted.result;
     assert.equal(service.allowed(APP), true);
-    const request = pending(service, { executable: 'C:\\Apps\\Other.exe' });
+    const request = pending(service, { executable: fixtureExecutable("Apps/Other.exe") });
     change();
     await assert.rejects(request.result, code(expected));
     assert.deepEqual(service.approvals(), []);
@@ -177,7 +178,7 @@ test('session grants disappear on a new connection; permanent app grants survive
   assert.equal(permanent.allowed(APP), true); permanent.dispose();
   const reopened = f.open();
   assert.equal(reopened.allowed(APP), true);
-  assert.deepEqual(reopened.snapshot().allowedApps.map(item => item.executable), ['c:\\apps\\editor.exe']);
+  assert.deepEqual(reopened.snapshot().allowedApps.map(item => item.executable), [expectedExecutable("Apps/Editor.exe")]);
   assert.equal(reopened.allowed(null, 'desktop'), false);
   const desktop = pending(reopened, null, 'desktop');
   assert.throws(() => reopened.respond(desktop.id, 'always'), code('invalid_arguments'));

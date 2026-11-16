@@ -1,4 +1,5 @@
 'use strict';
+const { fixtureExecutable } = require('./fixture-paths.cjs');
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {normalizeInput,inputSchema}=require('../vendor/azrael/window-input-coordinates.cjs');
 const {createRuntime}=require('../src/runtime.cjs');
@@ -18,8 +19,8 @@ test('public points contract distinguishes click/drag and rejects ambiguous lega
 test('runtime converts capture image coordinates once, including batch steps, and rejects stale geometry before input',async t=>{
   const root=path.resolve(__dirname,'../artifacts/verification/unit');fs.mkdirSync(root,{recursive:true});
   const directory=fs.mkdtempSync(path.join(root,'image-input-'));
-  const permissions=new PermissionService({directory,selfExecutables:['C:\\WindowUse\\WindowUse.exe']});permissions.save({mode:'full'});
-  const window={hwnd:'1234',pid:100,processCreated:'abcd',executable:'C:\\Apps\\Editor.exe',title:'fixture',minimized:false,widthPx:208,heightPx:160,dpi:144};
+  const permissions=new PermissionService({directory,selfExecutables:[fixtureExecutable("WindowUse/WindowUse.exe")]});permissions.save({mode:'full'});
+  const window={hwnd:'1234',pid:100,processCreated:'abcd',executable:fixtureExecutable("Apps/Editor.exe"),title:'fixture',minimized:false,widthPx:208,heightPx:160,dpi:144};
   let geometry={originX:-300,originY:220,widthPx:200,heightPx:150,dpi:144},sequence=0;
   const delivered=[];
   const observations=[];let failObservation=false;

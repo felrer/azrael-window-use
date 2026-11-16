@@ -12,7 +12,7 @@ test('portable layouts expose explicit Tauri host and resource entry points',()=
  assert.throws(()=>parseArguments(['--prepare','--node','node']),/absolute path/);
  assert.throws(()=>parseArguments(['--unknown']),/Usage/);
  assert.equal(checkedNode(process.execPath,targetLayout()).version,process.version);
- assert.throws(()=>checkedBinary(__filename,targetLayout()),/header/);
+ assert.throws(()=>checkedBinary(__filename,targetLayout()),process.platform==='darwin'?/Thin Mach-O64 executable required/:/header/);
 });
 test('development launcher forwards stdio arguments with explicit resources and runtime',()=>{
  const environment={AZ_WINDOW_USE_HOST_EXECUTABLE:process.execPath,AZ_WINDOW_USE_NODE:process.execPath,AZ_WINDOW_USE_PACKAGED:'1',NODE_OPTIONS:'--inspect',NODE_PATH:'external'};

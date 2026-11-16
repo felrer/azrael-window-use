@@ -1,4 +1,5 @@
 'use strict';
+const { fixtureExecutable, expectedExecutable } = require('./fixture-paths.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -12,8 +13,8 @@ test('runtime routes protected observation and desktop capture through actual pe
   const root = path.resolve(__dirname, '../artifacts/verification/unit');
   fs.mkdirSync(root, { recursive: true });
   const directory = fs.mkdtempSync(path.join(root, 'runtime-'));
-  const self = 'C:\\WindowUse\\WindowUse.exe';
-  const privateApp = 'C:\\Apps\\Private.exe';
+  const self = fixtureExecutable("WindowUse/WindowUse.exe");
+  const privateApp = fixtureExecutable("Apps/Private.exe");
   const permissions = new PermissionService({ directory, selfExecutables: [self] });
   const requests = [];
   let duringCapture = () => {};
@@ -22,7 +23,7 @@ test('runtime routes protected observation and desktop capture through actual pe
   const backend = {
     async request(method, args) {
       requests.push({ method, args });
-      if (method === 'listWindows') return [window(self, '1', 'Private approval request'), window(privateApp, '2', 'Private document'), window('C:\\Apps\\Editor.exe', '3', 'Public document')];
+      if (method === 'listWindows') return [window(self, '1', 'Private approval request'), window(privateApp, '2', 'Private document'), window(fixtureExecutable("Apps/Editor.exe"), '3', 'Public document')];
       if (method === 'captureDesktop') { duringCapture(); return image; }
       throw new Error(`Unexpected native operation: ${method}`);
     },
@@ -45,7 +46,7 @@ test('runtime routes protected observation and desktop capture through actual pe
   const capture = await runtime.call('capture_desktop', {});
   assert.equal(capture.redacted, true);
   assert.equal(typeof capture.observationId, 'string');
-  assert.deepEqual(requests.find(item => item.method === 'captureDesktop').args.blockedApps, ['c:\\apps\\private.exe', 'c:\\windowuse\\windowuse.exe']);
+  assert.deepEqual(requests.find(item => item.method === 'captureDesktop').args.blockedApps, [expectedExecutable("Apps/Private.exe"), expectedExecutable("WindowUse/WindowUse.exe")]);
   const before = requests.length;
   await assert.rejects(runtime.call('capture', { windowId: list.candidates[0].windowId }), { code: 'security_app_blocked', actionExecuted: false });
   assert.equal(requests.length, before, 'protected app must be rejected before native capture');
@@ -65,8 +66,8 @@ test('runtime routes protected observation and desktop capture through actual pe
 test('runtime desktop curve preserves fresh observation bounds, target resolution and permission guards',async t=>{
   const root=path.resolve(__dirname,'../artifacts/verification/unit');fs.mkdirSync(root,{recursive:true});
   const directory=fs.mkdtempSync(path.join(root,'runtime-curve-'));
-  const permissions=new PermissionService({directory,selfExecutables:['C:\\WindowUse\\WindowUse.exe']});
-  const target={executable:'C:\\Apps\\Editor.exe',hwnd:'1234',pid:123,processCreated:'abc',minimized:false,widthPx:200,heightPx:200,dpi:96};
+  const permissions=new PermissionService({directory,selfExecutables:[fixtureExecutable("WindowUse/WindowUse.exe")]});
+  const target={executable:fixtureExecutable("Apps/Editor.exe"),hwnd:'1234',pid:123,processCreated:'abc',minimized:false,widthPx:200,heightPx:200,dpi:96};
   let resolved=target,revoke=false;
   const requests=[],delivered=[];
   const backend={async request(method,args){
@@ -99,7 +100,7 @@ test('runtime desktop curve preserves fresh observation bounds, target resolutio
   await assert.rejects(runtime.call('desktop_input',{observationId:observation.observationId,input}),{code:'state_changed'});
   assert.equal(delivered.length,1,'consumed observation cannot deliver again');
   observation=await runtime.call('capture_desktop',{});
-  resolved={...target,executable:'C:\\WindowUse\\WindowUse.exe'};
+  resolved={...target,executable:fixtureExecutable("WindowUse/WindowUse.exe")};
   await assert.rejects(runtime.call('desktop_input',{observationId:observation.observationId,input}),{code:'security_app_blocked'});
   assert.equal(delivered.length,1);
   resolved=target;revoke=true;
