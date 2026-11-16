@@ -22,16 +22,19 @@ let settingsWindow, approvalWindow, tray, permissions, runtime, server, log, clo
 const windows = new Map();
 const html = path.join(__dirname, 'ui/index.html');
 const trustedURL = pathToFileURL(html).href;
-const icons = createAppIcons({ getFileIcon: (...args) => app.getFileIcon(...args), changed: () => { if (!closing) broadcast(); } });
+const icons = createAppIcons({ directory:path.join(app.getPath('userData'),'cache','app-icons'), getFileIcon: (...args) => app.getFileIcon(...args), changed: () => { if (!closing) broadcast(); } });
 function snapshot(view) {
-  const describe = identity => ({ ...identity, icon: icons.get(identity.executable) });
+  const describe = (identity, priority=false) => identity.locked ? {...identity,icon:null,iconState:'ready'} : ({ ...identity, icon: icons.get(identity.executable,priority), iconState: icons.state(identity.executable) });
+  const approvals = permissions.approvals().map(request => ({ ...request, app: describe(request.app,true) }));
   const settings = permissions.snapshot();
-  settings.protectedApps = settings.protectedApps.map(describe);
-  settings.allowedApps = settings.allowedApps.map(describe);
-  return { version: app.getVersion(), settings, connection: { id: runtime?.thread || '', clientName, connected, stopped: permissions.stopped }, approvals: permissions.approvals().map(request => ({ ...request, app: describe(request.app) })), theme: permissions.state.theme, view };
+  settings.protectedApps = settings.protectedApps.map(identity=>describe(identity));
+  settings.allowedApps = settings.allowedApps.map(identity=>describe(identity));
+  return { version: app.getVersion(), settings, connection: { id: runtime?.thread || '', clientName, connected, stopped: permissions.stopped }, approvals, theme: permissions.state.theme, view };
 }
 function broadcast() {
   if (!permissions) return;
+  // Start before BrowserWindow/renderer creation, including when no UI is open.
+  for(const request of permissions.approvals())icons.get(request.app.executable,true);
   nativeTheme.themeSource = permissions.state.theme;
   for (const [id, { window, view }] of windows) if (!window.isDestroyed()) window.webContents.send('window-use:changed', snapshot(view));
   if (approvalWindow && !approvalWindow.isDestroyed() && !permissions.pending.size) approvalWindow.hide();
@@ -144,6 +147,7 @@ async function shutdown() {
   if (closing) return; closing = true;
   globalShortcut.unregisterAll();
   icons.dispose();
+  await icons.flush();
   permissions?.dispose();
   try { await runtime?.dispose(); await server?.close(); }
   catch(error){ log?.('error','runtime','shutdown_failed',{code:error.code}); }

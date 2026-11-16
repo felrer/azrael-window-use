@@ -78,10 +78,15 @@
     const icon = node('div','app-icon'); icon.setAttribute('aria-hidden','true');
     const fallback = node('span','',desktop?'▧':'◇'); icon.append(fallback);
     const source = identity?.locked ? '../assets/app-icon-32.png' : identity?.icon;
-    if (identity?.locked || typeof source === 'string' && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(source)) {
+    const hasImage = identity?.locked || typeof source === 'string' && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(source);
+    if(!identity?.locked&&(identity?.iconState==='loading'||hasImage)){
+      icon.classList.add('icon-loading');fallback.textContent='';
+      icon.setAttribute('aria-hidden','false');icon.setAttribute('role','img');icon.setAttribute('aria-label','앱 아이콘 불러오는 중');
+    }
+    if (hasImage) {
       const image = node('img'); image.alt='';
-      image.addEventListener('load',()=>{fallback.hidden=true;});
-      image.addEventListener('error',()=>{image.remove();fallback.hidden=false;});
+      image.addEventListener('load',()=>{fallback.hidden=true;icon.classList.remove('icon-loading');icon.setAttribute('aria-hidden','true');});
+      image.addEventListener('error',()=>{image.remove();fallback.hidden=false;fallback.textContent=desktop?'▧':'◇';icon.classList.remove('icon-loading');icon.setAttribute('aria-hidden','true');});
       image.src=source;icon.append(image);
     }
     return icon;

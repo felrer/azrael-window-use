@@ -72,6 +72,16 @@ Status: design preview; runtime approval UI unchanged.
 
 ## Production integration
 
+### Follow-up: prioritized and persistent icons
+
+- User authorized approval-first icon scheduling, persistent extracted icons and loading placeholders.
+- Priority starts from permission change before window creation; approval snapshot identities precede list icons. Default four-worker scheduling reserves one slot for approval jobs and promotes queued matches.
+- Added optional bounded atomic disk cache under existing product userData/cache/app-icons. Reuse validates source size/mtime/ctime; in-memory entries revalidate on access after 30 seconds. Corrupt or unwritable storage never prevents approval or grants authority.
+- Added spinner for extraction/cache loading and image decoding, accessible loading label and reduced-motion treatment; errors restore generic fallback.
+- Focused icon checks: 4 passed, exit 0, including priority capacity/promotion, restart reuse, changed executable and corrupt-cache recovery. Generated test fixture directory deleted by the test owner and absence asserted.
+- Persistent product cache is explicitly requested application data, not a task temporary artifact. No native build or unrelated source changes needed.
+- Final verification: npm test 38 passed/0 failed, exit 0; main/renderer syntax checks exit 0; targeted icon recheck passed after final disposal guard. One-off renderer DOM simulation passed loading-through-decode, success/error and unavailable fallbacks. Visual timing improvement is not measured; user acceptance remains required for perceived speed and appearance.
+
 ### Follow-up: 60-second expiry
 
 - User requested changing the default approval timeout to 60 seconds and sending an Obsidian control request.
