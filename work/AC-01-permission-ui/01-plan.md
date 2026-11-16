@@ -64,3 +64,8 @@ Status: design preview; runtime approval UI unchanged.
 - Replaced OS-native menu in this picker with a themed rounded listbox, selected checkmark, subtle hover/focus states and shadow. Other preview selectors remain unchanged.
 - Supports pointer selection, arrows, Home/End, native button Enter/Space, Escape, focus departure and outside-click dismissal. Accessible label, expanded state, listbox relationship and selected option are exposed.
 - Static syntax/DOM/order check and one-off picker DOM simulation passed, exit 0: selected-value focus, arrows, selection, Escape and outside dismissal. No temporary test files retained. Actual browser rendering and screen-reader behavior remain unverified under recorded restrictions.
+
+## Revision 8: approval copy
+
+- Removed the approval note about protected apps being blocked regardless of permission; connection-expiration note remains. Preview text only; protection behavior unchanged.
+- Reviewed exact one-line HTML change and whitespace check. No behavior test required for this text-only edit; rendered review remains pending.
