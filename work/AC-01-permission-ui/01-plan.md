@@ -78,6 +78,12 @@ Status: design preview; runtime approval UI unchanged.
 - Kept the 28px button target, 6px footer gaps and accessible settings label; glyph is centered at 18px with neutral foreground/hover treatment.
 - No permission behavior change. Rendered visual acceptance remains user-owned under the existing browser limitation.
 
+### Follow-up: missing preview glyph
+
+- User screenshot confirms the CSS-mask version was invisible in their local preview. External SVG mask loading is a suspected file-origin restriction, not a verified browser-console diagnosis.
+- Replaced file-based masks with inline SVG geometry, in preview and production HTML template. Renderer clones the trusted local template. Color remains currentColor and dimensions remain 18px; canonical asset geometry is preserved.
+- Static check passed, exit 0: both embedded shapes match the source SVG, no external mask reference, theme stroke and renderer syntax. Actual visibility remains for user confirmation; no browser-policy bypass attempted.
+
 ### Follow-up: prioritized and persistent icons
 
 - User authorized approval-first icon scheduling, persistent extracted icons and loading placeholders.

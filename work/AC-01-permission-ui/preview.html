@@ -19,7 +19,7 @@ dialog{width:490px;max-width:calc(100vw - 32px);max-height:calc(100vh - 40px);pa
 <style>
 .security-card{overflow:visible}.mode-picker{position:relative;flex:none}#mode-trigger{display:flex;align-items:center;justify-content:space-between;gap:14px;min-width:108px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font-size:11px;min-height:34px}#mode-trigger:hover,#mode-trigger[aria-expanded=true]{background:var(--surface)}#mode-trigger svg{width:14px;height:14px;color:var(--muted)}.mode-options{position:absolute;top:calc(100% + 6px);right:0;z-index:5;min-width:145px;padding:5px;background:var(--bg);border:1px solid var(--line);border-radius:11px;box-shadow:0 8px 28px #0002}.mode-options[hidden]{display:none}.mode-options button{display:flex;align-items:center;justify-content:space-between;gap:20px;width:100%;border:0;border-radius:6px;background:transparent;color:var(--fg);text-align:left;font-size:12px;padding:9px 10px}.mode-options button:hover,.mode-options button:focus-visible{background:var(--hover);outline:none}.mode-options button[aria-selected=true]{font-weight:600;background:var(--surface)}.mode-options button span{font-size:12px;visibility:hidden}.mode-options button[aria-selected=true] span{visibility:visible}.mode-options button:focus-visible{box-shadow:inset 0 0 0 1px var(--muted)}
 </style>
-<style>.settings-link{padding:0;border-radius:7px}.settings-link:hover{color:var(--fg)}.settings-glyph{display:block;width:18px;height:18px;background:currentColor;mask:url('../../src/assets/settings.svg') center/contain no-repeat}</style>
+<style>.settings-link{padding:0;border-radius:7px}.settings-link:hover{color:var(--fg)}.settings-glyph{display:block;width:18px;height:18px;flex:none}</style>
 <div class="workspace">
  <header class="intro"><div><p class="kicker">AZRAEL WINDOW USE / DESIGN PREVIEW</p><h1>권한 요청</h1><p>요청한 앱과 접근 범위를 먼저 확인하고, 허용 여부를 선택합니다.</p></div><span class="badge">인터랙티브 시안 · 실제 권한 변경 없음</span></header>
  <div class="layout"><div><div class="stage" id="stage"><section class="window" id="approval-preview" aria-labelledby="heading">
@@ -28,7 +28,12 @@ dialog{width:490px;max-width:calc(100vw - 32px);max-height:calc(100vh - 40px);pa
    <div class="target"><div class="app-icon" id="target-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3M3 8h18"/></svg></div><div class="target-text"><p class="app-name" id="app-name">그림판</p><p class="path" id="path">C:\Program Files\WindowsApps\Microsoft.Paint\PaintApp\mspaint.exe</p></div></div>
    <div class="details"><p class="note">이 연결이 종료되면 허용도 종료됩니다.</p></div>
    <div class="actions"><button class="deny" data-decision="거부">거부</button><button class="allow" data-decision="이 연결에서 허용">이 연결에서 허용</button></div><button class="always" id="always" data-decision="이 앱을 항상 허용">이 앱을 항상 허용</button>
-  </main><footer class="foot"><button class="settings-link" id="open-settings" aria-label="설정 열기" title="설정"><span class="settings-glyph" aria-hidden="true"></span></button><span>50초 후 만료</span></footer>
+  </main><footer class="foot"><button class="settings-link" id="open-settings" aria-label="설정 열기" title="설정"><svg class="settings-glyph" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(0 -.5)">
+    <path d="m9.5 3-.6 2.2-1.7 1L5 5.6 2.5 10l1.6 1.6v1.9L2.5 15 5 19.4l2.2-.6 1.7 1 .6 2.2h5l.6-2.2 1.7-1 2.2.6 2.5-4.4-1.6-1.5v-1.9l1.6-1.6L19 5.6l-2.2.6-1.7-1L14.5 3z"/>
+    <circle cx="12" cy="12.5" r="3.1"/>
+  </g>
+</svg></button><span>50초 후 만료</span></footer>
  </section>
  <dialog id="settings-dialog" aria-labelledby="settings-heading">
   <header class="titlebar"><span class="brand" id="settings-heading">Azrael Window Use 설정</span><button class="close" id="close-settings" aria-label="설정 닫기">×</button></header>
