@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Azrael Window Use",
+  "version": "0.1.1",
+  "identifier": "com.azrael.window-use",
+  "build": { "frontendDist": "../src" },
+  "app": {
+    "windows": [],
+    "withGlobalTauri": true,
+    "macOSPrivateApi": true,
+    "security": {
+      "csp": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src ipc: http://ipc.localhost; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'",
+      "capabilities": ["window-use-ui"]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["../src/assets/app-icon-256.png", "../src/assets/app-icon.ico"],
+    "resources": { "../artifacts/tauri-resources/": "" },
+    "macOS": { "minimumSystemVersion": "14.0" }
+  }
+}

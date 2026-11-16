@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-window-use"
+description = "Read permission snapshots and submit validated local UI commands."
+commands.allow = ["snapshot", "command", "start_dragging", "ui_health"]
