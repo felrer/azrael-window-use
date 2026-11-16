@@ -1,6 +1,6 @@
 # Tauri 호스트
 
-상태: 구현. Windows x64 실제 패키지의 MCP·승인·설정·창 격리·Stop 수용 검사 11개와 macOS arm64 빌드·서명·MCP·Azrael 소비자 검증을 통과했습니다. Mac GUI는 사용자 준비 후 검증하며 Linux 빌드·GUI는 미검증입니다. 전역 단축키 충돌 중 시작은 확인했으며 다른 앱이 단축키를 해제한 뒤 자동 재등록되는 실환경 검사는 남아 있습니다. 공개 v0.1.0 ZIP은 이전 Electron 형식입니다.
+상태: 구현. 0.2.0 Windows x64 실제 패키지의 MCP·승인·설정·창 격리·Stop·좌표 클릭 수용 검사 13개와 macOS arm64 빌드·서명·MCP·Azrael 소비자 검증을 통과했습니다. Linux x64 빌드·패키지 무결성·실제 배포 실행 파일 MCP 검증도 통과했습니다. JavaScript 검증은 Windows 71개 통과·5개 플랫폼 생략, Mac 75개 통과·1개 플랫폼 생략, Linux 74개 통과·2개 플랫폼 생략입니다. Mac GUI는 같은 사용자 데스크톱과 화면 기록 권한 준비 후 검증하며 Linux GUI는 미검증입니다. Linux 검증은 작업 전용 WebKitGTK/GTK 의존성 경로를 사용했고 배포 실행 파일에 그 절대 경로를 포함하지 않았습니다. 전역 단축키 충돌 중 시작은 확인했으며 다른 앱이 단축키를 해제한 뒤 자동 재등록되는 실환경 검사는 남아 있습니다. 공개 v0.1.0 ZIP은 이전 Electron 형식입니다.
 
 ## 구조와 보존 계약
 
@@ -36,6 +36,8 @@ Windows와 Linux의 자원 루트는 실행 파일 옆 `resources/`, macOS는 �
 ## 개발과 패키징
 
 `npm ci`와 기존 네이티브 빌드를 먼저 실행합니다. Node와 그 버전에 맞는 라이선스를 명시하여 자원을 준비합니다.
+
+기존 런타임의 매니페스트·파일 해시 일치만으로 최신 네이티브 소스와의 일치를 판단하지 마세요. 기존 빌드 소유자를 먼저 실행하고 현재 `native/`, 관련 `vendor/azrael` 및 빌더 입력과 완료 영수증이 일치하는지 확인합니다. 0.2.0 수용 검사에서 오래된 바이너리의 사용자 이동 대기 상태를 발견해 최신 네이티브 소스부터 다시 빌드했습니다. 기존 자원이 다른 입력에 연결되어 있으면 이를 덮어쓰지 말고 별도 소스·출력 경로에서 빌드합니다.
 
 ```powershell
 node scripts/package.cjs --prepare --node 'C:\Program Files\nodejs\node.exe' --node-license 'C:\Inputs\node-LICENSE'
