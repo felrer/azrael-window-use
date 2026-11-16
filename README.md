@@ -1,8 +1,28 @@
 <img src="src/assets/app-icon-256.png" width="96" height="96" alt="Window Use 앱 아이콘">
 
-# Window Use MCP
+# Azrael Window Use
 
 Windows x64에서 창을 관찰하고 제어하는 독립 MCP 프로그램입니다. Azrael의 창 제어 엔진과 보호 앱 정책을 재사용하며, Azrael·VS Code·별도 Node.js 설치 없이 배포 패키지를 실행할 수 있습니다.
+
+## 다운로드 — 0.1.0
+
+[GitHub Releases](https://github.com/felrer/azrael-window-use/releases/tag/v0.1.0)에서 `WindowUseMCP-0.1.0-win32-x64.zip`을 받아 압축을 전부 해제하세요. `WindowUseMCP.exe`를 열면 설정창을 표시합니다. MCP 연결에는 아래 **사용** 절의 설정을 등록하세요. 실행 파일만 따로 옮기지 마세요.
+
+- 지원 환경: Windows x64의 로컬 대화형 데스크톱
+- 포함: Electron, MCP 서버, 창 제어·가상화 입력 런타임
+- 불필요: Azrael, VS Code, 별도 Node.js 설치
+- 무서명 초기 릴리스: Windows에서 알 수 없는 게시자 알림이 표시될 수 있습니다.
+- 무결성 확인: 릴리스의 `SHA256SUMS.txt`와 ZIP의 SHA-256을 비교하세요. `build-info.json`에는 빌드 입력과 파일 해시가 있습니다.
+
+```powershell
+Get-FileHash .\WindowUseMCP-0.1.0-win32-x64.zip -Algorithm SHA256
+```
+
+### 0.1.0의 공용 서비스
+
+같은 Windows 사용자·로그인 세션·데스크톱의 여러 MCP 연결이 서비스와 트레이 하나를 공유합니다. 최신 호환 설치본을 실행하면 진행 중 요청과 입력 정리가 끝난 뒤 전환합니다. 인터넷 다운로드 방식의 자동 업데이트는 제공하지 않습니다. 이전의 공용 서비스 미지원 실행 파일은 새 패키지로 교체하고 재연결해야 합니다.
+
+Azrael 채팅 승인 연동에는 공용 서비스 어댑터를 포함한 Azrael 빌드가 필요합니다. 기존에 설치한 Azrael이 자동으로 갱신되지는 않습니다. 일반 MCP 클라이언트에서는 자체 승인창을 사용합니다.
 
 ## 주요 기능
 
@@ -15,7 +35,7 @@ Windows x64에서 창을 관찰하고 제어하는 독립 MCP 프로그램입니
 
 ## 소스에서 시작하기
 
-이 저장소는 소스 코드입니다. 실행 파일이나 배포 ZIP이 게시되어 있다고 가정하지 마세요. 개발 실행에는 Windows x64 대화형 데스크톱, Node.js/npm, Rust MSVC 도구 체인, Visual Studio C++·CMake 및 .NET Framework C# 컴파일러가 필요합니다.
+개발 실행에는 Windows x64 대화형 데스크톱, Node.js/npm, Rust MSVC 도구 체인, Visual Studio C++·CMake 및 .NET Framework C# 컴파일러가 필요합니다. 실행만 할 경우에는 위의 배포 ZIP을 사용하세요.
 
 ```powershell
 git clone https://github.com/felrer/azrael-window-use.git
