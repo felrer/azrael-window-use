@@ -336,7 +336,7 @@ class Backend:
         d = dict(id=p['elementId'],isPassword=password)
         for f in p.get('fields', ['name','controlType','enabled']):
             if f in ('value','text'):
-                if password: d[f]=None; d['redacted']=True; continue
+                if password: d['redacted']=True; continue
                 text=e.get_text_iface()
                 if not text: raise Failure('unsupported-action','Text interface unavailable')
                 r=p.get('textRange')
@@ -467,7 +467,9 @@ class Backend:
                 self.overlay_identity = None
             return dict(hidden=True)
         w = self.x.verify(p.get('window'))
-        if method == 'status': return dict(window=w)
+        if method == 'status':
+            x,y,width,height = self.x.geometry(w)
+            return dict(window=w, captureGeometry=dict(originX=x,originY=y,widthPx=width,heightPx=height,dpi=96))
         if method == 'overlayShow':
             ready = threading.Event(); outcome = {}
             def show():
@@ -490,7 +492,11 @@ class Backend:
             return outcome
         if method == 'restore':
             self.observation = None; self.x.lib.XMapWindow(self.x.d, int(w['hwnd'],16)); self.x.barrier()
-            return dict(window=self.x.verify(w), restored=True, requiresObservation=True)
+            after = self.x.verify(w)
+            deadline = time.monotonic() + 1.0
+            while after['minimized'] and time.monotonic() < deadline:
+                time.sleep(0.025); after = self.x.verify(w)
+            return dict(window=after, restored=not after['minimized'], requiresObservation=True)
         if w['minimized']: raise Failure('window-minimized', 'Selected window is minimized')
         if method == 'resize':
             width, height = p.get('widthDip'), p.get('heightDip')
@@ -498,7 +504,13 @@ class Backend:
                 raise Failure('resize-bounds', 'Window dimensions outside bounds')
             self.observation = None
             self.x.lib.XResizeWindow(self.x.d,int(w['hwnd'],16),round(width),round(height)); self.x.barrier()
-            return dict(window=self.x.verify(w), resized=True, requiresObservation=True)
+            after = self.x.verify(w)
+            deadline = time.monotonic() + 1.0
+            while (after['widthPx'],after['heightPx']) != (round(width),round(height)) and time.monotonic() < deadline:
+                time.sleep(0.025); after = self.x.verify(w)
+            if (after['widthPx'],after['heightPx']) != (round(width),round(height)):
+                raise Failure('resize-rejected','Window manager did not apply requested X11 pixel dimensions')
+            return dict(window=after, resized=True, requiresObservation=True)
         if method == 'act': return self.act(p,w)
         if method in ('observe','inspect'):
             initial_geometry = self.x.geometry(w)
@@ -576,9 +588,10 @@ class Backend:
             if method == 'observe':
                 data = self.x.capture(w)
                 after = self.x.verify(w)
-                if any(w[k] != after[k] for k in ('widthPx','heightPx','minimized')):
+                if any(w[k] != after[k] for k in ('widthPx','heightPx','minimized')) or geometry != self.x.geometry(after):
                     raise Failure('capture-size-changed', 'Window geometry changed during capture')
                 result.update(frameTimestamp=str(time.monotonic_ns()),widthPx=w['widthPx'],heightPx=w['heightPx'],dpi=96,
+                              captureGeometry=dict(originX=geometry[0],originY=geometry[1],widthPx=w['widthPx'],heightPx=w['heightPx'],dpi=96),
                               image=dict(mimeType='image/png',data=data))
             if method=='inspect':
                 if mode=='read': refs={p['elementId']: (exact[2][p['elementId']][0],descriptors[0],exact[2][p['elementId']][2])}; signature=None
