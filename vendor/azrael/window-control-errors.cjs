@@ -8,6 +8,20 @@ const APPROVAL_STATES = new Set(['waiting', 'pending', 'expired', 'declined', 'c
 const NATIVE_PERMISSION_REASONS = new Set(['missing', 'malformed', 'not_disabled']);
 const PAUSE_REASONS = new Set(['minimized', 'user_stopped', 'error']);
 const RECOVERIES = new Set(['observe_again', 'reselect', 'user_resume']);
+const NATIVE_METHODS = new Set(['windowAtPoint', 'actionPoint', 'captureDesktop', 'listWindows', 'status', 'observe', 'inspect', 'restore', 'resize', 'act', 'overlayShow', 'overlayHide', 'approvalNotificationShow', 'approvalNotificationHide']);
+const NATIVE_ACTIONS = new Set(['invoke', 'setValue', 'toggle', 'select', 'expand', 'collapse', 'scroll', 'pressKey']);
+function nativeDiagnostic(value) {
+  if (!value || value.event !== 'window_use.native_failure') return undefined;
+  const result = { event: 'window_use.native_failure' };
+  if (NATIVE_METHODS.has(value.method)) result.method = value.method;
+  if (NATIVE_ACTIONS.has(value.action)) result.action = value.action;
+  if (typeof value.requestId === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value.requestId)) result.requestId = value.requestId;
+  if (typeof value.timestamp === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value.timestamp) && Number.isFinite(Date.parse(value.timestamp))) result.timestamp = value.timestamp;
+  if (Number.isSafeInteger(value.elapsedMs) && value.elapsedMs >= 0) result.elapsedMs = value.elapsedMs;
+  if (typeof value.responseCorrelated === 'boolean') result.responseCorrelated = value.responseCorrelated;
+  if (typeof value.hresult === 'string' && /^0x[0-9a-f]{8}$/i.test(value.hresult)) result.hresult = value.hresult.toUpperCase().replace('0X', '0x');
+  return result;
+}
 function switchedMetadata(value) {
   const out={};if(!value||typeof value!=='object'||Array.isArray(value))return out;
   const project=(source,numbers,booleans,strings=[])=>{const result={};if(!source||typeof source!=='object'||Array.isArray(source))return result;for(const key of numbers)if(Number.isSafeInteger(source[key])&&source[key]>=0)result[key]=source[key];for(const key of booleans)if(typeof source[key]==='boolean')result[key]=source[key];for(const key of strings)if(typeof source[key]==='string'&&/^[A-Za-z0-9_-]{1,96}$/.test(source[key]))result[key]=source[key];return result;};
@@ -38,6 +52,8 @@ function switchedMetadata(value) {
   return out;
 }
 function copyApprovalDetails(source, target) {
+  const diagnostic = nativeDiagnostic(source?.diagnostic);
+  if (diagnostic) target.diagnostic = diagnostic;
   if (APPROVAL_STATES.has(source?.approvalState)) target.approvalState = source.approvalState;
   if (typeof source?.approvalRequestId === 'string' && /^azrael-window-consent-[a-f0-9-]{36}$/i.test(source.approvalRequestId)) target.approvalRequestId = source.approvalRequestId;
   for (const key of ['userResponded', 'actionExecuted', 'restoreAllowed', 'observationRequired', 'inputReleaseConfirmed', 'connectionRecovered']) if (typeof source?.[key] === 'boolean') target[key] = source[key];
