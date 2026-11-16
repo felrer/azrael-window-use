@@ -11,6 +11,13 @@ function targetLayout(platform=process.platform,arch=process.arch) {
   if(!['win32-x64','darwin-arm64','linux-x64'].includes(platform+'-'+arch))throw Error('Unsupported packaging target: '+platform+'-'+arch);
   return {platform,arch,payloadDirectory:'WindowUseMCP-'+platform+'-'+arch,executable:platform==='darwin'?'WindowUseHost.app/Contents/MacOS/azrael-window-use':platform==='win32'?'WindowUseMCP.exe':'WindowUseMCP',resourceDirectory:platform==='darwin'?'WindowUseHost.app/Contents/Resources':'resources'};
 }
+function resolveNpmCli(nodeExecutable=process.execPath,platform=process.platform) {
+  if(!path.isAbsolute(nodeExecutable))throw Error('Installed Node tool path must be absolute');
+  const directory=path.dirname(nodeExecutable);
+  const cli=platform==='win32'?path.join(directory,'node_modules/npm/bin/npm-cli.js'):path.resolve(directory,'../lib/node_modules/npm/bin/npm-cli.js');
+  if(!fs.existsSync(cli)||!fs.lstatSync(cli).isFile())throw Error('Installed Node must provide npm-cli.js in its official '+platform+' installation layout: '+cli);
+  return cli;
+}
 function dependencyInventory(directory) {return inventory(directory).sort((a,b)=>a.path<b.path?-1:a.path>b.path?1:0);}
 function prepareAppPackage(pkg) {
   const packageJson=structuredClone(pkg);
@@ -84,8 +91,7 @@ function prepareResources(options,layout,report,save,step) {
   const app=path.join(prepared,'app');fs.mkdirSync(app);
   for(const name of ['src','vendor']){copyTree(path.join(snapshot,name),path.join(app,name));same(inventory(path.join(app,name)),inventory(path.join(snapshot,name)),'Copied application '+name);}
   for(const name of ['package.json','package-lock.json','LICENSE','README.md']){fs.copyFileSync(path.join(snapshot,name),path.join(app,name));if(hash(path.join(app,name))!==hash(path.join(snapshot,name)))throw Error('Copied application input differs: '+name);}
-  const npmCli=path.join(path.dirname(process.execPath),'node_modules/npm/bin/npm-cli.js');
-  if(!fs.existsSync(npmCli))throw Error('Installed Node must provide adjacent npm-cli.js');
+  const npmCli=resolveNpmCli();
   report.tools={node:process.version,nodeExecutable:process.execPath,nodeExecutableSha256:hash(process.execPath),npmCli,npmCliSha256:hash(npmCli),npmVersion:JSON.parse(fs.readFileSync(path.join(path.dirname(npmCli),'../package.json'))).version};save();
   step('production-dependencies',process.execPath,[npmCli,'ci','--omit=dev','--ignore-scripts','--bin-links=false','--no-audit','--no-fund','--cache',path.join(report.run,'npm-cache')],app);
   json(path.join(app,'package.json'),prepareAppPackage(JSON.parse(fs.readFileSync(path.join(app,'package.json')))).packageJson);
@@ -185,4 +191,4 @@ async function main(args=process.argv.slice(2)) {
   finally{fs.closeSync(fd);fs.unlinkSync(lock);}
 }
 if(require.main===module)main().catch(error=>{process.stderr.write(error.message+'\n');process.exitCode=1;});
-module.exports={main,targetLayout,dependencyInventory,prepareAppPackage,selectedInputs,checkedNode,checkedBinary,parseArguments,describeDistribution,signMacDistribution,verifyPrepared};
+module.exports={main,targetLayout,resolveNpmCli,dependencyInventory,prepareAppPackage,selectedInputs,checkedNode,checkedBinary,parseArguments,describeDistribution,signMacDistribution,verifyPrepared};

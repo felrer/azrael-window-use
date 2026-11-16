@@ -1,6 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const {targetLayout,dependencyInventory,parseArguments,checkedNode,checkedBinary}=require('../scripts/package.cjs');
+const {targetLayout,resolveNpmCli,dependencyInventory,parseArguments,checkedNode,checkedBinary}=require('../scripts/package.cjs');
 const {launchOptions}=require('../scripts/launch.cjs');
 // Retained: changing a portable layout or runtime selection must update every
 // launcher and downstream consumer together; never accept an ambient Node.
@@ -42,4 +42,16 @@ test('dependency receipt is accepted by actual startup verifier',t=>{
  assert.deepEqual(files.map(file=>file.path),['pkg/A.js','pkg/_fixture.js','pkg/z.js']);
  fs.writeFileSync(path.join(base,'dependencies.sha256.json'),JSON.stringify({schema:1,files}));
  assert.equal(require('../src/dependency-integrity.cjs').verifyDependencies(base),path.join(base,'dependencies.sha256.json'));
+});
+
+test('npm CLI resolves official Windows and Unix installed Node layouts only',t=>{
+ const os=require('node:os'),base=fs.mkdtempSync(path.join(os.tmpdir(),'awu-npm-layout-'));
+ t.after(()=>{fs.rmSync(base,{recursive:true});assert.ok(!fs.existsSync(base));});
+ const windows=path.join(base,'windows'),unix=path.join(base,'unix');
+ const windowsCli=path.join(windows,'node_modules/npm/bin/npm-cli.js'),unixCli=path.join(unix,'lib/node_modules/npm/bin/npm-cli.js');
+ for(const cli of [windowsCli,unixCli]){fs.mkdirSync(path.dirname(cli),{recursive:true});fs.writeFileSync(cli,'npm fixture');}
+ assert.equal(resolveNpmCli(path.join(windows,'node.exe'),'win32'),windowsCli);
+ for(const platform of ['darwin','linux'])assert.equal(resolveNpmCli(path.join(unix,'bin/node'),platform),unixCli);
+ assert.throws(()=>resolveNpmCli(path.join(base,'missing/node'),'darwin'),/official darwin installation layout/);
+ assert.throws(()=>resolveNpmCli('node','linux'),/absolute/);
 });
