@@ -39,9 +39,17 @@ function main(args=process.argv.slice(2)) {
   for(const size of [16,32,128,256,512])for(const scale of [1,2]){const pixels=size*scale,target=path.join(iconset,'icon_'+size+'x'+size+(scale===2?'@2x':'')+'.png');if(pixels===256)fs.copyFileSync(source,target,fs.constants.COPYFILE_EXCL);else step('icon-'+size+'-'+scale,'/usr/bin/sips',['-z',String(pixels),String(pixels),source,'--out',target]);}
   step('iconutil','/usr/bin/iconutil',['-c','icns',iconset,'-o',path.join(resources,'app-icon.icns')]);
   step('plist-check','/usr/bin/plutil',['-lint',path.join(contents,'Info.plist')]);
+  // Seal the new enclosing bundle before checking its main executable as code.
+  // This signs only our copied host and outer envelope; supplier natives remain intact.
+  const beforeSigning=inventoryDistribution(app),beforeExecutableSha256=hash(executable);
+  step('codesign-stage-app','/usr/bin/codesign',['--force','--sign','-','--timestamp=none',app]);
+  step('codesign-verify-stage-app','/usr/bin/codesign',['--verify','--strict','--deep',app]);
+  const afterSigning=inventoryDistribution(app),beforeMap=new Map(beforeSigning.map(file=>[file.path,file]));
+  record.executableSha256=hash(executable);
+  record.staging.signing={schema:1,policy:'adhoc-without-notarization',identity:'-',verified:true,executableBeforeSha256:beforeExecutableSha256,executableAfterSha256:record.executableSha256,beforeInventorySha256:sha(JSON.stringify(beforeSigning)),afterInventorySha256:sha(JSON.stringify(afterSigning)),changes:afterSigning.filter(file=>JSON.stringify(beforeMap.get(file.path))!==JSON.stringify(file))};
   const additions=inventoryDistribution(resources,{excludeReceipt:false}).filter(file=>file.path==='app-icon.icns');
   if(additions.length!==1)throw Error('Generated icon unavailable');
-  if(JSON.stringify(actual())!==JSON.stringify(prepared.resourceFiles)||hash(options.host)!==compiled.executableSha256)throw Error('Staging inputs changed');
+  if(JSON.stringify(actual())!==JSON.stringify(prepared.resourceFiles)||JSON.stringify(inventoryDistribution(resources,{excludeReceipt:false}).filter(file=>file.path!=='app-icon.icns'))!==JSON.stringify(prepared.resourceFiles)||hash(options.host)!==compiled.executableSha256)throw Error('Staging inputs or copied resources changed');
   Object.assign(record,{status:'passed',app,resourceAdditions:additions});record.staging.bundleFiles=inventoryDistribution(app);json(recordFile,record);
   process.stdout.write(JSON.stringify({app,hostReport:recordFile,sourceSha256:record.sourceSha256,resourceSha256:record.resourceSha256,resourceAdditions:additions,signing:'pending final package producer'})+'\n');
  }catch(error){record.status='failed';record.error=error.message;json(recordFile,record);throw error;}
