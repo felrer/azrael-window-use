@@ -50,3 +50,10 @@ Status: design preview; runtime approval UI unchanged.
 - Extracted actual installed Microsoft.Paint_11.2609.401.0_x64__8wekyb3d8bbwe/PaintApp/mspaint.exe icon via System.Drawing.Icon.ExtractAssociatedIcon (exit 0). Retained paint-icon.png (32x32) is a requested preview asset, not a disposable probe.
 - Visually inspected extracted PNG; Paint palette icon is present. Approval target, whitelist and protected rows reuse preview icon mapping. Paint is labeled 그림판; unknown app paths use a generic fallback; image-load failure restores fallback. Fixed self-protection row uses the approved Azrael Window Use app icon.
 - Arbitrary browser-entered executable paths do not read local files; production Electron main-process app.getFileIcon(path) is available in installed Electron declarations for later integration. Preview uses the extracted fixture only, not live extraction on each list edit.
+
+## Revision 6: settings simplification
+
+- Removed body settings heading, introductory description, security section heading and preview-only note. Dialog retains its accessible name using the existing title-bar text.
+- Settings scrollbar uses a 5px rounded thumb, transparent track, no arrow buttons, plus thin-scrollbar fallback for non-WebKit browsers. Reset button has a transparent border/background with keyboard focus styling preserved.
+- Node static checks passed (exit 0): JS syntax, unique IDs, DOM references and accessible title. Rendered scrollbar/light/dark inspection remains for user review because of the recorded browser restriction.
+- Preview scope only; production UI is unchanged. No new temporary material.
