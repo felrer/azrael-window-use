@@ -4,7 +4,17 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs/promises');
 const path=require('node:path');
 const os=require('node:os');
-const {inventoryApp,restoreRelativeLinks}=require('../scripts/package-unix.cjs');
+const {inventoryApp,restoreRelativeLinks,prepareAppPackage}=require('../scripts/package-unix.cjs');
+
+test('production sanitizer preserves the pinned Electron packaging input',async()=>{
+  const {defaultSanitizePackageJson}=await import('@electron/packager');
+  const pkg={name:'example',version:'0.1.0',main:'src/main.cjs',devDependencies:{electron:'45.2.3'}};
+  const prepared=prepareAppPackage(pkg,defaultSanitizePackageJson);
+  assert.equal(prepared.electronVersion,'45.2.3');
+  assert.equal(prepared.packageJson.devDependencies,undefined);
+  assert.equal(prepared.packageJson.main,'src/main.cjs');
+  assert.equal(pkg.devDependencies.electron,'45.2.3');
+});
 
 // Retained: switching packaging inventories or copy options can accidentally
 // reject npm executable links or stop verifying exact contained link identities.

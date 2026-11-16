@@ -7,6 +7,12 @@ const {inventory}=require('./build-native.cjs');
 const root=path.resolve(__dirname,'..');
 const sha=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 const json=(file,value)=>fs.writeFileSync(file,JSON.stringify(value,null,2)+'\n');
+function prepareAppPackage(pkg,sanitize) {
+  const electronVersion=pkg.devDependencies?.electron;
+  if(!/^\d+\.\d+\.\d+$/.test(electronVersion||''))throw Error('Exact Electron version required for Unix packaging');
+  // Packager's sanitizer mutates its argument, including devDependencies.
+  return {electronVersion,packageJson:sanitize(structuredClone(pkg))};
+}
 // npm creates relative executable links on Unix. This inventory is only for
 // prepared app dependencies; native/source inventories still reject all links.
 function inventoryApp(directory) {
@@ -101,7 +107,8 @@ async function main() {
     if(installed.error||installed.status!==0)throw Error('Production dependency installation failed; see '+logFile);
     const pkg=JSON.parse(fs.readFileSync(path.join(app,'package.json'),'utf8'));
     const {packager,defaultSanitizePackageJson}=await import('@electron/packager');
-    json(path.join(app,'package.json'),defaultSanitizePackageJson(pkg));
+    const {electronVersion,packageJson}=prepareAppPackage(pkg,defaultSanitizePackageJson);
+    json(path.join(app,'package.json'),packageJson);
     fs.unlinkSync(path.join(app,'package-lock.json'));
     const prepared=inventoryApp(app);
     const iconSource=path.join(snapshot,'src/assets/app-icon-256.png');
@@ -126,7 +133,7 @@ async function main() {
       } finally {fs.closeSync(iconFd);}
     }
     report.icon.path=icon;report.icon.sha256=sha(fs.readFileSync(icon));json(reportFile,report);
-    const paths=await packager({dir:app,out:release,name:'WindowUseHost',executableName:'WindowUseHost',appBundleId:'com.azrael.window-use',icon,appVersion:pkg.version,buildVersion:pkg.version,electronVersion:pkg.devDependencies.electron,platform:process.platform,arch:process.arch,asar:false,derefSymlinks:false,prune:false,overwrite:false,quiet:true,junk:false,ignore:()=>false,sanitizePackageJson:[value=>value],afterCopy:[async ({buildPath})=>restoreRelativeLinks(app,buildPath,prepared)],tmpdir:path.join(run,'packager-tmp'),extraResource:[path.join(snapshot,'artifacts/runtime')]});
+    const paths=await packager({dir:app,out:release,name:'WindowUseHost',executableName:'WindowUseHost',appBundleId:'com.azrael.window-use',icon,appVersion:pkg.version,buildVersion:pkg.version,electronVersion,platform:process.platform,arch:process.arch,asar:false,derefSymlinks:false,prune:false,overwrite:false,quiet:true,junk:false,ignore:()=>false,sanitizePackageJson:[value=>value],afterCopy:[async ({buildPath})=>restoreRelativeLinks(app,buildPath,prepared)],tmpdir:path.join(run,'packager-tmp'),extraResource:[path.join(snapshot,'artifacts/runtime')]});
     if(paths.length!==1)throw Error('Unexpected packager output');
     const distribution=paths[0],resources=path.join(distribution,process.platform==='darwin'?'WindowUseHost.app/Contents/Resources':'resources');
     if(JSON.stringify(inventoryApp(path.join(resources,'app')))!==JSON.stringify(prepared))throw Error('Packaged application contents or relative links differ');
@@ -147,4 +154,4 @@ async function main() {
   finally {fs.closeSync(fd);fs.unlinkSync(lock);}
 }
 if(require.main===module)main().catch(error=>{process.stderr.write(error.message+'\n');process.exitCode=1;});
-module.exports={commandLauncher,selectedInputs,inventoryApp,restoreRelativeLinks};
+module.exports={commandLauncher,selectedInputs,inventoryApp,restoreRelativeLinks,prepareAppPackage};
