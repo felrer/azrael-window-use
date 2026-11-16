@@ -126,7 +126,7 @@ async function main() {
       } finally {fs.closeSync(iconFd);}
     }
     report.icon.path=icon;report.icon.sha256=sha(fs.readFileSync(icon));json(reportFile,report);
-    const paths=await packager({dir:app,out:release,name:'WindowUseHost',executableName:'WindowUseHost',appBundleId:'com.azrael.window-use',icon,appVersion:pkg.version,buildVersion:pkg.version,electronVersion:pkg.devDependencies.electron,platform:process.platform,arch:process.arch,asar:false,derefSymlinks:false,prune:false,overwrite:false,quiet:true,junk:false,ignore:()=>false,sanitizePackageJson:[value=>value],afterCopy:[async destination=>restoreRelativeLinks(app,destination,prepared)],tmpdir:path.join(run,'packager-tmp'),extraResource:[path.join(snapshot,'artifacts/runtime')]});
+    const paths=await packager({dir:app,out:release,name:'WindowUseHost',executableName:'WindowUseHost',appBundleId:'com.azrael.window-use',icon,appVersion:pkg.version,buildVersion:pkg.version,electronVersion:pkg.devDependencies.electron,platform:process.platform,arch:process.arch,asar:false,derefSymlinks:false,prune:false,overwrite:false,quiet:true,junk:false,ignore:()=>false,sanitizePackageJson:[value=>value],afterCopy:[async ({buildPath})=>restoreRelativeLinks(app,buildPath,prepared)],tmpdir:path.join(run,'packager-tmp'),extraResource:[path.join(snapshot,'artifacts/runtime')]});
     if(paths.length!==1)throw Error('Unexpected packager output');
     const distribution=paths[0],resources=path.join(distribution,process.platform==='darwin'?'WindowUseHost.app/Contents/Resources':'resources');
     if(JSON.stringify(inventoryApp(path.join(resources,'app')))!==JSON.stringify(prepared))throw Error('Packaged application contents or relative links differ');
