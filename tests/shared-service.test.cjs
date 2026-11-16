@@ -11,11 +11,13 @@ const { createServiceClient } = require('../src/shared-client.cjs');
 const root = path.join(__dirname, '..', 'artifacts', 'verification', 'unit');
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function fixture(t) {
-  // Darwin's sockaddr_un has only 104 bytes, including its terminator. Keep
-  // real transport fixtures short even when the checkout has a long path.
+  // Unix socket address limits include the terminator. Keep real transport
+  // fixtures short even when the checkout has a long path.
   const directory = process.platform === 'darwin'
     ? await fs.mkdtemp('/private/tmp/awu-service-')
-    : path.join(root, `shared-service-${crypto.randomUUID()}`);
+    : process.platform === 'linux'
+      ? await fs.mkdtemp(path.join(require('node:os').tmpdir(), 'awu-service-'))
+      : path.join(root, `shared-service-${crypto.randomUUID()}`);
   // This retained test owns only this fresh private directory. All hosts and socket
   // readers are stopped before ordinary removal; no application state is used.
   await fs.mkdir(directory, { recursive: true });
