@@ -35,13 +35,12 @@ test('Unix candidate hashes window runtime without a multi-pointer sibling',asyn
     assert.throws(()=>createCandidate({executable:process.execPath,appRoot:temp,runtimeDirectory:path.join(temp,'runtime/window-control'),platform:'win32'}),{code:'ENOENT'});
   } finally {await fs.rm(temp,{recursive:true});}
 });
-test('bundled command uses its own Electron and stable macOS layout',()=>{
+test('bundled command invokes Tauri CLI with stable macOS layout',()=>{
   const mac=commandLauncher('darwin');
-  assert.ok(mac.includes('ELECTRON_RUN_AS_NODE=1'));
-  assert.ok(mac.includes('WindowUseHost.app/Contents/MacOS/WindowUseHost'));
-  assert.ok(mac.includes('/app/src/unix-launcher.cjs'));
+  assert.ok(mac.includes('WindowUseHost.app/Contents/MacOS/azrael-window-use'));
+  assert.ok(!mac.includes('ELECTRON_RUN_AS_NODE'));
   assert.ok(!mac.includes('exec node'));
-  assert.ok(commandLauncher('linux').includes('exec "$base/WindowUseHost"'));
+  assert.ok(commandLauncher('linux').includes('exec "$base/WindowUseMCP"'));
 });
 test('Unix stdio bridge rejects unauthenticated output and removes invocation socket',{skip:process.platform==='win32'},async()=>{
   const temp=await fs.mkdtemp(path.join(os.tmpdir(),'awu-test-'));

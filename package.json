@@ -1,7 +1,7 @@
 {
   "name": "azrael-window-use-mcp",
-  "version": "0.1.0",
-  "description": "Standalone Windows Window Use MCP with local permission controls",
+  "version": "0.1.1",
+  "description": "Standalone Window Use MCP with Tauri permission controls",
   "license": "MIT",
   "author": "felrer",
   "private": true,
@@ -17,9 +17,6 @@
     "@modelcontextprotocol/sdk": "1.32.2"
   },
   "devDependencies": {
-    "@electron/fuses": "2.1.3",
-    "@electron/packager": "20.3.0",
-    "electron": "45.2.3",
     "playwright": "1.65.0"
   }
 }

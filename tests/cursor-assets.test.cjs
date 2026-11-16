@@ -27,14 +27,9 @@ test('ICO frames contain actual size-matched PNG resources',()=>{
   assert.deepEqual(png,fs.readFileSync(path.join(root,`src/assets/app-icon-${size}.png`)));
  }
 });
-test('tray, titlebar, window, launcher and packaged host select the approved icon',()=>{
- const read=p=>fs.readFileSync(path.join(root,p),'utf8');
- assert.ok(read('src/main.cjs').includes("assets/app-icon.ico"));
- assert.ok(read('src/main.cjs').includes("assets/app-icon-256.png"));
- assert.ok(read('src/ui/index.html').includes('../assets/app-icon-32.png'));
- assert.ok(read('scripts/launch.cjs').includes("'/win32icon:'+icon"));
- assert.ok(read('scripts/launch.cjs').includes('.update(fs.readFileSync(icon))'));
- assert.ok(read('scripts/launch.cjs').includes("'artifacts/build/dev-launcher',hash"));
- assert.ok(read('scripts/package.cjs').includes("'/win32icon:' + path.join(snapshot, 'src/assets/app-icon.ico')"));
- assert.ok(read('scripts/package.cjs').includes("icon: path.join(app, 'src/assets/app-icon.ico')"));
+test('Tauri window and packaged host select approved icons',()=>{
+ const config=JSON.parse(fs.readFileSync(path.join(root,'src-tauri/tauri.conf.json'),'utf8'));
+ assert.ok(config.bundle.icon.includes('../src/assets/app-icon.ico'));
+ assert.ok(config.bundle.icon.includes('../src/assets/app-icon-256.png'));
+ assert.ok(fs.readFileSync(path.join(root,'src/ui/index.html'),'utf8').includes('../assets/app-icon-32.png'));
 });

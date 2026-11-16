@@ -6,14 +6,14 @@ const path=require('node:path');
 const os=require('node:os');
 const {inventoryApp,restoreRelativeLinks,prepareAppPackage}=require('../scripts/package-unix.cjs');
 
-test('production sanitizer preserves the pinned Electron packaging input',async()=>{
-  const {defaultSanitizePackageJson}=await import('@electron/packager');
-  const pkg={name:'example',version:'0.1.0',main:'src/main.cjs',devDependencies:{electron:'45.2.3'}};
-  const prepared=prepareAppPackage(pkg,defaultSanitizePackageJson);
-  assert.equal(prepared.electronVersion,'45.2.3');
+test('production package excludes development scripts without mutating selected source',()=>{
+  const pkg={name:'example',version:'0.1.0',main:'src/main.cjs',dependencies:{sdk:'1.0.0'},scripts:{test:'node --test'},devDependencies:{playwright:'1.65.0'}};
+  const prepared=prepareAppPackage(pkg);
   assert.equal(prepared.packageJson.devDependencies,undefined);
+  assert.equal(prepared.packageJson.scripts,undefined);
   assert.equal(prepared.packageJson.main,'src/main.cjs');
-  assert.equal(pkg.devDependencies.electron,'45.2.3');
+  assert.deepEqual(prepared.packageJson.dependencies,{sdk:'1.0.0'});
+  assert.equal(pkg.devDependencies.playwright,'1.65.0');
 });
 
 // Retained: switching packaging inventories or copy options can accidentally
