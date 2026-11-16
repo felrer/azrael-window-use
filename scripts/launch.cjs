@@ -8,6 +8,9 @@ const arguments_ = process.argv.slice(2);
 const environment = { ...process.env }; delete environment.ELECTRON_RUN_AS_NODE;
 const electron = require('electron');
 let executable = electron, childArguments = [root, ...arguments_];
+if (arguments_.includes('--mcp') && process.platform !== 'win32') {
+  require('../src/unix-launcher.cjs').run({host:electron,appRoot:root,args:arguments_.filter(arg=>arg!=='--mcp')}).catch(error=>{process.stderr.write(error.message+'\n');process.exitCode=1;});
+} else {
 if (arguments_.includes('--mcp')) {
   const source = path.join(root,'launcher/Program.cs');
   const icon = path.join(root,'src/assets/app-icon.ico');
@@ -27,3 +30,4 @@ if (arguments_.includes('--mcp')) {
 const child=spawn(executable,childArguments,{cwd:root,env:environment,stdio:'inherit',windowsHide:true});
 child.on('error',error=>{process.stderr.write(error.message+'\n');process.exitCode=1;});
 child.on('exit',(code,signal)=>{process.exitCode=code??(signal?1:0);});
+}

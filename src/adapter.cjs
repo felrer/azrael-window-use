@@ -11,7 +11,7 @@ const {createLogger}=require('./logger.cjs');
 async function run() {
   const index=process.argv.indexOf('--mcp-pipe'),pipeName=process.argv[index+1],token=process.env.WINDOW_USE_PIPE_TOKEN;
   delete process.env.WINDOW_USE_PIPE_TOKEN;
-  if(index<0||!/^[A-Za-z0-9_-]{1,128}$/.test(pipeName||'')||!/^[a-f0-9]{64}$/.test(token||''))throw Error('Start MCP using the WindowUseMCP launcher');
+  if(index<0||!(process.platform==='win32'?/^[A-Za-z0-9_-]{1,128}$/.test(pipeName||''):path.isAbsolute(pipeName||'')&&path.basename(pipeName)==='mcp.sock')||!/^[a-f0-9]{64}$/.test(token||''))throw Error('Start MCP using the WindowUseMCP launcher');
   const runtimeIndex=process.argv.indexOf('--runtime-directory');
   const runtimeDirectory=runtimeIndex<0?(app.isPackaged?path.join(process.resourcesPath,'runtime/window-control'):path.resolve(__dirname,'../artifacts/runtime/window-control')):process.argv[runtimeIndex+1];
   if(!path.isAbsolute(runtimeDirectory)||app.isPackaged&&runtimeIndex>=0)throw Error('Absolute development runtime required');
@@ -25,7 +25,7 @@ async function run() {
   const client=createServiceClient({directory:sharedDirectory,candidate:createCandidate({appRoot,runtimeDirectory,args})});
   const thread=crypto.randomUUID();
   const log=createLogger(path.join(profileDirectory,'logs'),app.getVersion());
-  const socket=net.createConnection('\\\\.\\pipe\\'+pipeName);
+  const socket=net.createConnection(process.platform==='win32'?'\\\\.\\pipe\\'+pipeName:pipeName);
   await new Promise((resolve,reject)=>{socket.once('connect',resolve);socket.once('error',reject);});
   await new Promise((resolve,reject)=>socket.write(token+'\n',error=>error?reject(error):resolve()));
   let closing=false;

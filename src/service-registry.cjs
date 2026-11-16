@@ -10,7 +10,33 @@ const PROTOCOL = 1;
 const SCHEMA = 1;
 function error(code, message) { return Object.assign(new Error(message), { code }); }
 let desktopScope;
+function unixDirectory({platform=process.platform,env=process.env,uid=process.geteuid(),temporaryDirectory=os.tmpdir(),managerPid}={}) {
+  if (!Number.isSafeInteger(uid) || uid < 0) throw error('desktop_scope_unavailable', 'Effective user identity unavailable');
+  let base, scope;
+  if (platform === 'linux') {
+    base=env.XDG_RUNTIME_DIR;
+    if (!base || !path.isAbsolute(base)) throw error('desktop_scope_unavailable', 'Linux requires an absolute XDG_RUNTIME_DIR');
+    if (!env.DISPLAY && !env.WAYLAND_DISPLAY) throw error('desktop_scope_unavailable', 'Linux desktop display is unavailable');
+    scope=[uid,env.XDG_SESSION_ID||'',env.XDG_SESSION_TYPE||'',env.DISPLAY||'',env.WAYLAND_DISPLAY||'',env.XDG_CURRENT_DESKTOP||''];
+  } else if (platform === 'darwin') {
+    if (!/^[1-9]\d*$/.test(String(managerPid||''))) throw error('desktop_scope_unavailable', 'macOS login-session manager identity unavailable');
+    base=temporaryDirectory;
+    scope=[uid,String(managerPid),env.SECURITYSESSIONID||''];
+  } else throw error('desktop_scope_unavailable','Unsupported Unix desktop');
+  return {base,directory:path.join(base,'az-window-use-'+crypto.createHash('sha256').update(JSON.stringify(scope)).digest('hex').slice(0,20))};
+}
 function defaultDirectory() {
+  if (process.platform !== 'win32') {
+    const managerPid=process.platform==='darwin'?execFileSync('/bin/launchctl',['managerpid'],{encoding:'utf8'}).trim():undefined;
+    // Keep the service socket below Darwin's 104-byte sockaddr_un limit.
+    // The final session-specific directory is ownership checked.
+    const selected=unixDirectory({managerPid,temporaryDirectory:process.platform==='darwin'?'/private/tmp':os.tmpdir()});
+    if (process.platform==='linux') {
+      const st=require('node:fs').lstatSync(selected.base);
+      if(!st.isDirectory()||st.isSymbolicLink()||st.uid!==process.geteuid()||(st.mode&0o077)!==0)throw error('unsafe_directory','XDG_RUNTIME_DIR must be an owned private ordinary directory');
+    }
+    return selected.directory;
+  }
   if (!desktopScope) {
     if (process.platform === 'win32') {
       const query = `Add-Type -TypeDefinition 'using System;using System.Text;using System.Runtime.InteropServices;public static class AzWindowDesktop{[DllImport("user32.dll")]public static extern IntPtr GetThreadDesktop(uint id);[DllImport("kernel32.dll")]public static extern uint GetCurrentThreadId();[DllImport("user32.dll",CharSet=CharSet.Unicode,SetLastError=true)]public static extern bool GetUserObjectInformation(IntPtr h,int n,StringBuilder b,uint l,out uint needed);}';$b=New-Object System.Text.StringBuilder 256;$n=0;$d=[AzWindowDesktop]::GetThreadDesktop([AzWindowDesktop]::GetCurrentThreadId());if(-not [AzWindowDesktop]::GetUserObjectInformation($d,2,$b,512,[ref]$n)){throw 'Desktop identity unavailable'};[string][System.Diagnostics.Process]::GetCurrentProcess().SessionId+'|'+$b.ToString()`;
@@ -30,13 +56,14 @@ async function prepareDirectory(directory) {
     const script = `& { param([string]$p) $ErrorActionPreference='Stop';$sid=[System.Security.Principal.WindowsIdentity]::GetCurrent().User;$existing=Get-Acl -LiteralPath $p;$owner=$existing.GetOwner([System.Security.Principal.SecurityIdentifier]);if($owner.Value -ne $sid.Value){throw 'Shared directory belongs to another user'};$acl=New-Object System.Security.AccessControl.DirectorySecurity;$acl.SetAccessRuleProtection($true,$false);foreach($s in @($sid.Value,'S-1-5-18')){$r=New-Object System.Security.AccessControl.FileSystemAccessRule((New-Object System.Security.Principal.SecurityIdentifier($s)),'FullControl','ContainerInherit,ObjectInherit','None','Allow');$acl.AddAccessRule($r)};[System.IO.Directory]::SetAccessControl($p,$acl) } '${directory.replace(/'/g, "''")}'`;
     execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true, stdio: 'pipe' });
   } else {
-    if (info.uid !== process.getuid()) throw error('unsafe_directory', 'Shared service directory belongs to another user');
+    if (info.uid !== process.geteuid()) throw error('unsafe_directory', 'Shared service directory belongs to another user');
     await fs.chmod(directory, 0o700);
   }
   return directory;
 }
 function addressFor(directory) {
-  const id = crypto.createHash('sha256').update(path.resolve(directory).toLowerCase()).digest('hex').slice(0, 32);
+  const resolved=path.resolve(directory);
+  const id = crypto.createHash('sha256').update(process.platform==='win32'?resolved.toLowerCase():resolved).digest('hex').slice(0, 32);
   return process.platform === 'win32' ? `\\\\.\\pipe\\az-window-use-${id}` : path.join(directory, 'service.sock');
 }
 async function readJson(file, max = 1024 * 1024) {
@@ -165,4 +192,4 @@ function launch(candidate, directory) {
   const child = spawn(candidate.executable, candidate.args, { detached: true, windowsHide: true, stdio: 'ignore', env });
   child.on('error', () => {}); child.unref(); return child;
 }
-module.exports = { PROTOCOL, SCHEMA, defaultDirectory, prepareDirectory, addressFor, readJson, writeJson, validateCandidate, registerCandidate, listCandidates, selectCandidate, compareVersions, acquireLock, error, send, wire, launch };
+module.exports = { PROTOCOL, SCHEMA, defaultDirectory, unixDirectory, prepareDirectory, addressFor, readJson, writeJson, validateCandidate, registerCandidate, listCandidates, selectCandidate, compareVersions, acquireLock, error, send, wire, launch };
