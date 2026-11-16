@@ -13,6 +13,7 @@ const run = runIndex < 0 ? path.join(root, 'artifacts/acceptance/windows-' + Dat
 assert.ok(!fs.existsSync(run), 'verification requires a fresh run directory');
 fs.mkdirSync(run, { recursive: true });
 const checks = [];
+const uiDiagnostics = [];
 function passed(name, data = {}) { checks.push({ name, ...data }); process.stdout.write('PASS ' + name + '\n'); }
 const json = result => JSON.parse(result.content.find(item => item.type === 'text').text);
 async function waitFor(read, label, timeout = 15000) {
@@ -30,7 +31,7 @@ class ChildTransport {
   async close() { this.child.stdin?.end(); }
 }
 async function main() {
-  let application, client, fixture, child;
+  let application, client, fixture, child, host;
   const stderr=[];
   try {
     const fixtureReady=path.join(run,'fixture.json');
@@ -43,22 +44,31 @@ async function main() {
     const packageArg=process.argv.indexOf('--executable');
     const executable=packageArg<0?process.execPath:path.resolve(process.argv[packageArg+1]);
     const environment={...process.env}; // Deliberately keep inherited Node mode: launcher must sanitize it.
+    environment.AZ_WINDOW_USE_SHARED_DIRECTORY=path.join(run,'profile','shared');
+    if(packageArg>=0)for(const name of ['AZ_WINDOW_USE_DEV_ROOT','AZ_WINDOW_USE_RESOURCES','AZ_WINDOW_USE_NODE','AZ_WINDOW_USE_PACKAGED','AZ_WINDOW_USE_HOST_EXECUTABLE'])delete environment[name];
     const portServer=require('node:net').createServer();
     await new Promise(resolve=>portServer.listen(0,'127.0.0.1',resolve));const port=portServer.address().port;await new Promise(resolve=>portServer.close(resolve));
+    environment.WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS='--remote-debugging-port='+port;
+    environment.WEBVIEW2_USER_DATA_FOLDER=path.join(run,'webview');
     const runtimeIndex=process.argv.indexOf('--runtime-directory');
     const runtimeArguments=runtimeIndex<0?[]:['--runtime-directory',path.resolve(process.argv[runtimeIndex+1])];
-    child=spawn(executable,[...(packageArg<0?[path.join(root,'scripts/launch.cjs')]:[]),'--mcp',...runtimeArguments,'--user-data-dir',path.join(run,'profile'),'--remote-debugging-port='+port],{env:environment,windowsHide:true,stdio:['pipe','pipe','pipe']});
+    const prefix=packageArg<0?[path.join(root,'scripts/launch.cjs')]:[];
+    host=spawn(executable,[...prefix,'--shared-service',...runtimeArguments,'--user-data-dir',path.join(run,'profile')],{env:environment,windowsHide:true,stdio:['ignore','ignore','pipe']});
+    host.stderr.on('data',chunk=>stderr.push(chunk.toString()));
+    await waitFor(()=>fs.existsSync(path.join(run,'profile/shared/service.json')),'private shared host');
+    child=spawn(executable,[...prefix,'--mcp',...runtimeArguments,'--user-data-dir',path.join(run,'profile')],{env:environment,windowsHide:true,stdio:['pipe','pipe','pipe']});
     child.stderr.on('data',chunk=>stderr.push(chunk.toString()));
-    await waitFor(async()=>{try{return (await fetch('http://127.0.0.1:'+port+'/json/version')).ok;}catch{return false;}},'Electron test CDP readiness');
-    const browser=await chromium.connectOverCDP('http://127.0.0.1:'+port);
-    application={windows:()=>browser.contexts().flatMap(context=>context.pages()),close:()=>browser.close()};
+    let connecting;
+    const connectUI=async()=>{if(application.browser?.isConnected()&&application.windows().length)return;if(connecting)return connecting;connecting=(async()=>{await application.close().catch(()=>{});await waitFor(async()=>{try{const targets=await fetch('http://127.0.0.1:'+port+'/json/list').then(response=>response.json());return targets.some(target=>target.type==='page'&&target.url==='http://tauri.localhost/ui/index.html');}catch{return false;}},'Tauri test WebView2 page readiness');const browser=await chromium.connectOverCDP('http://127.0.0.1:'+port,{noDefaults:true});application={browser,windows:()=>browser.contexts().flatMap(context=>context.pages()),close:()=>browser.close()};})();try{return await connecting;}finally{connecting=undefined;}};
+    application={windows:()=>{void connectUI().catch(()=>{});return [];},close:async()=>{}};
     client=new Client({name:'Window Use release verification',version:'1.0.0'});
     await client.connect(new ChildTransport(child));
     const tools=await client.listTools();
     for(const name of ['context','list_windows','capture','inspect','set_value','invoke','capture_desktop','desktop_input','run_task_macro'])assert.ok(tools.tools.some(tool=>tool.name===name),name);
     assert.ok(!tools.tools.some(tool=>/approval|permission|settings/.test(tool.name)));
     passed('standard SDK stdio connection and tool discovery');
-    assert.equal(application.windows().length, 0, 'MCP starts without a pre-opened settings or approval renderer');
+    const initialPages=await fetch('http://127.0.0.1:'+port+'/json/list').then(response=>response.json()).catch(()=>[]);
+    assert.equal(initialPages.filter(page=>page.type==='page').length,0,'MCP starts without a pre-opened settings or approval renderer');
     const context=json(await client.callTool({name:'context',arguments:{}})); assert.equal(context.capabilities.desktopControl,true);
     const list=()=>client.callTool({name:'list_windows',arguments:{}}).then(json);
     let candidates=await list();
@@ -86,8 +96,8 @@ async function main() {
       return;
     }
     assert.equal(await readValue(),'before');
-    const mutate=value=>client.callTool({name:'set_value',arguments:{windowId:target.windowId,observationId:observation.observationId,elementId:edit().id,value}});
-    const findApproval=()=>waitFor(async()=>{for(const page of application.windows()){try{if(await page.evaluate(()=>window.windowUse?.snapshot().then(value=>value.view==='approval')))return page;}catch{}}},'automatic approval window');
+    const mutate=value=>{const request=client.callTool({name:'set_value',arguments:{windowId:target.windowId,observationId:observation.observationId,elementId:edit().id,value}});void request.catch(()=>{});return request;};
+    const findApproval=async()=>{return waitFor(async()=>{await connectUI();for(const page of application.windows()){try{const state=await page.evaluate(async()=>({url:location.href,bridge:!!window.windowUse,body:document.body.innerText,snapshot:await Promise.race([window.windowUse?.snapshot().catch(error=>({error:String(error)})),new Promise(resolve=>setTimeout(()=>resolve({error:'snapshot timeout'}),2000))])}));uiDiagnostics.push(state);if(uiDiagnostics.length>5)uiDiagnostics.shift();if(state.snapshot?.view==='approval')return page;}catch(error){uiDiagnostics.push({error:String(error)});if(uiDiagnostics.length>5)uiDiagnostics.shift();}}},'automatic approval window');};
     let action=mutate('closed');
     let approval=await findApproval();
     await approval.getByRole('button',{name:'닫기',exact:true}).click();
@@ -118,12 +128,22 @@ async function main() {
     await approval.evaluate(()=>window.windowUse.command('openSettings'));
     const findSettings=()=>waitFor(async()=>{for(const page of application.windows()){try{if(await page.evaluate(()=>window.windowUse?.snapshot().then(value=>value.view==='settings')))return page;}catch{}}},'settings window');
     let settings=await findSettings();
+    const serviceFile=path.join(run,'profile/shared/service.json');
+    const servicePid=JSON.parse(fs.readFileSync(serviceFile,'utf8')).pid;
+    const forwarding=spawnSync(executable,[...prefix,'--user-data-dir',path.join(run,'profile')],{env:environment,encoding:'utf8',windowsHide:true,timeout:15000});
+    assert.equal(forwarding.status,0,forwarding.stderr);
+    assert.equal(JSON.parse(fs.readFileSync(serviceFile,'utf8')).pid,servicePid);
+    passed('ordinary launch forwards settings to the existing private host and exits');
     const width=await settings.evaluate(()=>window.innerWidth);assert.ok(width>=400&&width<=460,'compact settings viewport');
+    fs.writeFileSync(path.join(run,'settings-before-theme.json'),JSON.stringify(await settings.evaluate(async()=>({url:location.href,body:document.body.innerText,view:(await window.windowUse.snapshot()).view})),null,2));
     for(const theme of ['light','dark']){
-      await settings.getByLabel('테마',{exact:true}).selectOption(theme);
+      await settings.getByRole('button',{name:'테마',exact:true}).click();
+      await settings.getByRole('option',{name:theme==='light'?'라이트':'다크',exact:true}).click();
       await settings.screenshot({path:path.join(run,'settings-'+theme+'.png')});
       assert.equal(await settings.locator('html').getAttribute('data-theme'),theme);
+      assert.equal(await approval.getByRole('button',{name:'테마',exact:true}).count(),0,'settings snapshots must not render in the approval WebView');
     }
+    passed('settings and approval snapshots remain isolated while both WebViews exist');
     assert.ok(await settings.getByText('항상 보호',{exact:true}).count());
     passed('compact custom-chrome UI renders and switches light/dark');
     await settings.getByRole('button',{name:'닫기',exact:true}).click();
@@ -132,14 +152,17 @@ async function main() {
     settings=await findSettings();
     assert.equal(await settings.locator('html').getAttribute('data-theme'),'dark');
     passed('closed settings UI reopens from the host with preserved settings');
-    await settings.getByLabel('권한 모드',{exact:true}).selectOption('full');
+    await settings.getByRole('button',{name:'권한 모드',exact:true}).click();
+    await settings.getByRole('option',{name:'전체 허용',exact:true}).click();
     candidates=await list();
-    const selfApps=candidates.candidates.filter(item=>item.appName===(packageArg<0?'electron.exe':'WindowUseHost.exe')&&item.title==='');assert.ok(selfApps.length,'self windows are title-redacted');
+    const selfApps=candidates.candidates.filter(item=>item.appName.toLowerCase()===path.basename(executable).toLowerCase()&&item.title==='');assert.ok(selfApps.length,'self windows are title-redacted');
     for(const own of selfApps){
       result=await client.callTool({name:'capture',arguments:{windowId:own.windowId}});assert.equal(json(result).code,'security_app_blocked');
       result=await client.callTool({name:'invoke',arguments:{windowId:own.windowId,observationId:'forged',elementId:'forged'}});assert.equal(json(result).code,'security_app_blocked');
     }
     passed('own settings/approval windows blocked from observation and control in full mode');
+    let coordinateFailure;
+    if(!process.argv.includes('--ui-only')) {
     let desktop;
     for(let attempt=0;attempt<3;attempt++){result=await client.callTool({name:'capture_desktop',arguments:{}});if(!result.isError){desktop=json(result);break;}await new Promise(resolve=>setTimeout(resolve,200));}
     assert.ok(desktop,'masked desktop capture');assert.equal(desktop.redacted,true);assert.ok(desktop.maskedWindowCount>=1);
@@ -163,13 +186,13 @@ async function main() {
       await new Promise(resolve=>setTimeout(resolve,700));
       const next=await client.callTool({name:'capture_desktop',arguments:{}});if(next.isError)break;desktop=json(next);
     }
-    let coordinateFailure;
     fs.writeFileSync(path.join(run,'coordinate-delivery.json'),JSON.stringify({button:fixtureInfo,baseline:coordinateBaseline,result:json(result)},null,2));
     if(result.isError)coordinateFailure=json(result);
     else {
       assert.equal(json(result).delivery,'desktopInput');
       await waitFor(()=>Number(fs.readFileSync(fixtureReady+'.clicks','utf8'))>coordinateBaseline,'coordinate click observed by fixture',5000);
       passed('real coordinate input reaches owned fixture with observed postcondition',{attempts:inputAttempts+1});
+    }
     }
     // Dispatch through the exact trusted renderer IPC even while minimized.
     await settings.evaluate(()=>window.windowUse.command('stop'));
@@ -185,12 +208,14 @@ async function main() {
     process.stdout.write('RESULT '+path.join(run,'result.json')+'\n');
     if(coordinateFailure)throw Error('Coordinate input not accepted: '+JSON.stringify(coordinateFailure));
   } catch(error) {
-    fs.writeFileSync(path.join(run,'failure.json'),JSON.stringify({message:error.message,stack:error.stack,checks,stderr:stderr.join('').slice(-8000)},null,2));
+    fs.writeFileSync(path.join(run,'failure.json'),JSON.stringify({message:error.message,stack:error.stack,checks,uiDiagnostics,stderr:stderr.join('').slice(-8000)},null,2));
     throw error;
   } finally {
     await client?.close().catch(()=>{});
     await application?.close().catch(()=>{});
-    if(child&&child.exitCode===null){child.stdin?.end();await waitFor(()=>child.exitCode!==null||child.signalCode!==null,'Electron termination',5000).catch(()=>{child.kill();});}
+    if(child&&child.exitCode===null){child.stdin?.end();await waitFor(()=>child.exitCode!==null||child.signalCode!==null,'MCP termination',5000).catch(()=>{child.kill();});}
+    if(host&&host.exitCode===null){host.kill();await waitFor(()=>host.exitCode!==null||host.signalCode!==null,'private Tauri host termination');}
+    if(host)await waitFor(()=>!fs.existsSync(path.join(run,'profile/shared/service.json')),'private worker endpoint released');
     if(fixture&&fixture.exitCode===null){fixture.kill();await waitFor(()=>fixture.exitCode!==null||fixture.signalCode!==null,'fixture termination');}
   }
 }
