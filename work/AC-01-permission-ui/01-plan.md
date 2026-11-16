@@ -72,6 +72,12 @@ Status: design preview; runtime approval UI unchanged.
 
 ## Production integration
 
+### Follow-up: 60-second expiry
+
+- User requested changing the default approval timeout to 60 seconds and sending an Obsidian control request.
+- Changed PermissionService default to 60000ms; explicit test timeout overrides remain unchanged. Permission tests: 6 passed, exit 0. Independent MCP refreshed ready:true (unrelated laio still unavailable).
+- Sent Obsidian control request via same-size resize (1197x825 physical pixels at 144 DPI, 798x550 DIP). User approved; returned state ready and unchanged dimensions. No text input or document modification. Source and documentation change committed together.
+
 Status: implementation committed; independent MCP refreshed; real approval shown; awaiting user visual acceptance.
 
 - User authorized applying the agreed preview to production, all-app icon extraction, MCP refresh and a real approval request for user verification.

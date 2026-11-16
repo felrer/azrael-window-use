@@ -1,6 +1,6 @@
 # Permission UI
 
-Status: implemented for Windows x64; current-user visual acceptance pending.
+Status: implemented for Windows x64; current-user visual acceptance pending. Permission requests expire after 60 seconds by default.
 
 Azrael Window Use presents separate frameless approval and settings windows. The approval names the exact executable, describes its scope and offers deny/session decisions, plus permanent app allowance for control requests only. The footer opens settings without cancelling the pending request and shows the real expiry time. Closing approval still denies pending requests. Settings are not an overlay or a replacement for the MCP connection.
 

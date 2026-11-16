@@ -11,7 +11,7 @@ function executableList(list) {
   return [...new Set(list.map(normalizeExecutable))].sort();
 }
 class PermissionService extends EventEmitter {
-  constructor({ directory, selfExecutables, approvalTimeoutMs = 50000, now = Date.now }) {
+  constructor({ directory, selfExecutables, approvalTimeoutMs = 60000, now = Date.now }) {
     super();
     this.directory = directory;
     this.file = path.join(directory, 'permissions.json');
