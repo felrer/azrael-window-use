@@ -174,3 +174,13 @@
   후보 9개·SVG 반경 기록·PNG 256px·방향키 이동·JS 오류 없음 확인.
   수정한 배치 화면의 실제 렌더를 검토했습니다.
 - 임시 그룹 70,909 logical bytes를 소유 도구로 삭제하고 경로 부재를 확인했습니다.
+
+
+## 2026-11-16 Repository rename
+
+- User approved renaming the GitHub repository to felrer/azrael-window-use.
+- GitHub PATCH succeeded (exit 0), private visibility retained; local origin updated.
+- README clone URL, cloned directory and example launcher path follow the new slug.
+- Existing local directory, package name and MCP namespace az_window_use remain unchanged.
+- Publish only the README rename edits against the remote baseline; preserve unpublished functional changes.
+- Official GitHub docs still restrict first social-preview upload to public repositories; previously uploaded previews can be changed in private repositories. No visibility change or social-preview upload performed.
