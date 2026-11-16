@@ -43,6 +43,7 @@ def capabilities(kind):
                 windowResize=kind == 'x11', desktopCapture=False,
                 desktopControl=False, switchedInput=False, independentPointer=False,
                 coordinateInput=False, windowKeyInput=kind == 'x11',
+                actionVisualization=kind == 'x11', actionPointCoordinateSpace='screen-physical',
                 limitations=['X11 capture requires a redirected XComposite window',
                              'Wayland supports exposed AT-SPI frames and semantic actions only',
                              'No global input, pointer reservation or suppression'])
@@ -134,6 +135,8 @@ def make_backend(provider, kind):
         def call(self, method, params):
             if method == 'listWindows':
                 return dict(windows=self.x.enumerate())
+            if method == 'actionPoint':
+                raise Failure('unsupported-action', 'Wayland AT-SPI frames have no verified global coordinate mapping')
             if method in ('observe', 'restore', 'resize'):
                 raise Failure('unsupported-action', 'Wayland selected-window capture/restore/resize requires compositor support')
             if method == 'status':
@@ -192,7 +195,7 @@ def serve(input_stream=None, emit=None):
                         raise Failure('dependency-missing', 'X11 requires libX11.so.6 and libXcomposite.so.1')
                 emit(dict(id=rid, result=capabilities(kind)))
                 continue
-            if method in ('captureDesktop', 'windowAtPoint', 'actionPoint', 'approvalNotificationShow'):
+            if method in ('captureDesktop', 'windowAtPoint', 'approvalNotificationShow'):
                 raise Failure('unsupported-action', 'This Linux provider does not support desktop input/capture or native notifications')
             if method == 'approvalNotificationHide':
                 emit(dict(id=rid, result=dict(hidden=True)))

@@ -470,6 +470,34 @@ class Backend:
         if method == 'status':
             x,y,width,height = self.x.geometry(w)
             return dict(window=w, captureGeometry=dict(originX=x,originY=y,widthPx=width,heightPx=height,dpi=96))
+        if method == 'actionPoint':
+            observation = self.observation
+            identity = {k:w[k] for k in ('hwnd','pid','processCreated','executable')}
+            geometry = self.x.geometry(w)
+            if not observation or observation[0] != p.get('observationId') or observation[1] != identity or observation[3] != geometry:
+                raise Failure('stale-observation','A retained observation for the unchanged selected window is required')
+            if w['minimized']:
+                raise Failure('window-minimized','Selected window is minimized')
+            x,y,width,height = geometry
+            left,top,right,bottom = x,y,x+width,y+height
+            if p.get('elementId') is not None:
+                element = self.retained_element(w,observation,p['elementId'])
+                state = element.get_state_set()
+                if any(not state.contains(s) for s in (Atspi.StateType.ENABLED,Atspi.StateType.VISIBLE,Atspi.StateType.SHOWING)):
+                    raise Failure('stale-element','Element is no longer enabled and visible')
+                component = element.get_component_iface()
+                if not component:
+                    raise Failure('unsupported-action','Element does not expose visual bounds')
+                rect = component.get_extents(Atspi.CoordType.SCREEN)
+                left,top = max(left,rect.x),max(top,rect.y)
+                right,bottom = min(right,rect.x+rect.width),min(bottom,rect.y+rect.height)
+            if left >= right or top >= bottom:
+                raise Failure('unsupported-action','No visible action point inside selected window')
+            point = dict(x=(left+right)//2,y=(top+bottom)//2)
+            after = self.x.verify(w)
+            if self.x.geometry(after) != geometry:
+                raise Failure('stale-observation','Window moved while resolving action point')
+            return point
         if method == 'overlayShow':
             ready = threading.Event(); outcome = {}
             def show():
