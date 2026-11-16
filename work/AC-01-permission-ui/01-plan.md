@@ -35,3 +35,11 @@ Status: design preview; runtime approval UI unchanged.
 - No actual executable picker or file access is performed; this is a design simulation. Production app-icon integration and performance work remain outside this revision.
 - Rendered inspection remains blocked by the browser policy previously recorded. Focus trapping/keyboard and actual light/dark rendering need user review.
 - One-off Node DOM harness passed, exit 0: script syntax/references, modal open/close, invalid path, add/duplicate/remove, protection precedence, current-app shortcut, mode and reset. This simulates DOM events only and does not establish visual or production approval correctness. No permanent test or temporary file created.
+
+## Revision 4: naming and standalone settings view
+
+- Preview display name is Azrael Window Use throughout. Product/package identity remains unchanged until production integration is requested.
+- Footer gear button has a 28px hit area and equal 6px top/bottom/left gaps.
+- Added settings to the preview screen selector. Gear navigates to this same standalone settings preview; close/done/Escape return to app-control preview. Settings preview remains scrollable and supports theme changes.
+- Corrected flow representation: production main.cjs creates a separate non-modal settings BrowserWindow, not an overlay modal over approval. Preview now displays settings alone in its stage; it does not create an OS window or reproduce all production settings persistence/file-picker behavior.
+- Browser visual verification remains unavailable under the recorded policy; user screenshots confirm previous version rendered, not acceptance of this revision.
