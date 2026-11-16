@@ -11,6 +11,7 @@ function targetLayout(platform=process.platform,arch=process.arch) {
   if(!['win32-x64','darwin-arm64','linux-x64'].includes(platform+'-'+arch))throw Error('Unsupported packaging target: '+platform+'-'+arch);
   return {platform,arch,payloadDirectory:'WindowUseMCP-'+platform+'-'+arch,executable:platform==='darwin'?'WindowUseHost.app/Contents/MacOS/azrael-window-use':platform==='win32'?'WindowUseMCP.exe':'WindowUseMCP',resourceDirectory:platform==='darwin'?'WindowUseHost.app/Contents/Resources':'resources'};
 }
+function dependencyInventory(directory) {return inventory(directory).sort((a,b)=>a.path<b.path?-1:a.path>b.path?1:0);}
 function prepareAppPackage(pkg) {
   const packageJson=structuredClone(pkg);
   delete packageJson.devDependencies;delete packageJson.scripts;
@@ -91,8 +92,9 @@ function prepareResources(options,layout,report,save,step) {
   fs.unlinkSync(path.join(app,'package-lock.json'));
   const lock=path.join(app,'node_modules/.package-lock.json');if(fs.existsSync(lock))fs.unlinkSync(lock);
   for(const forbidden of ['electron','@electron','playwright','playwright-core'])if(fs.existsSync(path.join(app,'node_modules',forbidden)))throw Error('Development dependency in application: '+forbidden);
-  const dependencies=inventory(path.join(app,'node_modules')).sort((a,b)=>a.path.localeCompare(b.path,'en'));
+  const dependencies=dependencyInventory(path.join(app,'node_modules'));
   json(path.join(app,'dependencies.sha256.json'),{schema:1,files:dependencies});
+  require(path.join(app,'src/dependency-integrity.cjs')).verifyDependencies(app);
   copyTree(path.join(snapshot,'artifacts/runtime'),path.join(prepared,'runtime'));
   fs.mkdirSync(path.join(prepared,'node'));
   const bundledNode=path.join(prepared,'node',layout.platform==='win32'?'node.exe':'node');
@@ -183,4 +185,4 @@ async function main(args=process.argv.slice(2)) {
   finally{fs.closeSync(fd);fs.unlinkSync(lock);}
 }
 if(require.main===module)main().catch(error=>{process.stderr.write(error.message+'\n');process.exitCode=1;});
-module.exports={main,targetLayout,prepareAppPackage,selectedInputs,checkedNode,checkedBinary,parseArguments,describeDistribution,signMacDistribution,verifyPrepared};
+module.exports={main,targetLayout,dependencyInventory,prepareAppPackage,selectedInputs,checkedNode,checkedBinary,parseArguments,describeDistribution,signMacDistribution,verifyPrepared};

@@ -1,6 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const {targetLayout,parseArguments,checkedNode,checkedBinary}=require('../scripts/package.cjs');
+const {targetLayout,dependencyInventory,parseArguments,checkedNode,checkedBinary}=require('../scripts/package.cjs');
 const {launchOptions}=require('../scripts/launch.cjs');
 // Retained: changing a portable layout or runtime selection must update every
 // launcher and downstream consumer together; never accept an ambient Node.
@@ -30,4 +30,16 @@ test('dependency manifests and lock contain no retired desktop runtime tooling',
   const data=JSON.parse(fs.readFileSync(path.join(__dirname,'..',file)));
   for(const name of Object.keys(data.packages||data.devDependencies||{}))assert.ok(!/(^|\/)@?electron(?:\/|$)/.test(name),name);
  }
+});
+
+// Packaging must produce the ordering consumed by startup integrity verification.
+test('dependency receipt is accepted by actual startup verifier',t=>{
+ const os=require('node:os'),base=fs.mkdtempSync(path.join(os.tmpdir(),'awu-dependency-receipt-'));
+ t.after(()=>{fs.rmSync(base,{recursive:true});assert.ok(!fs.existsSync(base));});
+ const directory=path.join(base,'node_modules/pkg');fs.mkdirSync(directory,{recursive:true});
+ for(const name of ['A.js','_fixture.js','z.js'])fs.writeFileSync(path.join(directory,name),name);
+ const files=dependencyInventory(path.join(base,'node_modules'));
+ assert.deepEqual(files.map(file=>file.path),['pkg/A.js','pkg/_fixture.js','pkg/z.js']);
+ fs.writeFileSync(path.join(base,'dependencies.sha256.json'),JSON.stringify({schema:1,files}));
+ assert.equal(require('../src/dependency-integrity.cjs').verifyDependencies(base),path.join(base,'dependencies.sha256.json'));
 });
