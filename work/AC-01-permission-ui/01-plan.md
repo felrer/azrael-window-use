@@ -57,3 +57,10 @@ Status: design preview; runtime approval UI unchanged.
 - Settings scrollbar uses a 5px rounded thumb, transparent track, no arrow buttons, plus thin-scrollbar fallback for non-WebKit browsers. Reset button has a transparent border/background with keyboard focus styling preserved.
 - Node static checks passed (exit 0): JS syntax, unique IDs, DOM references and accessible title. Rendered scrollbar/light/dark inspection remains for user review because of the recorded browser restriction.
 - Preview scope only; production UI is unchanged. No new temporary material.
+
+## Revision 7: permission mode picker
+
+- Ordered permission options: observe, ask, full. Default remains ask.
+- Replaced OS-native menu in this picker with a themed rounded listbox, selected checkmark, subtle hover/focus states and shadow. Other preview selectors remain unchanged.
+- Supports pointer selection, arrows, Home/End, native button Enter/Space, Escape, focus departure and outside-click dismissal. Accessible label, expanded state, listbox relationship and selected option are exposed.
+- Static syntax/DOM/order check and one-off picker DOM simulation passed, exit 0: selected-value focus, arrows, selection, Escape and outside dismissal. No temporary test files retained. Actual browser rendering and screen-reader behavior remain unverified under recorded restrictions.
