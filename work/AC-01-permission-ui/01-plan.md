@@ -43,3 +43,10 @@ Status: design preview; runtime approval UI unchanged.
 - Added settings to the preview screen selector. Gear navigates to this same standalone settings preview; close/done/Escape return to app-control preview. Settings preview remains scrollable and supports theme changes.
 - Corrected flow representation: production main.cjs creates a separate non-modal settings BrowserWindow, not an overlay modal over approval. Preview now displays settings alone in its stage; it does not create an OS window or reproduce all production settings persistence/file-picker behavior.
 - Browser visual verification remains unavailable under the recorded policy; user screenshots confirm previous version rendered, not acceptance of this revision.
+
+## Revision 5: target app icons
+
+- User requested executable app icons on approval targets and settings lists. Applied to preview; production integration remains pending design acceptance.
+- Extracted actual installed Microsoft.Paint_11.2609.401.0_x64__8wekyb3d8bbwe/PaintApp/mspaint.exe icon via System.Drawing.Icon.ExtractAssociatedIcon (exit 0). Retained paint-icon.png (32x32) is a requested preview asset, not a disposable probe.
+- Visually inspected extracted PNG; Paint palette icon is present. Approval target, whitelist and protected rows reuse preview icon mapping. Paint is labeled 그림판; unknown app paths use a generic fallback; image-load failure restores fallback. Fixed self-protection row uses the approved Azrael Window Use app icon.
+- Arbitrary browser-entered executable paths do not read local files; production Electron main-process app.getFileIcon(path) is available in installed Electron declarations for later integration. Preview uses the extracted fixture only, not live extraction on each list edit.
