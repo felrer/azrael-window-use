@@ -55,3 +55,13 @@ test('npm CLI resolves official Windows and Unix installed Node layouts only',t=
  assert.throws(()=>resolveNpmCli(path.join(base,'missing/node'),'darwin'),/official darwin installation layout/);
  assert.throws(()=>resolveNpmCli('node','linux'),/absolute/);
 });
+
+test('Mac staging names agree with portable host and reject version injection',()=>{
+ const {bundlePlist,parse}=require('../scripts/stage-tauri-macos.cjs');
+ const plist=bundlePlist('0.1.1');
+ assert.ok(plist.includes('<key>CFBundleExecutable</key><string>azrael-window-use</string>'));
+ assert.ok(plist.includes('<key>CFBundleIdentifier</key><string>com.azrael.window-use</string>'));
+ assert.ok(plist.includes('<key>LSMinimumSystemVersion</key><string>14.0</string>'));
+ assert.throws(()=>bundlePlist('0.1.1</string>'),/Exact application version/);
+ assert.throws(()=>parse(['--host','relative']),/Usage/);
+});
