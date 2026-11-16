@@ -13,6 +13,36 @@ function prepareAppPackage(pkg,sanitize) {
   // Packager's sanitizer mutates its argument, including devDependencies.
   return {electronVersion,packageJson:sanitize(structuredClone(pkg))};
 }
+// Complete transport inventory, including Electron's framework directory links.
+// Never follow links during enumeration or change the signed vendor layout.
+function inventoryDistribution(directory) {
+  const base=fs.realpathSync(directory),files=[];
+  function visit(rel) {
+    if(rel==='build-info.json')return;
+    const file=path.join(base,rel),stat=fs.lstatSync(file);
+    if(stat.isSymbolicLink()) {
+      const linkTarget=fs.readlinkSync(file),resolved=fs.realpathSync(file);
+      const lexical=path.resolve(path.dirname(file),linkTarget),inside=value=>value===base||value.startsWith(base+path.sep);
+      if(!linkTarget||path.posix.isAbsolute(linkTarget)||linkTarget.includes('\\')||linkTarget.includes(':')||/[\x00-\x1f]/.test(linkTarget)||!inside(lexical)||!inside(resolved))throw Error('Unsafe packaged relative link: '+rel);
+      files.push({path:rel,type:'symlink',linkTarget});
+    } else if(stat.isDirectory())for(const name of fs.readdirSync(file).sort())visit(rel?rel+'/'+name:name);
+    else if(stat.isFile()){const bytes=fs.readFileSync(file);files.push({path:rel,bytes:bytes.length,sha256:sha(bytes),mode:stat.mode&0o111?0o755:0o644});}
+    else throw Error('Unsupported packaged entry: '+rel);
+  }
+  visit('');return files;
+}
+function describeDistribution(distribution,report) {
+  if(report?.schema!==1||report.owner!=='standalone-package-unix'||report.status!=='passed'||!['darwin-arm64','linux-x64'].includes(report.platform+'-'+report.arch)||!/^[a-f0-9]{64}$/.test(report.sourceSha256||'')||!Array.isArray(report.inputs)||sha(JSON.stringify(report.inputs))!==report.sourceSha256)throw Error('A passed source-pinned Unix packaging report is required');
+  distribution=fs.realpathSync(distribution);
+  const resources=path.join(distribution,report.platform==='darwin'?'WindowUseHost.app/Contents/Resources':'resources');
+  if(JSON.stringify(inventoryApp(path.join(resources,'app')))!==JSON.stringify(report.appFiles))throw Error('Packaged application differs from source-pinned build report');
+  const pkg=JSON.parse(fs.readFileSync(path.join(resources,'app/package.json')));
+  const native=require(path.join(resources,'app/src/platform-backend.cjs')).verifyPlatformRuntime(path.join(resources,'runtime/window-control'),{platform:report.platform,arch:report.arch});
+  const executable=report.platform==='darwin'?'WindowUseHost.app/Contents/MacOS/WindowUseHost':'WindowUseHost';
+  const files=inventoryDistribution(distribution),entry=files.find(file=>file.path===executable);
+  if(!entry||entry.type||entry.mode!==0o755)throw Error('Packaged Electron executable unavailable');
+  return {...report,kind:'window-use-mcp-portable',version:pkg.version,buildId:report.buildId||path.basename(path.dirname(distribution)),payloadDirectory:'WindowUseHost-'+report.platform+'-'+report.arch,executable,sharedService:{protocol:1,schema:1},launcher:{executableSha256:entry.sha256},files,nativeManifestSha256:native.manifestSha256,packagedBehaviorAcceptance:report.packagedBehaviorAcceptance||'pending',proof:{payloadExactContents:true,nativeRuntimeManifests:true,selectedInputsUnchanged:true},inventoryBasis:'passed source-pinned package report; current full distribution and native manifest hashes; GUI acceptance separate'};
+}
 // npm creates relative executable links on Unix. This inventory is only for
 // prepared app dependencies; native/source inventories still reject all links.
 function inventoryApp(directory) {
@@ -148,10 +178,11 @@ async function main() {
     if(sha(JSON.stringify(selectedInputs()))!==sourceSha256)throw Error('Source changed during packaging');
     if(JSON.stringify(inventoryApp(app))!==JSON.stringify(prepared))throw Error('Prepared application changed during packaging');
     report.status='passed';report.activeReferences=['packaged-acceptance'];report.distribution=distribution;report.command=command;report.packagedBehaviorAcceptance='pending';report.fuses={runAsNode:fuses[FuseV1Options.RunAsNode]};report.appFiles=prepared;
+    Object.assign(report,describeDistribution(distribution,report));
     json(path.join(distribution,'build-info.json'),report);json(reportFile,report);
     process.stdout.write(JSON.stringify({distribution,command,report:reportFile,packagedBehaviorAcceptance:'pending'})+'\n');
   } catch(error) {if(report){report.status='failed';report.error=error.message;json(reportFile,report);}throw error;}
   finally {fs.closeSync(fd);fs.unlinkSync(lock);}
 }
 if(require.main===module)main().catch(error=>{process.stderr.write(error.message+'\n');process.exitCode=1;});
-module.exports={commandLauncher,selectedInputs,inventoryApp,restoreRelativeLinks,prepareAppPackage};
+module.exports={commandLauncher,selectedInputs,inventoryApp,restoreRelativeLinks,prepareAppPackage,inventoryDistribution,describeDistribution};
