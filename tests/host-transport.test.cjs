@@ -50,7 +50,7 @@ test('Tauri worker action checks preserve settings and approval authority withou
 
 const testHost=process.env.AZ_WINDOW_USE_TEST_HOST;
 if(testHost&&!path.isAbsolute(testHost))throw Error('Absolute AZ_WINDOW_USE_TEST_HOST required');
-test((testHost?'compiled Rust host':'plain Node')+' --mcp uses SDK stdio exclusively and closes its shared session on EOF',async()=>{
+test((testHost?'compiled Rust host':'plain Node')+' --mcp uses SDK stdio exclusively and closes its shared session on EOF',async t=>{
  const {spawn}=require('node:child_process'),{createSharedService}=require('../src/shared-service.cjs');const root=await fs.mkdtemp(path.join(os.tmpdir(),'window-use-stdio-'));let child,service;try{
  const runtime=path.join(root,'runtime');await fs.mkdir(runtime);await fs.mkdir(path.join(root,'multi-pointer'));await fs.writeFile(path.join(runtime,'fixture'),'fixture');
  const appRoot=testHost&&process.env.AZ_WINDOW_USE_DEV_ROOT||path.resolve(__dirname,'..'),executable=testHost||process.execPath;
@@ -60,8 +60,11 @@ test((testHost?'compiled Rust host':'plain Node')+' --mcp uses SDK stdio exclusi
  service=await createSharedService({directory:path.join(root,'shared'),candidate,createSession:()=>({call:async()=>({ok:true}),dispose:async()=>{}})});
  const args=[...(!testHost?[path.join(appRoot,'src/main.cjs')]:[]),'--mcp','--user-data-dir',root,'--runtime-directory',runtime];
  child=spawn(executable,args,{env:{...process.env,AZ_WINDOW_USE_PACKAGED:'0',AZ_WINDOW_USE_DEV_ROOT:appRoot,AZ_WINDOW_USE_RESOURCES:resources,AZ_WINDOW_USE_HOST_EXECUTABLE:executable,AZ_WINDOW_USE_NODE:process.execPath,AZ_WINDOW_USE_SHARED_DIRECTORY:path.join(root,'shared')},stdio:['pipe','pipe','pipe']});let buffer='',stderr='';const pending=new Map();child.stderr.on('data',d=>stderr+=d);child.stdout.on('data',d=>{buffer+=d;let at;while((at=buffer.indexOf('\n'))>=0){const value=JSON.parse(buffer.slice(0,at));buffer=buffer.slice(at+1);assert.equal(value.event,undefined);if(pending.has(value.id)){pending.get(value.id)(value);pending.delete(value.id);}}});
- const request=(id,method,params)=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('MCP '+method+' timeout (resident version '+candidate.version+') '+stderr)),10000);pending.set(id,value=>{clearTimeout(timer);resolve(value);});child.stdin.write(JSON.stringify({jsonrpc:'2.0',id,method,params})+'\n');});
- const initialized=await request(1,'initialize',{protocolVersion:'2025-03-26',capabilities:{},clientInfo:{name:'fixture',version:'1'}});assert.equal(initialized.result.serverInfo.name,'az_window_use');assert.equal(initialized.result.serverInfo.version,require('../package.json').version);child.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})+'\n');const tools=await request(2,'tools/list',{});assert(tools.result.tools.length>0);
+ // Initialize includes cold SDK imports and complete executable/source candidate hashing.
+ // Tool requests and EOF retain their separate 10-second budgets.
+ const request=(id,method,params)=>new Promise((resolve,reject)=>{const budgetMs=method==='initialize'?30000:10000;const started=Date.now();const timer=setTimeout(()=>reject(Error('MCP '+method+' timeout after '+(Date.now()-started)+'ms (budget '+budgetMs+'ms, resident version '+candidate.version+', child exit '+child.exitCode+') '+stderr)),budgetMs);pending.set(id,value=>{clearTimeout(timer);resolve(value);});child.stdin.write(JSON.stringify({jsonrpc:'2.0',id,method,params})+'\n');});
+ const initializeStarted=Date.now();
+ const initialized=await request(1,'initialize',{protocolVersion:'2025-03-26',capabilities:{},clientInfo:{name:'fixture',version:'1'}});t.diagnostic('MCP initialize completed in '+(Date.now()-initializeStarted)+'ms; host='+(testHost||'plain Node'));assert.equal(initialized.result.serverInfo.name,'az_window_use');assert.equal(initialized.result.serverInfo.version,require('../package.json').version);child.stdin.write(JSON.stringify({jsonrpc:'2.0',method:'notifications/initialized'})+'\n');const tools=await request(2,'tools/list',{});assert(tools.result.tools.length>0);
  const exited=new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('MCP EOF did not close '+stderr)),10000);child.once('exit',code=>{clearTimeout(timer);resolve(code);});});child.stdin.end();assert.equal(await exited,0,stderr);
  }finally{if(child&&child.exitCode===null){const ended=new Promise(resolve=>child.once('exit',resolve));child.kill();await ended;}await service?.close();await fs.rm(root,{recursive:true});}
 });
