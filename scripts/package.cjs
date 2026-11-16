@@ -81,11 +81,11 @@ function prepareResources(options,layout,report,save,step) {
   fs.mkdirSync(snapshot);fs.mkdirSync(prepared);
   for(const member of before){const target=path.join(snapshot,member.path);fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(path.join(root,member.path),target,fs.constants.COPYFILE_EXCL);if(hash(target)!==member.sha256)throw Error('Source changed during snapshot: '+member.path);}
   const app=path.join(prepared,'app');fs.mkdirSync(app);
-  for(const name of ['src','vendor'])copyTree(path.join(snapshot,name),path.join(app,name));
-  for(const name of ['package.json','package-lock.json','LICENSE','README.md'])fs.copyFileSync(path.join(snapshot,name),path.join(app,name));
+  for(const name of ['src','vendor']){copyTree(path.join(snapshot,name),path.join(app,name));same(inventory(path.join(app,name)),inventory(path.join(snapshot,name)),'Copied application '+name);}
+  for(const name of ['package.json','package-lock.json','LICENSE','README.md']){fs.copyFileSync(path.join(snapshot,name),path.join(app,name));if(hash(path.join(app,name))!==hash(path.join(snapshot,name)))throw Error('Copied application input differs: '+name);}
   const npmCli=path.join(path.dirname(process.execPath),'node_modules/npm/bin/npm-cli.js');
   if(!fs.existsSync(npmCli))throw Error('Installed Node must provide adjacent npm-cli.js');
-  report.tools={node:process.version,npmCli, npmCliSha256:hash(npmCli)};save();
+  report.tools={node:process.version,nodeExecutable:process.execPath,nodeExecutableSha256:hash(process.execPath),npmCli,npmCliSha256:hash(npmCli),npmVersion:JSON.parse(fs.readFileSync(path.join(path.dirname(npmCli),'../package.json'))).version};save();
   step('production-dependencies',process.execPath,[npmCli,'ci','--omit=dev','--ignore-scripts','--bin-links=false','--no-audit','--no-fund','--cache',path.join(report.run,'npm-cache')],app);
   json(path.join(app,'package.json'),prepareAppPackage(JSON.parse(fs.readFileSync(path.join(app,'package.json')))).packageJson);
   fs.unlinkSync(path.join(app,'package-lock.json'));
@@ -98,8 +98,9 @@ function prepareResources(options,layout,report,save,step) {
   const bundledNode=path.join(prepared,'node',layout.platform==='win32'?'node.exe':'node');
   fs.copyFileSync(node.path,bundledNode,fs.constants.COPYFILE_EXCL);fs.copyFileSync(license,path.join(prepared,'node/LICENSE'),fs.constants.COPYFILE_EXCL);
   if(layout.platform!=='win32')fs.chmodSync(bundledNode,0o755);
-  if(hash(bundledNode)!==node.sha256||hash(license)!==report.nodeLicense.sha256)throw Error('Node runtime or license changed');
+  if(hash(bundledNode)!==node.sha256||hash(license)!==report.nodeLicense.sha256||hash(path.join(prepared,'node/LICENSE'))!==report.nodeLicense.sha256)throw Error('Node runtime or license changed');
   same(selectedInputs(),before,'Selected source inputs');
+  same(inventory(snapshot).sort((a,b)=>a.path.localeCompare(b.path,'en')),before,'Frozen source inputs');
   same(verifyNative(prepared,layout),report.nativeManifests,'Native runtime manifests');
   report.appFiles=inventoryApp(app);report.resourceFiles=inventoryDistribution(prepared,{excludeReceipt:false});
   report.resources=path.join(root,'artifacts/tauri-resources');report.resourceSha256=sha(JSON.stringify(report.resourceFiles));
@@ -110,7 +111,7 @@ function prepareResources(options,layout,report,save,step) {
 }
 function verifyPrepared(report) {
   if(report.schema!==1||report.runtime!=='tauri'||report.status!=='prepared'||sha(JSON.stringify(report.inputs))!==report.sourceSha256)throw Error('Passed source-pinned prepared resources required');
-  same(selectedInputs(),report.inputs,'Selected source inputs');same(inventoryDistribution(report.resources,{excludeReceipt:false}),report.resourceFiles,'Prepared resources');
+  same(selectedInputs(),report.inputs,'Selected source inputs');same(inventory(path.join(report.run,'inputs')).sort((a,b)=>a.path.localeCompare(b.path,'en')),report.inputs,'Frozen source inputs');same(inventoryDistribution(report.resources,{excludeReceipt:false}),report.resourceFiles,'Prepared resources');
   same(verifyNative(report.resources,report),report.nativeManifests,'Prepared native manifests');
 }
 function describeDistribution(distribution,report) {
