@@ -2,7 +2,7 @@
 
 # Azrael Window Use
 
-현재 소스 **0.1.1**은 Tauri 기반 호스트를 사용합니다. Chromium/Electron을 포함하지 않고 Node.js MCP 서비스와 기존 네이티브 입력 엔진을 재사용합니다. Windows는 WebView2, macOS는 WKWebView, Linux는 WebKitGTK가 필요합니다. 기존 **공개 v0.1.0 ZIP은 Electron 기반 Windows 패키지**이며 소스 변경만으로 갱신되지 않습니다. Tauri 실행·패키징 및 검증 범위는 [Tauri 호스트 안내](docs/tauri-host.md)를 참고하세요.
+현재 소스 **0.2.0**은 Tauri 기반 호스트를 사용합니다. Chromium/Electron을 포함하지 않고 Node.js MCP 서비스와 기존 네이티브 입력 엔진을 재사용합니다. Windows는 WebView2, macOS는 WKWebView, Linux는 WebKitGTK가 필요합니다. 기존 **공개 v0.1.0 ZIP은 Electron 기반 Windows 패키지**이며 소스 변경만으로 갱신되지 않습니다. Tauri 실행·패키징 및 검증 범위는 [Tauri 호스트 안내](docs/tauri-host.md)를 참고하세요.
 
 macOS·Linux용 플랫폼 백엔드가 소스에 추가되었습니다. 접근성 기반 작업과 공통 승인 UI를 제공하며, Windows의 독립 가상화 입력과 지원 범위는 다릅니다. 현재 게시된 `v0.1.0` ZIP은 **Windows x64 전용**입니다. 플랫폼별 빌드 방법과 검증 상태는 [플랫폼 안내](docs/platforms.md)를 확인하세요.
 

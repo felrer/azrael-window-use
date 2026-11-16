@@ -4,7 +4,7 @@
 
 ## 구조와 보존 계약
 
-0.1.1 소스는 Chromium/Electron을 제거하고 Rust Tauri v2 호스트와 Node MCP 서비스를 사용합니다. 기존 HTML/CSS·승인·설정 렌더러를 유지합니다. Node와 네이티브 입력 엔진을 패키지에 포함하므로 별도 Node 설치는 필요하지 않습니다. Windows x64는 시스템 WebView2, macOS arm64는 WKWebView, Linux x64는 WebKitGTK를 사용합니다. GUI 표시와 OS 입력 지원 범위는 별개이며 기존 플랫폼 차이를 유지합니다.
+0.2.0 소스는 Chromium/Electron을 제거하고 Rust Tauri v2 호스트와 Node MCP 서비스를 사용합니다. 기존 HTML/CSS·승인·설정 렌더러를 유지합니다. Node와 네이티브 입력 엔진을 패키지에 포함하므로 별도 Node 설치는 필요하지 않습니다. Windows x64는 시스템 WebView2, macOS arm64는 WKWebView, Linux x64는 WebKitGTK를 사용합니다. GUI 표시와 OS 입력 지원 범위는 별개이며 기존 플랫폼 차이를 유지합니다.
 
 일반 실행과 MCP 실행은 가벼운 전달 모드입니다. 설치 후보를 등록하고 공용 서비스에 연결합니다. 실제 `--shared-service` 호스트만 Tauri UI·트레이·전역 중지를 소유합니다. 진행 중인 요청과 입력 정리가 끝난 뒤 호환 최신 설치본으로 전환하고 불확실한 입력을 재실행하지 않습니다. MCP·공용 서비스 프로토콜은 1을 유지합니다. Azrael 연결의 승인은 기존 채팅으로 전달하고 일반 MCP 연결은 자체 승인창을 사용합니다.
 
