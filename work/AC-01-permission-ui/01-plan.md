@@ -25,3 +25,13 @@ Status: design preview; runtime approval UI unchanged.
 - App-control heading now asks whether to temporarily allow control of this app. Other request types retain their distinct headings.
 - Static JS/DOM-reference verification passed, exit 0. Visual browser verification remains blocked as described above.
 - App icon question investigated: the preview uses a static monitor SVG; the runtime renderer has no target-app icon, and permission records carry name/executable only. Actual executable icon extraction is not implemented by this revision.
+
+## Revision 3: settings preview
+
+- User requested heading "앱의 제어를 잠시 허용할까요?", replacement of the bottom-left waiting label with a gear settings button, and a security/whitelist settings window.
+- Scope remains this interactive design preview. Production permissions, IPC and persisted policy are unchanged.
+- Added native HTML modal with accessible title, close/done controls and return focus. Security controls reuse current enabled/ask/observe/full concepts.
+- Added in-memory whitelist and protected-app lists, path entry, duplicate checks, protection precedence, current-demo-app shortcut and reset. Self-protection is displayed as a fixed row.
+- No actual executable picker or file access is performed; this is a design simulation. Production app-icon integration and performance work remain outside this revision.
+- Rendered inspection remains blocked by the browser policy previously recorded. Focus trapping/keyboard and actual light/dark rendering need user review.
+- One-off Node DOM harness passed, exit 0: script syntax/references, modal open/close, invalid path, add/duplicate/remove, protection precedence, current-app shortcut, mode and reset. This simulates DOM events only and does not establish visual or production approval correctness. No permanent test or temporary file created.
