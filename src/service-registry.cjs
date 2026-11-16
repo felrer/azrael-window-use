@@ -64,7 +64,10 @@ async function prepareDirectory(directory) {
 function addressFor(directory) {
   const resolved=path.resolve(directory);
   const id = crypto.createHash('sha256').update(process.platform==='win32'?resolved.toLowerCase():resolved).digest('hex').slice(0, 32);
-  return process.platform === 'win32' ? `\\\\.\\pipe\\az-window-use-${id}` : path.join(directory, 'service.sock');
+  if(process.platform==='win32')return `\\\\.\\pipe\\az-window-use-${id}`;
+  const address=path.join(resolved,'service.sock'),limit=process.platform==='darwin'?103:107;
+  if(Buffer.byteLength(address)>limit)throw error('socket_path_too_long','Shared service socket path exceeds '+limit+' bytes; choose a shorter private shared directory');
+  return address;
 }
 async function readJson(file, max = 1024 * 1024) {
   const st = await fs.lstat(file);

@@ -54,7 +54,29 @@ async function main() {
     json(path.join(app,'package.json'),defaultSanitizePackageJson(pkg));
     fs.unlinkSync(path.join(app,'package-lock.json'));
     const prepared=inventory(app);
-    const paths=await packager({dir:app,out:release,name:'WindowUseHost',executableName:'WindowUseHost',appBundleId:'com.azrael.window-use',appVersion:pkg.version,buildVersion:pkg.version,electronVersion:pkg.devDependencies.electron,platform:process.platform,arch:process.arch,asar:false,prune:false,overwrite:false,quiet:true,extraResource:[path.join(snapshot,'artifacts/runtime')]});
+    const iconSource=path.join(snapshot,'src/assets/app-icon-256.png');
+    let icon=iconSource;
+    report.icon={sourceSha256:sha(fs.readFileSync(iconSource)),steps:[]};
+    if(process.platform==='darwin'){
+      const iconset=path.join(run,'app-icon.iconset');fs.mkdirSync(iconset);
+      const iconLog=path.join(run,'icon-conversion.log'),iconFd=fs.openSync(iconLog,'wx');
+      const convert=(executable,args)=>{
+        const result=spawnSync(executable,args,{stdio:['ignore',iconFd,iconFd]});
+        report.icon.steps.push({executable,args,exitCode:result.status,error:result.error?.message,log:iconLog});json(reportFile,report);
+        if(result.error||result.status!==0)throw Error('Application icon conversion failed; see '+iconLog);
+      };
+      try {
+        for(const size of [16,32,128,256,512])for(const scale of [1,2]){
+          const target=path.join(iconset,'icon_'+size+'x'+size+(scale===2?'@2x':'')+'.png'),pixels=size*scale;
+          if(pixels===256)fs.copyFileSync(iconSource,target,fs.constants.COPYFILE_EXCL);
+          else convert('/usr/bin/sips',['-z',String(pixels),String(pixels),iconSource,'--out',target]);
+        }
+        icon=path.join(run,'app-icon.icns');
+        convert('/usr/bin/iconutil',['-c','icns',iconset,'-o',icon]);
+      } finally {fs.closeSync(iconFd);}
+    }
+    report.icon.path=icon;report.icon.sha256=sha(fs.readFileSync(icon));json(reportFile,report);
+    const paths=await packager({dir:app,out:release,name:'WindowUseHost',executableName:'WindowUseHost',appBundleId:'com.azrael.window-use',icon,appVersion:pkg.version,buildVersion:pkg.version,electronVersion:pkg.devDependencies.electron,platform:process.platform,arch:process.arch,asar:false,prune:false,overwrite:false,quiet:true,extraResource:[path.join(snapshot,'artifacts/runtime')]});
     if(paths.length!==1)throw Error('Unexpected packager output');
     const distribution=paths[0],resources=path.join(distribution,process.platform==='darwin'?'WindowUseHost.app/Contents/Resources':'resources');
     for(const member of prepared)if(sha(fs.readFileSync(path.join(resources,'app',member.path)))!==member.sha256)throw Error('Packaged application differs: '+member.path);

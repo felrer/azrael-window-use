@@ -11,8 +11,12 @@ const { createServiceClient } = require('../src/shared-client.cjs');
 const root = path.join(__dirname, '..', 'artifacts', 'verification', 'unit');
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function fixture(t) {
-  const directory = path.join(root, `shared-service-${crypto.randomUUID()}`);
-  // This retained test owns only this fresh UUID directory. All hosts and socket
+  // Darwin's sockaddr_un has only 104 bytes, including its terminator. Keep
+  // real transport fixtures short even when the checkout has a long path.
+  const directory = process.platform === 'darwin'
+    ? await fs.mkdtemp('/private/tmp/awu-service-')
+    : path.join(root, `shared-service-${crypto.randomUUID()}`);
+  // This retained test owns only this fresh private directory. All hosts and socket
   // readers are stopped before ordinary removal; no application state is used.
   await fs.mkdir(directory, { recursive: true });
   const identity = path.join(directory, 'identity.txt'); await fs.writeFile(identity, 'test service identity');
@@ -26,6 +30,11 @@ async function fixture(t) {
   });
   return { directory, candidate, cleanup };
 }
+test('Unix service socket paths fail with actionable length diagnostics', { skip: process.platform === 'win32' }, () => {
+  const directory = path.join('/tmp', 'x'.repeat(120));
+  assert.throws(() => registry.addressFor(directory), { code: 'socket_path_too_long' });
+  assert.equal(registry.addressFor('/tmp/awu-short'), '/tmp/awu-short/service.sock');
+});
 test('registry validates source identities and selects newest compatible installed candidate', async t => {
   const f = await fixture(t); await registry.prepareDirectory(f.directory);
   await Promise.all(Array.from({ length: 4 }, () => registry.registerCandidate(f.directory, f.candidate)));
