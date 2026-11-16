@@ -43,6 +43,50 @@ function describeDistribution(distribution,report) {
   if(!entry||entry.type||entry.mode!==0o755)throw Error('Packaged Electron executable unavailable');
   return {...report,kind:'window-use-mcp-portable',version:pkg.version,buildId:report.buildId||path.basename(path.dirname(distribution)),payloadDirectory:'WindowUseHost-'+report.platform+'-'+report.arch,executable,sharedService:{protocol:1,schema:1},launcher:{executableSha256:entry.sha256},files,nativeManifestSha256:native.manifestSha256,packagedBehaviorAcceptance:report.packagedBehaviorAcceptance||'pending',proof:{payloadExactContents:true,nativeRuntimeManifests:true,selectedInputsUnchanged:true},inventoryBasis:'passed source-pinned package report; current full distribution and native manifest hashes; GUI acceptance separate'};
 }
+async function signMacDistribution(distribution,report) {
+  if(process.platform!=='darwin'||process.arch!=='arm64')throw Error('Native macOS arm64 signing is required');
+  distribution=fs.realpathSync(distribution);
+  // This is a producer transformation of a fresh owned package copy. Preserve
+  // the source snapshot and refuse any pre-existing application/native drift.
+  const original=describeDistribution(distribution,report),before=original.files;
+  if(report.files&&JSON.stringify(report.files)!==JSON.stringify(before))throw Error('Prebuilt package changed before signing');
+  const app=path.join(distribution,'WindowUseHost.app'),objects=[];
+  const magic=new Set([0xfeedface,0xcefaedfe,0xfeedfacf,0xcffaedfe,0xcafebabe,0xbebafeca,0xcafebabf,0xbfbafeca]);
+  for(const entry of before)if(entry.type!=='symlink'&&entry.path.startsWith('WindowUseHost.app/')){
+    const file=path.join(distribution,entry.path),header=Buffer.alloc(4),fd=fs.openSync(file,'r');let size;
+    try{size=fs.readSync(fd,header,0,4,0);}finally{fs.closeSync(fd);}
+    if(size===4&&magic.has(header.readUInt32BE()))objects.push(file);
+  }
+  const invoke=args=>{
+    const result=spawnSync('/usr/bin/codesign',args,{encoding:'utf8',env:{...process.env,LC_ALL:'C'}});
+    if(result.error)throw result.error;
+    return {exitCode:result.status,output:(result.stdout||'')+(result.stderr||'')};
+  };
+  const checks=[];
+  const {sign}=await import('@electron/osx-sign');
+  await sign({app,platform:'darwin',identity:'-',identityValidation:false,preAutoEntitlements:false,gatekeeperAssess:false,
+    optionsForFile:()=>({hardenedRuntime:false,timestamp:'none'}),
+    ignore:file=>{
+      // A valid supplier object or the separately verified native helper need not
+      // be rewritten. Invalid enclosing bundles are sealed from inside out by
+      // the mature Electron signer, including their resource envelopes.
+      if(file===app)return false;
+      const result=invoke(['--verify','--strict',file]);
+      checks.push({path:path.relative(distribution,file).split(path.sep).join('/'),beforeValid:result.exitCode===0});
+      return result.exitCode===0;
+    }});
+  for(const file of [...objects,app]){
+    const result=invoke(['--verify','--strict',...(file===app?['--deep']:[]),file]);
+    if(result.exitCode!==0)throw Error('Signed Mac package verification failed: '+path.relative(distribution,file)+'\n'+result.output);
+  }
+  // Rechecks exact appFiles AND the native manifest. A native helper rewrite
+  // would invalidate its original manifest and must fail rather than be hidden.
+  const signed=describeDistribution(distribution,{...report,files:undefined});
+  if(signed.nativeManifestSha256!==original.nativeManifestSha256)throw Error('Mac signing changed the native runtime manifest');
+  const after=signed.files,prior=new Map(before.map(entry=>[entry.path,entry])),next=new Map(after.map(entry=>[entry.path,entry]));
+  const changes=[...new Set([...prior.keys(),...next.keys()])].sort().filter(name=>JSON.stringify(prior.get(name))!==JSON.stringify(next.get(name))).map(name=>({path:name,before:prior.get(name)||null,after:next.get(name)||null}));
+  return {...signed,signing:{schema:1,policy:'adhoc-without-notarization',tool:'@electron/osx-sign',identity:'-',verified:true,sourceSnapshotSha256:report.sourceSha256,canonicalSourceReportSha256:sha(JSON.stringify(report)),producerScriptSha256:sha(fs.readFileSync(__filename)),beforeInventorySha256:sha(JSON.stringify(before)),afterInventorySha256:sha(JSON.stringify(after)),nativeManifestSha256:original.nativeManifestSha256,objectsVerified:objects.length+1,preserved:checks.filter(check=>check.beforeValid).map(check=>check.path),changes}};
+}
 // npm creates relative executable links on Unix. This inventory is only for
 // prepared app dependencies; native/source inventories still reject all links.
 function inventoryApp(directory) {
@@ -120,7 +164,7 @@ async function main() {
     const run=path.join(buildRoot,'package-unix-'+id),release=path.join(root,'artifacts/releases','unix-'+id);
     fs.mkdirSync(run);fs.mkdirSync(release,{recursive:true});
     reportFile=path.join(run,'package-report.json');
-    report={schema:1,owner:'standalone-package-unix',status:'running',platform:process.platform,arch:process.arch,sourceSha256,inputs:before,plannedOutputs:[run,release],activeReferences:['packager'],signing:'unsigned; no signing or publication requested'};
+    report={schema:1,owner:'standalone-package-unix',status:'running',platform:process.platform,arch:process.arch,sourceSha256,inputs:before,plannedOutputs:[run,release],activeReferences:['packager'],signing:process.platform==='darwin'?'pending ad-hoc signing; no notarization or publication':'not applicable'};
     json(reportFile,report);
     const snapshot=path.join(run,'inputs'),app=path.join(run,'app');fs.mkdirSync(snapshot);fs.mkdirSync(app);
     for(const member of before){
@@ -178,6 +222,7 @@ async function main() {
     if(sha(JSON.stringify(selectedInputs()))!==sourceSha256)throw Error('Source changed during packaging');
     if(JSON.stringify(inventoryApp(app))!==JSON.stringify(prepared))throw Error('Prepared application changed during packaging');
     report.status='passed';report.activeReferences=['packaged-acceptance'];report.distribution=distribution;report.command=command;report.packagedBehaviorAcceptance='pending';report.fuses={runAsNode:fuses[FuseV1Options.RunAsNode]};report.appFiles=prepared;
+    if(process.platform==='darwin')Object.assign(report,await signMacDistribution(distribution,report));
     Object.assign(report,describeDistribution(distribution,report));
     json(path.join(distribution,'build-info.json'),report);json(reportFile,report);
     process.stdout.write(JSON.stringify({distribution,command,report:reportFile,packagedBehaviorAcceptance:'pending'})+'\n');
@@ -185,4 +230,4 @@ async function main() {
   finally {fs.closeSync(fd);fs.unlinkSync(lock);}
 }
 if(require.main===module)main().catch(error=>{process.stderr.write(error.message+'\n');process.exitCode=1;});
-module.exports={commandLauncher,selectedInputs,inventoryApp,restoreRelativeLinks,prepareAppPackage,inventoryDistribution,describeDistribution};
+module.exports={commandLauncher,selectedInputs,inventoryApp,restoreRelativeLinks,prepareAppPackage,inventoryDistribution,describeDistribution,signMacDistribution};
