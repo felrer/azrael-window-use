@@ -72,6 +72,12 @@ Status: design preview; runtime approval UI unchanged.
 
 ## Production integration
 
+### Follow-up: settings glyph
+
+- Replaced the font-dependent gear character with a shared rounded-stroke SVG silhouette. Both production and preview use the same asset via a theme-colored CSS mask.
+- Kept the 28px button target, 6px footer gaps and accessible settings label; glyph is centered at 18px with neutral foreground/hover treatment.
+- No permission behavior change. Rendered visual acceptance remains user-owned under the existing browser limitation.
+
 ### Follow-up: prioritized and persistent icons
 
 - User authorized approval-first icon scheduling, persistent extracted icons and loading placeholders.

@@ -177,7 +177,7 @@
     const footerLeft=document.getElementById('footer-left'),footerRight=document.getElementById('footer-right');
     footerLeft.replaceChildren();footerRight.replaceChildren();
     if(settingsView){footerLeft.append(button('설정 초기화',()=>command('resetSettings'),'reset-button'));footerRight.append(button('완료',()=>command('close'),'primary'));}
-    else {const gear=button('⚙',()=>command('openSettings'),'settings-button');gear.setAttribute('aria-label','설정 열기');gear.title='설정';footerLeft.append(gear);}
+    else {const gear=button('',()=>command('openSettings'),'settings-button');gear.setAttribute('aria-label','설정 열기');gear.title='설정';const glyph=node('span','settings-glyph');glyph.setAttribute('aria-hidden','true');gear.append(glyph);footerLeft.append(gear);}
     const version=node('span');version.id='version';footerRight.append(version);
     if (error || state?.error) {
       const alert = node('div', 'error', error || state.error); alert.setAttribute('role', 'alert');
