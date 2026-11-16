@@ -69,3 +69,14 @@ Status: design preview; runtime approval UI unchanged.
 
 - Removed the approval note about protected apps being blocked regardless of permission; connection-expiration note remains. Preview text only; protection behavior unchanged.
 - Reviewed exact one-line HTML change and whitespace check. No behavior test required for this text-only edit; rendered review remains pending.
+
+## Production integration
+
+Status: implementation and checks complete; MCP refresh and user acceptance request pending.
+
+- User authorized applying the agreed preview to production, all-app icon extraction, MCP refresh and a real approval request for user verification.
+- Applied naming, approval copy/layout/footer gear, independent settings UI, mode ordering/custom picker, thin scrollbar, text-only reset and whitelist/protected list editing. Preserved real expiry, fail-closed approvals, self-protection, theme and Stop/resume.
+- Added asynchronous bounded local-executable icon cache and trusted snapshot enrichment for approval and settings. Uses Electron app.getFileIcon; failures retain generic icon. No renderer path-reading bridge or remote lookup.
+- Existing unrelated local edits in architecture/distribution/logger/MCP/vendor diagnostics are preserved and excluded from this unit's commit.
+- Verification: node --check main and renderer exit 0; npm test 36 passed, 0 failed, exit 0. Icon cache tests retained to prevent duplicate/unbounded extraction or post-shutdown callbacks during future UI changes. Native binaries unchanged; no native compilation needed.
+- Detailed contract: docs/permission-ui.md. No publication/push or GPUI migration authorized by this step.

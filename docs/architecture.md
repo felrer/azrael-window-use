@@ -18,6 +18,8 @@ The enabled switch gates managed operations. Observation mode denies mutations. 
 
 ## UI and self-protection
 
+The current permission UI contract and executable-icon behavior are maintained in [Permission UI](permission-ui.md).
+
 A frameless compact settings window and tray expose enable/mode, protected apps, saved grants and Stop. Approval windows state the app, executable, requested scope and expiry. Light/dark themes reuse Azrael's semantic colors, settings rows and permission labels. The window retains an application drag region and accessible close/minimize controls.
 
 The MCP launcher starts its UI-capable host automatically; users need not start a separate settings application. MCP mode initially has no settings or approval renderer. A permission request creates and shows the approval window on demand, or restores its existing window. Closing a window releases that renderer while the MCP host and tray remain available. Closing an approval denies its pending requests; a subsequent independent request creates a new approval window. A request cancelled during window loading must not surface an obsolete approval. Explicit tray Quit and MCP disconnect terminate the host; they do not silently restart or replay pending input. Host-client tool approvals occur before MCP dispatch and remain the client's responsibility.

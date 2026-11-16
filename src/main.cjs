@@ -4,6 +4,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
 const { PermissionService, fail } = require('./permissions.cjs');
+const { createAppIcons } = require('./app-icons.cjs');
 const { createLogger } = require('./logger.cjs');
 const { createRuntime } = require('./runtime.cjs');
 const { startMcp, SocketTransport } = require('./mcp.cjs');
@@ -16,26 +17,31 @@ if (profileIndex >= 0) {
   if (!explicit || !path.isAbsolute(explicit)) throw Error('Absolute --user-data-dir required');
   app.setPath('userData', explicit);
 } else app.setPath('userData', path.join(app.getPath('appData'), 'Azrael Window Use MCP'));
-app.setName('Window Use');
+app.setName('Azrael Window Use');
 let settingsWindow, approvalWindow, tray, permissions, runtime, server, log, closing = false, connected = false, clientName = '';
 const windows = new Map();
 const html = path.join(__dirname, 'ui/index.html');
 const trustedURL = pathToFileURL(html).href;
+const icons = createAppIcons({ getFileIcon: (...args) => app.getFileIcon(...args), changed: () => { if (!closing) broadcast(); } });
 function snapshot(view) {
-  return { version: app.getVersion(), settings: permissions.snapshot(), connection: { id: runtime?.thread || '', clientName, connected, stopped: permissions.stopped }, approvals: permissions.approvals(), theme: permissions.state.theme, view };
+  const describe = identity => ({ ...identity, icon: icons.get(identity.executable) });
+  const settings = permissions.snapshot();
+  settings.protectedApps = settings.protectedApps.map(describe);
+  settings.allowedApps = settings.allowedApps.map(describe);
+  return { version: app.getVersion(), settings, connection: { id: runtime?.thread || '', clientName, connected, stopped: permissions.stopped }, approvals: permissions.approvals().map(request => ({ ...request, app: describe(request.app) })), theme: permissions.state.theme, view };
 }
 function broadcast() {
   if (!permissions) return;
   nativeTheme.themeSource = permissions.state.theme;
   for (const [id, { window, view }] of windows) if (!window.isDestroyed()) window.webContents.send('window-use:changed', snapshot(view));
   if (approvalWindow && !approvalWindow.isDestroyed() && !permissions.pending.size) approvalWindow.hide();
-  if (tray) tray.setToolTip(permissions.stopped ? 'Window Use · 중지됨' : connected ? 'Window Use · 연결됨' : 'Window Use');
+  if (tray) tray.setToolTip(permissions.stopped ? 'Azrael Window Use · 중지됨' : connected ? 'Azrael Window Use · 연결됨' : 'Azrael Window Use');
 }
 function createWindow(view) {
   const window = new BrowserWindow({
-    width: 440, height: view === 'approval' ? 420 : 640, minWidth: 400, minHeight: view === 'approval' ? 380 : 520,
+    width: 440, height: view === 'approval' ? 460 : 720, minWidth: 400, minHeight: view === 'approval' ? 380 : 520,
     frame: false, autoHideMenuBar: true, resizable: true, show: false, backgroundColor: nativeTheme.shouldUseDarkColors ? '#171717' : '#ffffff',
-    title: 'Window Use', roundedCorners: true, icon: path.join(__dirname, 'assets/app-icon-256.png'),
+    title: 'Azrael Window Use', roundedCorners: true, icon: path.join(__dirname, 'assets/app-icon-256.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true, devTools: !app.isPackaged }
   });
   const contentsId = window.webContents.id;
@@ -89,21 +95,32 @@ function setupIPC() {
     fields(request, ['action','payload']);
     const { action, payload } = request;
     if (typeof action !== 'string') throw fail('invalid_arguments', '알 수 없는 요청입니다.');
-    if (['setEnabled','setMode','setTheme','addProtectedApp','removeProtectedApp','removeAllowedApp','resume'].includes(action) && entry.view !== 'settings') throw fail('permission_denied','설정창에서만 변경할 수 있습니다.');
+    if (['setEnabled','setMode','setTheme','addProtectedApp','addAllowedApp','resetSettings','removeProtectedApp','removeAllowedApp','resume'].includes(action) && entry.view !== 'settings') throw fail('permission_denied','설정창에서만 변경할 수 있습니다.');
     switch (action) {
       case 'setEnabled': fields(payload,['enabled']); permissions.save({enabled:payload.enabled}); break;
       case 'setMode': fields(payload,['mode']); permissions.save({mode:payload.mode}); break;
       case 'setTheme': fields(payload,['theme']); permissions.save({theme:payload.theme}); break;
+      case 'addAllowedApp':
       case 'addProtectedApp': {
-        fields(payload,[]);
-        const result = await dialog.showOpenDialog(entry.window, { title:'보호할 앱 선택', properties:['openFile'], filters:[{name:'Windows 앱',extensions:['exe']}] });
-        if (!result.canceled && result.filePaths.length === 1) {
-          const executable = normalizeExecutable(result.filePaths[0]);
-          if (!fs.statSync(executable).isFile()) throw fail('invalid_arguments','실행 파일이 아닙니다.');
-          permissions.save({protectedApps:[...permissions.state.protectedApps,executable]});
+        let selected;
+        if (Object.keys(payload).length) { fields(payload,['executable']); selected = payload.executable; }
+        else {
+          fields(payload,[]);
+          const result = await dialog.showOpenDialog(entry.window, { title:action === 'addAllowedApp' ? '허용할 앱 선택' : '보호할 앱 선택', properties:['openFile'], filters:[{name:'Windows 앱',extensions:['exe']}] });
+          if (!result.canceled && result.filePaths.length === 1) selected = result.filePaths[0];
         }
+        if (!selected) break;
+        const executable = normalizeExecutable(selected);
+        // Never probe a network location from a typed path or icon lookup.
+        if (!/^[a-z]:[\\/]/i.test(executable)) throw fail('invalid_arguments','로컬 실행 파일을 선택해주세요.');
+        if (!(await fs.promises.stat(executable)).isFile()) throw fail('invalid_arguments','실행 파일이 아닙니다.');
+        if (action === 'addAllowedApp') {
+          if (permissions.blocked({executable})) throw fail('security_app_blocked','보호된 앱은 허용할 수 없습니다.');
+          permissions.save({allowedApps:[...permissions.state.allowedApps,executable]});
+        } else permissions.save({protectedApps:[...permissions.state.protectedApps,executable],allowedApps:permissions.state.allowedApps.filter(exe=>exe!==executable)});
         break;
       }
+      case 'resetSettings': fields(payload,[]); permissions.save({enabled:true,mode:'ask',protectedApps:[],allowedApps:[],theme:'system'}); break;
       case 'removeProtectedApp':
         fields(payload,['executable']);
         if (permissions.selfApps.has(normalizeExecutable(payload.executable))) throw fail('security_app_blocked','Window Use 자체 UI는 보호 해제할 수 없습니다.');
@@ -126,6 +143,7 @@ function trayIcon() {
 async function shutdown() {
   if (closing) return; closing = true;
   globalShortcut.unregisterAll();
+  icons.dispose();
   permissions?.dispose();
   try { await runtime?.dispose(); await server?.close(); }
   catch(error){ log?.('error','runtime','shutdown_failed',{code:error.code}); }
@@ -146,9 +164,9 @@ app.whenReady().then(async () => {
   permissions.on('approval',()=>show('approval'));
   permissions.on('invalidate',reason=>log('info','permissions','invalidated',{code:reason}));
   setupIPC();
-  tray = new Tray(trayIcon()); tray.setToolTip('Window Use');
+  tray = new Tray(trayIcon()); tray.setToolTip('Azrael Window Use');
   tray.setContextMenu(Menu.buildFromTemplate([
-    {label:'Window Use 설정',click:()=>show('settings')},
+    {label:'Azrael Window Use 설정',click:()=>show('settings')},
     {label:'즉시 중지',click:()=>permissions.stop()},
     {type:'separator'}, {label:'종료',click:()=>void shutdown()}
   ]));
