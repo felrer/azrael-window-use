@@ -2,6 +2,12 @@
 // Called by the real SDK acceptance runner; never changes production input guards.
 const fs = require('node:fs');
 const path = require('node:path');
+async function closeApproval(page,waitFor) {
+  if(!page.isClosed())try {
+    await page.evaluate(()=>{void window.windowUse.command('close');});
+  } catch(error) { if(!page.isClosed())throw error; }
+  await waitFor(()=>page.isClosed(),'accepted approval renderer closed');
+}
 async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtureReady, application, run, waitFor}) {
   const cases=[];
   const mouseOnly=process.argv.includes('--mouse-keyboard');
@@ -59,8 +65,7 @@ async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtur
         // These observations do not prove raw-input survival or require physical motion.
         rawPackets:collaboration?.rawPackets,suppression:collaboration?.suppression});
     }
-    // The trusted host destroys the transient approval WebView after acceptance.
-    await waitFor(()=>approval.isClosed(),'accepted approval renderer closed');
+    await closeApproval(approval,waitFor);
     fs.writeFileSync(fixtureReady+'.activate','activate owned fixture');
     await new Promise(resolve=>setTimeout(resolve,300));
     cases.push({label:'fixture activation',foregroundConfirmed:fs.existsSync(fixtureReady+'.active')});
@@ -139,4 +144,4 @@ function summarizeVirtualizedCases(cases,mouseOnly=false,batchMode=false) {
   const verdict=!effectsPassed?'failed':passed?'passed':'incomplete_external_input_coverage';
   return {passed,verdict,effectsPassed,enabled,externalObserved:externalMouseObserved||externalKeyboardObserved,externalMouseObserved,externalKeyboardObserved};
 }
-module.exports={verifyVirtualizedInput,summarizeVirtualizedCases};
+module.exports={verifyVirtualizedInput,summarizeVirtualizedCases,closeApproval};

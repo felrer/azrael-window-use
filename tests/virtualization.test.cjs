@@ -57,3 +57,15 @@ test('batch requires immediate default readiness before input even if later effe
   assert.equal(summarizeVirtualizedCases([{...startup,collaboration:{enabled:false,failed:true,phase:'failed'}},
     {label:'virtualized batch',isError:true,postcondition:false,collaboration:{failed:true,phase:'failed'}}],false,true).verdict,'failed');
 });
+
+
+test('approval close accepts destroyed renderer but preserves unrelated failures',async()=>{
+  const {closeApproval}=require('../scripts/verify-virtualized-input.cjs');
+  let closed=false,calls=0;
+  const waitFor=async read=>assert.equal(await read(),true);
+  const page={isClosed:()=>closed,async evaluate(){calls++;closed=true;throw Error('Target page closed');}};
+  await closeApproval(page,waitFor);assert.equal(calls,1);
+  await closeApproval(page,waitFor);assert.equal(calls,1);
+  closed=false;page.evaluate=async()=>{throw Error('Unexpected IPC failure');};
+  await assert.rejects(closeApproval(page,waitFor),/Unexpected IPC failure/);
+});
