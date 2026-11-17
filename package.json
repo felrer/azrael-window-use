@@ -1,6 +1,6 @@
 {
   "name": "azrael-window-use-mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Standalone Window Use MCP with Tauri permission controls",
   "license": "MIT",
   "author": "felrer",
