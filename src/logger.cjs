@@ -8,6 +8,9 @@ function createLogger(directory, version) {
     // Callers pass only metadata, never arguments, UI text, captures or raw errors.
     const record = { timestamp: new Date().toISOString(), level, component, event, version, platform: process.platform, arch: process.arch };
     for (const key of ['requestId','connectionId','tool','code','nativeCode','durationMs']) if (fields[key] !== undefined) record[key] = String(fields[key]).slice(0, 128);
+    if (fields.diagnostic?.event === 'window_use.broker_failure') {
+      record.diagnostic = require('../vendor/azrael/window-control-errors.cjs').errorPayload({ diagnostic: fields.diagnostic }).diagnostic;
+    }
     try {
       if (fs.existsSync(file) && fs.statSync(file).size > 1024 * 1024) { const previous = file + '.1'; if (fs.existsSync(previous)) fs.unlinkSync(previous); fs.renameSync(file, previous); }
       fs.appendFileSync(file, JSON.stringify(record) + '\n', { mode: 0o600 });
