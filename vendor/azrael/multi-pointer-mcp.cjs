@@ -65,22 +65,39 @@ function verifyRuntime(directory){
  for(const f of m.files){if(typeof f.path!=='string'||!['azrael-multi-pointer.exe','THIRD_PARTY_NOTICES.md'].includes(f.path)||seen.has(f.path)||!/^[a-f0-9]{64}$/.test(f.sha256)||!Number.isSafeInteger(f.bytes)||f.bytes<1)throw Error('Invalid runtime member');seen.add(f.path);const p=plainFile(path.join(directory,f.path));const b=fs.readFileSync(p);if(b.length!==f.bytes||crypto.createHash('sha256').update(b).digest('hex')!==f.sha256)throw Error('Runtime integrity mismatch');if(f.path==='azrael-multi-pointer.exe')executable=p;}
  if(!executable||fs.readdirSync(directory).some(name=>name!=='manifest.json'&&!seen.has(name)))throw Error('Runtime executable missing or unrecorded runtime file');return {directory:path.resolve(directory),executable,manifest:m,manifestSha256:crypto.createHash('sha256').update(fs.readFileSync(manifestFile)).digest('hex'),sourceSha256:m.sourceSha256};
 }
-function createBroker({runtimeDirectory,targetsFile}){
+function createBroker({runtimeDirectory,targetsFile,spawnProcess=spawn}){
  if(process.platform!=='win32'||process.arch!=='x64')throw Error('Multi-pointer requires local Windows x64');
  const runtime=verifyRuntime(runtimeDirectory),targets=plainFile(targetsFile);if(fs.statSync(targets).size>65536)throw Error('Target allowlist too large');
- let child,reader,pending,sequence=0,operationSequence=0,closed=false,failed=false,stderr='';
- function fail(error){failed=true;if(pending){clearTimeout(pending.timer);pending.reject(error);pending=null;}}
- function start(){if(child)return;if(closed||failed)throw Error('Broker is closed');child=spawn(runtime.executable,['--targets',targets],{windowsHide:true,stdio:['pipe','pipe','pipe']});
-  child.stderr.on('data',b=>{stderr=(stderr+b).slice(-8192);});child.on('error',fail);child.stdin.on('error',fail);
-  reader=readline.createInterface({input:child.stdout,crlfDelay:Infinity});reader.on('line',line=>{try{if(line.length>MAX_LINE)throw Error('Oversized native reply');const r=JSON.parse(line);if(r.id===null&&r.error){const e=Error(r.error.message||'Native startup failed');e.details=r.error;fail(e);child.stdin.end();return;}if(!pending||r.id!==pending.id)throw Error('Unexpected native reply identity');const p=pending;pending=null;clearTimeout(p.timer);if(r.error){const e=Error(r.error.message||'Native operation failed');e.details=r.error;p.reject(e);}else if(!Object.hasOwn(r,'result')){p.reject(Error('Missing native result'));}else p.resolve(r.result);}catch(e){fail(e);child.stdin.end();}});
-  child.on('close',(code,signal)=>{closed=true;fail(Error('Native broker exited '+code+' '+(signal||'')+(stderr?': '+stderr:'')));});
+ let child,reader,pending,sequence=0,operationSequence=0,closed=false,failed=false,stderr='',startupRejected=false,replySeen=false,firstFailure,closing;
+ const events=[];
+ const token=value=>typeof value==='string'&&/^[A-Za-z0-9_-]{1,96}$/.test(value)?value:undefined;
+ function diagnostic(){return {event:'window_use.broker_failure',...(child?.pid?{pid:child.pid}:{}),...firstFailure,
+  terminationVerified:closed,exitCode:child?.exitCode??null,signal:child?.signalCode??null,startupRejected,events:[...events]};}
+ function fail(error,stage='transport'){
+  failed=true;firstFailure||={stage,method:pending?.method,nativeCode:token(error.details?.code)||token(error.code)||'broker_error'};
+  error.details={...error.details,brokerDiagnostic:diagnostic()};
+  if(pending){clearTimeout(pending.timer);pending.reject(error);pending=null;}
+ }
+ function stderrLine(line){try{const r=JSON.parse(line);if(r.component!=='multi-pointer'||!token(r.event))return;
+  events.push({event:r.event,...(token(r.code)?{code:r.code}:{}),...(Number.isSafeInteger(r.win32Error)&&r.win32Error>=0?{win32Error:r.win32Error}:{})});if(events.length>8)events.shift();}catch{}}
+ function start(){if(child)return;if(closed||failed)throw Error('Broker is closed');child=spawnProcess(runtime.executable,['--targets',targets],{windowsHide:true,stdio:['pipe','pipe','pipe']});
+  child.stderr.on('data',b=>{stderr+=b;let newline;while((newline=stderr.indexOf('\n'))>=0){stderrLine(stderr.slice(0,newline));stderr=stderr.slice(newline+1);}stderr=stderr.slice(-8192);});child.on('error',e=>fail(e,'spawn'));child.stdin.on('error',e=>fail(e,'stdin'));
+  reader=readline.createInterface({input:child.stdout,crlfDelay:Infinity});reader.on('line',line=>{try{if(line.length>MAX_LINE)throw Error('Oversized native reply');const r=JSON.parse(line);if(r.id===null&&r.error){startupRejected=!replySeen&&r.error.actionExecuted===false;const e=Error('Native startup failed');e.details=r.error;fail(e,'startup');child.stdin.end();return;}if(!pending||r.id!==pending.id)throw Error('Unexpected native reply identity');replySeen=true;const p=pending;pending=null;clearTimeout(p.timer);if(r.error){const e=Error('Native operation failed');e.details={...r.error,brokerDiagnostic:{...diagnostic(),stage:'operation',method:p.method,nativeCode:token(r.error.code)||'broker_error'}};p.reject(e);}else if(!Object.hasOwn(r,'result')){p.reject(Error('Missing native result'));}else p.resolve(r.result);}catch(e){fail(e,'protocol');child.stdin.end();}});
+  child.on('close',(code,signal)=>{closed=true;if(stderr)stderrLine(stderr);fail(Error('Native broker exited'),'exit');});
  }
  async function call(method,params={}){if(failed||closed)throw Error('Native broker unavailable; no replay');if(pending)throw Error('Native operation already pending');
   if(ACTUATION.has(method)){const operationId=params.operationId??operationSequence+1;if(!Number.isSafeInteger(operationId)||operationId<1)throw Error('Operation identity exhausted or invalid');operationSequence=Math.max(operationSequence,operationId);params={...params,operationId};}
   start();const id=++sequence;
-  return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{fail(Error('Native result unknown after deadline; input is not replayed'));child.stdin.end();},10000);pending={id,resolve,reject,timer};child.stdin.write(JSON.stringify({id,method,params})+'\n');});
+  return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{fail(Error('Native result unknown after deadline; input is not replayed'),'deadline');child.stdin.end();},10000);pending={id,method,resolve,reject,timer};child.stdin.write(JSON.stringify({id,method,params})+'\n');});
  }
- async function close(){if(!child){closed=true;return {started:false};}if(closed)return {exitCode:child.exitCode,signal:child.signalCode,terminationVerified:true};child.stdin.end();return new Promise(resolve=>{const timer=setTimeout(()=>resolve({exitCode:null,signal:null,terminationVerified:false}),5000);child.once('close',(exitCode,signal)=>{clearTimeout(timer);resolve({exitCode,signal,terminationVerified:true});});});}
+ function stopped(){return {exitCode:child.exitCode,signal:child.signalCode,terminationVerified:true,
+  // A correlated startup rejection guarantees no command was executed. A crash
+  // after startup has no such proof and must keep blocking cleanup.
+  cleanupVerified:child.signalCode===null&&(child.exitCode===0||startupRejected),brokerDiagnostic:diagnostic()};}
+ async function close(){if(!child){closed=true;return {started:false};}if(closed)return stopped();if(closing)return closing;
+  closing=new Promise(resolve=>{const finish=()=>{clearTimeout(timer);resolve(stopped());};
+   const timer=setTimeout(()=>{child.removeListener('close',finish);closing=null;resolve({exitCode:null,signal:null,terminationVerified:false,cleanupVerified:false,brokerDiagnostic:diagnostic()});},5000);
+   child.once('close',finish);child.stdin.end();});return closing;}
  return {call,close};
 }
 function createProtocol({call,platform=process.platform}){let initialized=false;return async message=>{

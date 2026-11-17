@@ -15,14 +15,62 @@ function fixture(t) {
   const files=['azrael-multi-pointer.exe','THIRD_PARTY_NOTICES.md'].map(name=>{const bytes=Buffer.from('non-executable test fixture '+name);fs.writeFileSync(path.join(runtime,name),bytes);return {path:name,bytes:bytes.length,sha256:sha(bytes)};});
   const manifest=JSON.stringify({schema:1,kind:'azrael-multi-pointer',platform:'win32',arch:'x64',sourceSha256:'b'.repeat(64),files});
   fs.writeFileSync(path.join(runtime,'manifest.json'),manifest);
-  const calls=[];let failure,response={},failurePartial={};
+  const calls=[];let failure,response={},failurePartial={},stopped={terminationVerified:true,exitCode:0,signal:null};
   const provider=createSwitchedInputProvider({directory:runtime,manifestSha256:sha(manifest),modulePath:path.resolve(__dirname,'../vendor/azrael/multi-pointer-mcp.cjs')},{stateDirectory:path.join(directory,'state'),platform:'win32',arch:'x64',createNativeBroker:()=>({
     async call(method,args){calls.push({method,args});if(failure===method){failure=undefined;throw Object.assign(Error('fixture failure'),{details:{code:'collaboration_failed',actionExecuted:false,partial:failurePartial}});}return response;},
-    async close(){return {terminationVerified:true,exitCode:0,signal:null};}
+    async close(){return stopped;}
   })});
   t.after(async()=>{await provider.dispose();fs.rmSync(directory,{recursive:true});assert.equal(fs.existsSync(directory),false);});
-  return {provider,calls,failNext:(method,partial={})=>{failure=method;failurePartial=partial;},respond:value=>response=value};
+  return {provider,calls,directory,runtime,setStopped:value=>stopped=value,failNext:(method,partial={})=>{failure=method;failurePartial=partial;},respond:value=>response=value};
 }
+
+// Retained: simplifying close into a single "failed" bit loses startup evidence
+// and can permanently block service upgrades after a process has already exited.
+test('verified startup failure can detach without reclassifying the failed operation',async t=>{
+  const f=fixture(t);
+  f.setStopped({terminationVerified:true,exitCode:1,signal:null,cleanupVerified:true});
+  f.failNext('collaboration');
+  await assert.rejects(f.provider.input('thread',target,{action:'click',button:'left',x:10,y:20}),{code:'state_changed',nativeCode:'collaboration_failed'});
+  assert.equal((await f.provider.release('thread')).detached,true);
+  assert.deepEqual(f.calls.map(c=>c.method),['collaboration']);
+});
+
+test('post-startup abnormal exit and unknown termination remain distinct and protected',async t=>{
+  const f=fixture(t);await f.provider.input('thread',target,{action:'status'});
+  f.setStopped({terminationVerified:true,exitCode:2,signal:null,cleanupVerified:false});
+  await assert.rejects(f.provider.release('thread'),e=>e.exitCode===2&&e.message.includes('exited abnormally'));
+  assert.equal(fs.readdirSync(path.join(f.directory,'state')).length,1);
+  f.setStopped({terminationVerified:false,exitCode:null,signal:null});
+  await assert.rejects(f.provider.release('thread'),e=>e.exitCode===null&&e.message.includes('termination is unverified'));
+  f.setStopped({terminationVerified:true,exitCode:0,signal:null});
+  await f.provider.release('thread');assert.equal(fs.readdirSync(path.join(f.directory,'state')).length,0);
+});
+
+test('broker preserves startup cause, safe stderr metadata and actual terminal exit', {skip:process.platform!=='win32'},async t=>{
+  const f=fixture(t),{EventEmitter}=require('node:events'),{PassThrough,Writable}=require('node:stream');
+  const targetsFile=path.join(f.directory,'targets.json');fs.writeFileSync(targetsFile,'{}');
+  let child;
+  const broker=native.createBroker({runtimeDirectory:f.runtime,targetsFile,spawnProcess:()=>{
+    child=new EventEmitter();child.pid=12345;child.exitCode=null;child.signalCode=null;
+    child.stdout=new PassThrough();child.stderr=new PassThrough();
+    child.stdin=new Writable({write(_bytes,_encoding,done){done();},final(done){done();setImmediate(()=>{child.exitCode=1;child.emit('close',1,null);});}});
+    process.nextTick(()=>{
+      child.stderr.write(JSON.stringify({component:'multi-pointer',event:'startup_failed',code:'target_changed',win32Error:5,text:'PRIVATE KEY CONTENT'})+'\n');
+      child.stdout.write(JSON.stringify({id:null,error:{code:'target_changed',actionExecuted:false,message:'PRIVATE TITLE'}})+'\n');
+    });return child;
+  }});
+  await assert.rejects(broker.call('status'),e=>e.details.code==='target_changed'&&e.details.brokerDiagnostic.stage==='startup');
+  const stopped=await broker.close();assert.equal(stopped.exitCode,1);assert.equal(stopped.terminationVerified,true);assert.equal(stopped.cleanupVerified,true);
+  assert.equal(stopped.brokerDiagnostic.nativeCode,'target_changed');assert.equal(stopped.brokerDiagnostic.pid,12345);
+  assert.deepEqual(stopped.brokerDiagnostic.events,[{event:'startup_failed',code:'target_changed',win32Error:5}]);
+  const {windowError,errorPayload,fromPayload}=require('../vendor/azrael/window-control-errors.cjs');
+  const payload=errorPayload(fromPayload(errorPayload(windowError('connection_error','Startup failed',{brokerDiagnostic:{...stopped.brokerDiagnostic,text:'PRIVATE'}}))));
+  assert.equal(payload.brokerDiagnostic.exitCode,1);assert.equal(JSON.stringify(payload).includes('PRIVATE'),false);
+  const {createLogger}=require('../src/logger.cjs');const logs=path.join(f.directory,'logs');
+  createLogger(logs,'fixture')('warn','input','broker_failed',{diagnostic:{...stopped.brokerDiagnostic,text:'PRIVATE'}});
+  const record=JSON.parse(fs.readFileSync(path.join(logs,'window-use.log'),'utf8'));
+  assert.equal(record.diagnostic.nativeCode,'target_changed');assert.equal(JSON.stringify(record).includes('PRIVATE'),false);
+});
 test('real sessions enable virtualization by default, including after release',async t=>{
   const {provider,calls}=fixture(t);
   await provider.input('thread',target,{action:'status'});

@@ -51,8 +51,26 @@ function switchedMetadata(value) {
   }
   return out;
 }
+function brokerDiagnostic(value) {
+    if (!value || value.event!=='window_use.broker_failure') return undefined;
+    const safe={event:'window_use.broker_failure'};
+    for(const name of ['pid'])if(Number.isSafeInteger(value[name])&&value[name]>0)safe[name]=value[name];
+    if(value.exitCode===null||Number.isSafeInteger(value.exitCode))safe.exitCode=value.exitCode;
+    if(value.signal===null||typeof value.signal==='string'&&/^SIG[A-Z0-9]+$/.test(value.signal))safe.signal=value.signal;
+    for(const name of ['terminationVerified','startupRejected'])if(typeof value[name]==='boolean')safe[name]=value[name];
+    for(const name of ['stage','method','nativeCode'])if(typeof value[name]==='string'&&/^[A-Za-z0-9_-]{1,96}$/.test(value[name]))safe[name]=value[name];
+    if(Array.isArray(value.events))safe.events=value.events.slice(-8).flatMap(entry=>{
+      if(!entry||typeof entry.event!=='string'||!/^[A-Za-z0-9_-]{1,96}$/.test(entry.event))return [];
+      const item={event:entry.event};if(typeof entry.code==='string'&&/^[A-Za-z0-9_-]{1,96}$/.test(entry.code))item.code=entry.code;
+      if(Number.isSafeInteger(entry.win32Error)&&entry.win32Error>=0)item.win32Error=entry.win32Error;return [item];
+    });
+    return safe;
+}
 function copyApprovalDetails(source, target) {
-  const diagnostic = nativeDiagnostic(source?.diagnostic);
+  for (const key of ['brokerDiagnostic','cleanupDiagnostic']) {
+    const safe=brokerDiagnostic(source?.[key]);if(safe)target[key]=safe;
+  }
+  const diagnostic = nativeDiagnostic(source?.diagnostic) || brokerDiagnostic(source?.diagnostic);
   if (diagnostic) target.diagnostic = diagnostic;
   if (APPROVAL_STATES.has(source?.approvalState)) target.approvalState = source.approvalState;
   if (typeof source?.approvalRequestId === 'string' && /^azrael-window-consent-[a-f0-9-]{36}$/i.test(source.approvalRequestId)) target.approvalRequestId = source.approvalRequestId;

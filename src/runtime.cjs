@@ -20,7 +20,9 @@ function createRuntime({ runtimeDirectory, directory, permissions, log, backend:
     require('../vendor/azrael/multi-pointer-mcp.cjs').verifyRuntime(multiDirectory);
     multiPointer = { directory: multiDirectory, manifestSha256: crypto.createHash('sha256').update(fs.readFileSync(path.join(multiDirectory, 'manifest.json'))).digest('hex'), modulePath: path.resolve(__dirname, '../vendor/azrael/multi-pointer-mcp.cjs') };
   }
-  const input = injectedInput || (multiPointer && createSwitchedInputProvider(multiPointer, { stateDirectory: path.join(directory, 'input') }));
+  const input = injectedInput || (multiPointer && createSwitchedInputProvider(multiPointer, {
+    stateDirectory: path.join(directory, 'input'), onDiagnostic: diagnostic => log('warn','input','broker_failed',{diagnostic}),
+  }));
   const thread = sessionId || crypto.randomUUID(), scope = new AsyncLocalStorage();
   let disposed = false, externalDesktopGranted=false;
   const desktopGranted=()=>externalAuthorize ? externalDesktopGranted&&permissions.state.enabled&&!permissions.stopped&&permissions.state.mode!=='observe' : permissions.allowed(null,'desktop');

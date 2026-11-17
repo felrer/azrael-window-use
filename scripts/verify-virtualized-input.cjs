@@ -41,8 +41,13 @@ async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtur
   try {
     const current=await capture();
     if(current.isError)throw Error('Initial capture failed: '+current.value.code);
-    const pending=call('switched_input',{windowId:target.windowId,observationId:current.value.observationId,input:{action:'status'}});
-    const approval=await waitFor(async()=>{for(const page of application.windows())try{if(await page.evaluate(()=>window.windowUse?.snapshot().then(s=>s.view==='approval')))return page;}catch{}},'virtual input approval');
+    let initialReply;
+    const pending=call('switched_input',{windowId:target.windowId,observationId:current.value.observationId,input:{action:'status'}}).then(
+      value=>(initialReply=value),error=>(initialReply={isError:true,value:{code:error.code,message:error.message}}));
+    const approval=await waitFor(async()=>{
+      if(initialReply)throw Error('Virtual input completed before approval: '+JSON.stringify(initialReply));
+      for(const page of application.windows())try{if(await page.evaluate(()=>window.windowUse?.snapshot().then(s=>s.view==='approval')))return page;}catch{}
+    },'virtual input approval');
     await approval.getByRole('button',{name:'이 연결에서 허용',exact:true}).click();
     const initial=await pending;
     cases.push({label:'permission and default virtualization',...initial});

@@ -104,7 +104,7 @@ function unchanged(file, expected, directory) {
   const now = fileIdentity(file);
   if (now.dev !== expected.dev || now.ino !== expected.ino) throw Error('Switched input session path identity changed');
 }
-function createSwitchedInputProvider(declaration, { stateDirectory, createNativeBroker = native.createBroker, platform = process.platform, arch = process.arch } = {}) {
+function createSwitchedInputProvider(declaration, { stateDirectory, createNativeBroker = native.createBroker, platform = process.platform, arch = process.arch, onDiagnostic = () => {} } = {}) {
   // One bounded counter record per thread, never a replayable history of input packets.
   const sessions = new Map(), pending = new Set(), operations = new Map(); let disposed = false;
   function admitOperation(thread, packet) {
@@ -141,7 +141,15 @@ function createSwitchedInputProvider(declaration, { stateDirectory, createNative
     if (operationState) operationState.retired = operationState.high;
     s.releasing = (async () => {
       const stopped = s.broker ? await s.broker.close() : { started: false };
-      if (stopped?.started !== false && (stopped?.terminationVerified !== true || stopped.exitCode !== 0 || stopped.signal)) throw windowError('connection_error', 'Switched input stop/exit is unverified; session retained: ' + s.directory, { mutationOutcome: 'unknown' });
+      if (stopped?.brokerDiagnostic && (stopped.terminationVerified !== true || stopped.exitCode !== 0 || stopped.signal)) {
+        try { onDiagnostic(stopped.brokerDiagnostic); } catch { /* Logging cannot change cleanup authority. */ }
+      }
+      if (stopped?.started !== false && (stopped?.terminationVerified !== true ||
+          (stopped.exitCode !== 0 || stopped.signal) && stopped.cleanupVerified !== true)) {
+        const message = stopped?.terminationVerified === true ? 'Switched input exited abnormally; input restoration is unverified' : 'Switched input process termination is unverified';
+        throw windowError('connection_error', message + '; session retained: ' + s.directory, {
+          mutationOutcome: 'unknown', exitCode: stopped?.exitCode ?? null, signal: stopped?.signal ?? null, brokerDiagnostic: stopped?.brokerDiagnostic });
+      }
       unchanged(s.directory, s.directoryIdentity, true);
       if (!s.targetsDeleted && s.targetsIdentity) {
         unchanged(s.targetsFile, s.targetsIdentity, false);
@@ -152,7 +160,7 @@ function createSwitchedInputProvider(declaration, { stateDirectory, createNative
       fs.rmdirSync(s.directory);
       if (fs.existsSync(s.directory)) throw Error('Switched input session cleanup is unverified');
       if (sessions.get(thread) === s) sessions.delete(thread);
-      return { detached: true };
+      return { detached: true, ...(stopped?.exitCode !== undefined ? { exitCode: stopped.exitCode, signal: stopped.signal, brokerDiagnostic: stopped.brokerDiagnostic } : {}) };
     })();
     try { return await s.releasing; } finally { s.releasing = null; }
   }
@@ -204,6 +212,7 @@ function createSwitchedInputProvider(declaration, { stateDirectory, createNative
               ...(typeof details?.actionExecuted === 'boolean' ? { actionExecuted: details.actionExecuted } : {}),
               observationRequired: true, recovery: 'observe_again', ...(uncertain ? { mutationOutcome: 'unknown' } : {}),
               switchedInputDetails: partial,
+              brokerDiagnostic: details?.brokerDiagnostic,
             });
           }
         } finally { await guard(); live(); }
@@ -236,7 +245,7 @@ function createSwitchedInputProvider(declaration, { stateDirectory, createNative
     } catch (error) {
       if (s || sessions.has(thread)) {
         try { await release(thread); } catch (cleanupError) {
-          const combined = windowError(error.code || 'connection_error', error.message + '; switched input cleanup is unverified', { ...error, mutationOutcome: 'unknown' });
+          const combined = windowError(error.code || 'connection_error', error.message + '; switched input cleanup is unverified', { ...error, mutationOutcome: 'unknown', cleanupDiagnostic: cleanupError.brokerDiagnostic });
           combined.cause = error; combined.cleanupError = cleanupError; throw combined;
         }
       }
