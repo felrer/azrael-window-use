@@ -59,7 +59,8 @@ async function verifyVirtualizedInput({client, json, target, fixtureInfo, fixtur
         // These observations do not prove raw-input survival or require physical motion.
         rawPackets:collaboration?.rawPackets,suppression:collaboration?.suppression});
     }
-    await approval.evaluate(()=>window.windowUse.command('close'));
+    // The trusted host destroys the transient approval WebView after acceptance.
+    await waitFor(()=>approval.isClosed(),'accepted approval renderer closed');
     fs.writeFileSync(fixtureReady+'.activate','activate owned fixture');
     await new Promise(resolve=>setTimeout(resolve,300));
     cases.push({label:'fixture activation',foregroundConfirmed:fs.existsSync(fixtureReady+'.active')});
