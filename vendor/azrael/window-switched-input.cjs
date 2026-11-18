@@ -206,6 +206,9 @@ function createSwitchedInputProvider(declaration, { stateDirectory, createNative
           try { return await s.broker.call(method, args); }
           catch (error) {
             const details = error?.details, partial = switchedMetadata(details?.partial);
+            if (details?.brokerDiagnostic) {
+              try { onDiagnostic(details.brokerDiagnostic); } catch { /* Logging cannot change input outcome. */ }
+            }
             const uncertain = details?.actionExecuted !== false || partial.recovery?.uncertainDelivery === true;
             throw windowError('state_changed', 'Switched input requires a fresh observation before another operation', {
               nativeCode: typeof details?.code === 'string' && /^[A-Za-z0-9_-]{1,96}$/.test(details.code) ? details.code : 'broker_error',

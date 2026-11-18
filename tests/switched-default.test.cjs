@@ -15,13 +15,13 @@ function fixture(t) {
   const files=['azrael-multi-pointer.exe','THIRD_PARTY_NOTICES.md'].map(name=>{const bytes=Buffer.from('non-executable test fixture '+name);fs.writeFileSync(path.join(runtime,name),bytes);return {path:name,bytes:bytes.length,sha256:sha(bytes)};});
   const manifest=JSON.stringify({schema:1,kind:'azrael-multi-pointer',platform:'win32',arch:'x64',sourceSha256:'b'.repeat(64),files});
   fs.writeFileSync(path.join(runtime,'manifest.json'),manifest);
-  const calls=[];let failure,response={},failurePartial={},stopped={terminationVerified:true,exitCode:0,signal:null};
-  const provider=createSwitchedInputProvider({directory:runtime,manifestSha256:sha(manifest),modulePath:path.resolve(__dirname,'../vendor/azrael/multi-pointer-mcp.cjs')},{stateDirectory:path.join(directory,'state'),platform:'win32',arch:'x64',createNativeBroker:()=>({
-    async call(method,args){calls.push({method,args});if(failure===method){failure=undefined;throw Object.assign(Error('fixture failure'),{details:{code:'collaboration_failed',actionExecuted:false,partial:failurePartial}});}return response;},
+  const calls=[],diagnostics=[];let failure,response={},failurePartial={},stopped={terminationVerified:true,exitCode:0,signal:null};
+  const provider=createSwitchedInputProvider({directory:runtime,manifestSha256:sha(manifest),modulePath:path.resolve(__dirname,'../vendor/azrael/multi-pointer-mcp.cjs')},{stateDirectory:path.join(directory,'state'),platform:'win32',arch:'x64',onDiagnostic:d=>diagnostics.push(d),createNativeBroker:()=>({
+    async call(method,args){calls.push({method,args});if(failure===method){failure=undefined;throw Object.assign(Error('fixture failure'),{details:{code:'collaboration_failed',actionExecuted:false,partial:failurePartial,brokerDiagnostic:{event:'window_use.broker_failure',pid:12345,stage:'operation',method,nativeCode:'collaboration_failed'}}});}return response;},
     async close(){return stopped;}
   })});
   t.after(async()=>{await provider.dispose();fs.rmSync(directory,{recursive:true});assert.equal(fs.existsSync(directory),false);});
-  return {provider,calls,directory,runtime,setStopped:value=>stopped=value,failNext:(method,partial={})=>{failure=method;failurePartial=partial;},respond:value=>response=value};
+  return {provider,calls,diagnostics,directory,runtime,setStopped:value=>stopped=value,failNext:(method,partial={})=>{failure=method;failurePartial=partial;},respond:value=>response=value};
 }
 
 // Retained: simplifying close into a single "failed" bit loses startup evidence
@@ -104,9 +104,10 @@ test('explicit opt-out lasts for the session; a replacement session gets the def
   assert.equal(calls[0].args.enabled,true);
 });
 test('failed initialization sends no pointer action and next session requests the default',async t=>{
-  const {provider,calls,failNext}=fixture(t);failNext('collaboration');
+  const {provider,calls,diagnostics,failNext}=fixture(t);failNext('collaboration');
   await assert.rejects(provider.input('thread',target,{action:'click',button:'left',x:10,y:20}),{code:'state_changed'});
   assert.deepEqual(calls.map(c=>c.method),['collaboration']);
+  assert.deepEqual(diagnostics,[{event:'window_use.broker_failure',pid:12345,stage:'operation',method:'collaboration',nativeCode:'collaboration_failed'}]);
   calls.length=0;await provider.input('thread',target,{action:'status'});
   assert.deepEqual(calls.map(c=>c.method),['collaboration','status']);
 });
