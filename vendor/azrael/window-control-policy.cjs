@@ -14,7 +14,7 @@ const OBSERVATION_FAILURES = new Set(['stale-element', 'stale-observation', 'unk
   'capture-unsupported', 'protected-target', 'unobservable-target']);
 const INPUT_REJECTIONS = new Set(['stale-observation', 'unknown-element', 'stale-element',
   'unsupported-action', 'unsupported-key', 'disabled-element', 'readonly-element']);
-const { expectedError, windowError } = require('./window-control-errors.cjs');
+const { CODES, expectedError, windowError } = require('./window-control-errors.cjs');
 const { normalizeInput, mapInput, sameGeometry, imageToScreen } = require('./window-input-coordinates.cjs');
 const fail = message => { throw expectedError(message); };
 const plain = value => value && typeof value === 'object' && !Array.isArray(value);
@@ -93,6 +93,21 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
     return pending;
   }
   const releaseQuietly = thread => {void releaseSwitched(thread).catch(() => {});};
+  async function failSwitched(thread, error) {
+    try { await releaseSwitched(thread); }
+    catch (cleanup) {
+      const initial = error ?? {};
+      const classified = CODES.has(initial.code) && initial.code !== 'unclassified';
+      throw windowError(classified ? initial.code : 'connection_error',
+        (classified ? initial.message + '; ' : '') + 'switched input cleanup is unverified', {
+        ...initial, cause: error, mutationOutcome: 'unknown',
+        exitCode: Object.hasOwn(cleanup, 'exitCode') ? cleanup.exitCode : initial.exitCode,
+        signal: Object.hasOwn(cleanup, 'signal') ? cleanup.signal : initial.signal,
+        cleanupDiagnostic: cleanup.brokerDiagnostic ?? initial.cleanupDiagnostic,
+      });
+    }
+    throw error;
+  }
   workspaceName = (process.platform === 'win32' ? path.win32 : path).basename(String(workspaceName).replace(/[\x00-\x1f]/g, '')).slice(0,256) || 'Azrael';
   const occupancy = createRegistry({ directory: occupancyDirectory || path.join(codexHome, 'azrael', 'window-use', 'occupancy'), now, entries: () => allBindings().map(b => ({ sessionId:b.thread, workspaceName, state: b.running && b.state !== 'paused' ? 'running' : b.state, window: Object.fromEntries(['hwnd','pid','processCreated','executable'].map(k => [k,b.identity[k]])) })) });
   const occupancyOf = (w, thread) => leases.read(w,thread);
@@ -433,7 +448,7 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
         try {
         if(b.operationPermission === 'control') {
           try {await showOverlay(b, thread, generation, tool);}
-          catch(error) {if(tool==='switched_input') {b.generation++;pause(b,'error');await releaseSwitched(thread);}throw error;}
+          catch(error) {if(tool==='switched_input') {b.generation++;pause(b,'error');return await failSwitched(thread,error);}throw error;}
         }
         if (tool === 'run_task_macro') {
           const stored = args.definition ? null : await taskStore.read(); const snapshot = args.definition || stored.macros.find(m => m.id === args.macroId);if(!snapshot) fail('Unknown task macro');
@@ -457,7 +472,7 @@ function createWindowOwner({ backend, authorize, approve, requestPermission, con
             const result=await switchedInput.input(thread,{...b.identity},packet,check);
             await check();b.used=true;
             return {...view(b),delivery:'switchedInput',verified:false,observationRequired:true,inputResult:result,...(typeof result?.delivered==='boolean'?{delivered:result.delivered}:{})};
-          } catch(error) {if(bindings.get(thread)===b) {b.generation++;pause(b,'error');}await releaseSwitched(thread);throw error;}
+          } catch(error) {if(bindings.get(thread)===b) {b.generation++;pause(b,'error');}return await failSwitched(thread,error);}
         }
         if (ACTIONS.includes(action) || action === 'pressKey') {
           const observation = b.observation;

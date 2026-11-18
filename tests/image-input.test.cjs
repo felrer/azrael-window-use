@@ -31,7 +31,9 @@ test('runtime converts capture image coordinates once, including batch steps, an
     if(method==='act'){assert.equal(args.elementId,'button');return {window};}
     throw Error('Unexpected backend call '+method);
   },async dispose(){}};
-  const input={async input(thread,target,packet,guard){await guard();delivered.push(packet);await guard();return {delivered:true};},async release(){},async dispose(){}};
+  const {windowError}=require('../vendor/azrael/window-control-errors.cjs');
+  let inputError,releaseError;
+  const input={async input(thread,target,packet,guard){await guard();if(inputError)throw inputError;delivered.push(packet);await guard();return {delivered:true};},async release(){if(releaseError)throw releaseError;},async dispose(){}};
   const runtime=createRuntime({directory,permissions,backend,switchedInput:input});
   t.after(async()=>{await runtime.dispose();permissions.dispose();fs.rmSync(directory,{recursive:true});assert.equal(fs.existsSync(directory),false);});
   const windowId=(await runtime.call('list_windows',{})).candidates[0].windowId;
@@ -61,6 +63,18 @@ test('runtime converts capture image coordinates once, including batch steps, an
   await assert.rejects(send(o,{points:[[10,20]]}),{code:'state_changed'});
   o=await runtime.call('capture',{windowId,includeUIA:true});await send(o,{points:[[10,20]]});
   o=await runtime.call('capture',{windowId,includeUIA:false});assert.equal(observations.at(-1).includeUIA,false);assert.deepEqual(o.elements,[]);
+  const diagnostic=(stage,nativeCode)=>({event:'window_use.broker_failure',stage,nativeCode});
+  inputError=windowError('state_changed','Fresh observation required',{nativeCode:'keyboard_restore',
+    brokerDiagnostic:diagnostic('operation','keyboard_restore')});
+  releaseError=windowError('connection_error','Release unconfirmed',{exitCode:2,brokerDiagnostic:diagnostic('exit','cleanup_failed')});
+  // Cleanup is also an error, but cannot replace the cause of the input failure.
+  await assert.rejects(send(o,{points:[[10,20]]}),{
+    code:'state_changed',nativeCode:'keyboard_restore',mutationOutcome:'unknown',exitCode:2,
+    brokerDiagnostic:diagnostic('operation','keyboard_restore'),cleanupDiagnostic:diagnostic('exit','cleanup_failed'),
+  });
+  inputError=releaseError=undefined;
+  await runtime.call('release_switched_input',{windowId});
+  o=await capture();
   failObservation=true;await assert.rejects(runtime.call('capture',{windowId,includeUIA:true}));
   await assert.rejects(send(o,{points:[[10,20]]}),{code:'state_changed'});
 });

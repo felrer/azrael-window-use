@@ -26,6 +26,8 @@ Windows input cleanup distinguishes unconfirmed process termination from a confi
 
 Broker failures preserve the initial stage, method and native code separately from cleanup diagnostics. The existing rotating application log records `input/broker_failed` when a broker call fails, even if the broker subsequently exits cleanly. If termination is unconfirmed or the exit is abnormal, cleanup emits an additional record; correlate by native PID when available. Records carry the observed termination/exit/signal and up to eight structured native stderr event/code/Win32-error records. Raw stderr, input text, target titles and tool arguments are excluded. Observation and temporary permission renewal remain required after service replacement. A failed drain in an older immutable service cannot be repaired by editing a newer source checkout; its supported shutdown/recovery must finish before takeover.
 
+An OS launch failure with no process ID leaves no native input owner to detach. A broker started with a PID still requires verified cleanup. If a switched request and its cleanup both fail, the request keeps the initial failure and reports cleanup separately; input is never replayed.
+
 Connection adapters remain the MCP-facing endpoint. They reconnect for subsequent operations after replacement. A dispatched operation whose reply is lost returns an unknown outcome and is never automatically resent. UIA and capture references, selected-window handles and temporary grants from the old generation are not accepted by the successor. The caller must discover/capture again and obtain any necessary approval. An idle connection does not keep an old service version active indefinitely.
 
 ## Distribution

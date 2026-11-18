@@ -71,6 +71,18 @@ test('broker preserves startup cause, safe stderr metadata and actual terminal e
   const record=JSON.parse(fs.readFileSync(path.join(logs,'window-use.log'),'utf8'));
   assert.equal(record.diagnostic.nativeCode,'target_changed');assert.equal(JSON.stringify(record).includes('PRIVATE'),false);
 });
+// A launch failure with no PID never owned input, even when Node emits a nonzero close.
+test('failed child spawn cannot retain a native input session', {skip:process.platform!=='win32'},async t=>{
+  const f=fixture(t),{spawn}=require('node:child_process');
+  const targetsFile=path.join(f.directory,'targets.json');fs.writeFileSync(targetsFile,'{}');
+  const broker=native.createBroker({runtimeDirectory:f.runtime,targetsFile,spawnProcess:()=>spawn(
+    path.join(f.directory,'missing-broker.exe'),[],{windowsHide:true,stdio:['pipe','pipe','pipe']})});
+  await assert.rejects(broker.call('collaboration'),e=>e.details?.actionExecuted===false &&
+    e.details.brokerDiagnostic.stage==='spawn' && e.details.brokerDiagnostic.method==='collaboration' &&
+    e.details.brokerDiagnostic.nativeCode==='ENOENT' && !Object.hasOwn(e.details.brokerDiagnostic,'pid'));
+  assert.deepEqual(await broker.close(),{started:false});
+  await assert.rejects(broker.call('collaboration'),/no replay/);
+});
 test('real sessions enable virtualization by default, including after release',async t=>{
   const {provider,calls}=fixture(t);
   await provider.input('thread',target,{action:'status'});
