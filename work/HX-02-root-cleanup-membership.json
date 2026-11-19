@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "owner": "HX-02-release020-root",
+  "groups": [{
+    "id": "hx020-root-ui-disposable",
+    "kind": "run",
+    "owner": "HX-02-release020-root",
+    "version": "0.2.0",
+    "membership_complete": true,
+    "provenance_ref": "work/HX-02-release020-verification.json",
+    "membership_source": "work/HX-02-root-cleanup-membership.json",
+    "members": [
+      {"id":"hx020-root-ui-first","path":"artifacts/acceptance/v020","kind":"test","generated":true,"owner":"HX-02-release020-root","protection_known":true,"references":[],"deletion_scope":"entire_directory"},
+      {"id":"hx020-root-ui-passed","path":"artifacts/acceptance/v020-fresh","kind":"test","generated":true,"owner":"HX-02-release020-root","protection_known":true,"references":[],"deletion_scope":"entire_directory"},
+      {"id":"hx020-root-mac-transport","path":"artifacts/build/tauri-migration/mac-transport","kind":"logs","generated":true,"owner":"HX-02-release020-root","protection_known":true,"references":[],"deletion_scope":"entire_directory"}
+    ]
+  }]
+}

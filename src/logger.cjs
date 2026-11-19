@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
+const { errorPayload } = require('../vendor/azrael/window-control-errors.cjs');
 function createLogger(directory, version) {
   fs.mkdirSync(directory, { recursive: true });
   const file = path.join(directory, 'window-use.log');
@@ -11,6 +12,8 @@ function createLogger(directory, version) {
     if (fields.diagnostic?.event === 'window_use.broker_failure') {
       record.diagnostic = require('../vendor/azrael/window-control-errors.cjs').errorPayload({ diagnostic: fields.diagnostic }).diagnostic;
     }
+    const safe = errorPayload(fields);
+    for (const key of ['stage','mutationOutcome','actionExecuted','pauseReason','diagnostic']) if (safe[key] !== undefined) record[key] = safe[key];
     try {
       if (fs.existsSync(file) && fs.statSync(file).size > 1024 * 1024) { const previous = file + '.1'; if (fs.existsSync(previous)) fs.unlinkSync(previous); fs.renameSync(file, previous); }
       fs.appendFileSync(file, JSON.stringify(record) + '\n', { mode: 0o600 });

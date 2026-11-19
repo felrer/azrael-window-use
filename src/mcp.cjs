@@ -5,6 +5,7 @@ const { ReadBuffer, serializeMessage } = require('@modelcontextprotocol/sdk/shar
 const { ListToolsRequestSchema, CallToolRequestSchema } = require('@modelcontextprotocol/sdk/types.js');
 const { toolDefinitions, callResult } = require('../vendor/azrael/window-control-mcp.cjs');
 const { randomUUID } = require('node:crypto');
+const { errorPayload } = require('../vendor/azrael/window-control-errors.cjs');
 class SocketTransport {
   constructor(socket) { this.socket = socket; this.buffer = new ReadBuffer(); }
   async start() {
@@ -29,10 +30,12 @@ async function startMcp({ runtime, log, onClient, onClose, transport }) {
       return callResult(result);
     } catch (error) {
       const code = /^[a-z_]{1,64}$/.test(error.code || '') ? error.code : 'execution_error';
-      log('warn','mcp','request_failed',{requestId,tool,code,nativeCode:error.nativeCode,durationMs:Date.now()-started});
+      const safe = errorPayload(error);
+      log('warn','mcp','request_failed',{...safe,requestId,connectionId:runtime.thread,tool,code,durationMs:Date.now()-started});
       // A native mutation may have partially executed. Do not turn unknown outcomes into safe retries.
       const result = { code, message: error.message || '작업을 완료하지 못했습니다.' };
       for (const key of ['actionExecuted','mutationOutcome','observationRequired','recovery','pauseReason','nativeCode','stage']) if (error[key] !== undefined) result[key] = error[key];
+      if (safe.diagnostic) result.diagnostic = safe.diagnostic;
       if(error.switchedInputDetails)result.switchedInputDetails=require('../vendor/azrael/window-control-errors.cjs').switchedMetadata(error.switchedInputDetails);
       return { isError: true, content: [{ type:'text',text:JSON.stringify(result) }] };
     }

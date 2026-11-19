@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "owner": "HX-02-release020-root",
+  "reason": "The deleted quiet-input-acceptance path has been recreated exclusively by this task. Its only current children are v020, v020-fresh and v020-source; all consumers have ended and verification is retained in work/HX-02-release020-verification.json. Refresh current physical identity and select all overlapping lifecycle groups together; do not bypass any protection.",
+  "groups": [{
+    "id": "quiet-input-acceptance",
+    "kind": "run",
+    "owner": "window-use-public-mcp",
+    "version": "0.2.0",
+    "membership_complete": true,
+    "membership_source": "work/HX-02-root-alias-cleanup-membership.json",
+    "provenance_ref": "work/HX-02-release020-verification.json",
+    "members": [{"id":"quiet-input-acceptance-material","path":"artifacts/acceptance","kind":"verification","generated":true,"owner":"window-use-public-mcp","protection_known":true,"references":[],"deletion_scope":"entire_directory"}]
+  }]
+}

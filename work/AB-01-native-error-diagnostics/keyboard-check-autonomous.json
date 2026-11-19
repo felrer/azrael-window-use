@@ -1,0 +1,42 @@
+{
+  "owner": "AB-01-keyboard-check-autonomous",
+  "status": "awaiting_physical_keyboard_check",
+  "activeReferences": [
+    "physical-keyboard-and-ime-acceptance"
+  ],
+  "directory": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\work\\AB-01-native-error-diagnostics\\keyboard-check-autonomous\\runtime",
+  "supersedes": "keyboard-check",
+  "sourceSha256": "5f6ed52879b52e4ea02bbfe894bbde03a8201c760c77fadc2fbf4515b97cfaff",
+  "manifests": {
+    "windowControl": "eaaae4add2f237a37de4bbcac871582be0f6296a10b48f31d5b3124ce466ad25",
+    "multiPointer": "9fbb4c0cc8dac3facde7a7b818bcadd4b62dc96e5b12c5dce4f6b04f4dd59176"
+  },
+  "files": [
+    {
+      "path": "window-control/azrael-window-control.exe",
+      "bytes": 1189376
+    },
+    {
+      "path": "window-control/manifest.json",
+      "bytes": 765
+    },
+    {
+      "path": "window-control/THIRD_PARTY_NOTICES.md",
+      "bytes": 27625
+    },
+    {
+      "path": "multi-pointer/azrael-multi-pointer.exe",
+      "bytes": 556544
+    },
+    {
+      "path": "multi-pointer/manifest.json",
+      "bytes": 512
+    },
+    {
+      "path": "multi-pointer/THIRD_PARTY_NOTICES.md",
+      "bytes": 4343
+    }
+  ],
+  "totalBytes": 1779165,
+  "releaseCondition": "User confirms normal input; delete runtime and handoff record through root task owner"
+}

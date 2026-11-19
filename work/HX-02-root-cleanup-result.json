@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "owner": "HX-02-release020-root",
+  "status": "cleanup blocked; user retention decision pending",
+  "reason": "Native owner rejected matching whole-group apply: new member claim overlaps a reserved lifecycle group",
+  "attempts": [
+    "Initial overlapping lifecycle-group protection",
+    "Whole-group review required common directory mode",
+    "Current replaced roots re-registered with original ownership preserved; no guard bypass",
+    "All overlapping groups received matching delete decisions; native reserved-claim guard refused apply"
+  ],
+  "retained": [
+    {
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\acceptance",
+      "presence": "present",
+      "bytes": 23762788,
+      "files": 576,
+      "dirs": 186,
+      "links": 0,
+      "targetsNotFollowed": true
+    },
+    {
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\mac-transport",
+      "presence": "present",
+      "bytes": 4412,
+      "files": 1,
+      "dirs": 0,
+      "links": 0,
+      "targetsNotFollowed": true
+    }
+  ],
+  "disposableProducersAndConsumersEnded": true,
+  "requiredDeliverablesOutsideTargets": true,
+  "physicalBytesReclaimed": null,
+  "previousReserved255702053BytesUntouched": true,
+  "retainedBytes": 23767200
+}

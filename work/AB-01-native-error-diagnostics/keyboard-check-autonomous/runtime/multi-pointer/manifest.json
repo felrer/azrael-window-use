@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "kind": "azrael-multi-pointer",
+  "platform": "win32",
+  "arch": "x64",
+  "sourceSha256": "5f6ed52879b52e4ea02bbfe894bbde03a8201c760c77fadc2fbf4515b97cfaff",
+  "files": [
+    {
+      "path": "azrael-multi-pointer.exe",
+      "bytes": 556544,
+      "sha256": "d1f3345e298a0e7567fe5feb98cd63c241b60945734ed65c5e6a95a85494330e"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "bytes": 4343,
+      "sha256": "cbf79e6b3177308edc9aa9928754d1170f06d089c6dafb3848dfa30fdc13eca1"
+    }
+  ]
+}

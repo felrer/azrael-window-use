@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "owner": "HX-02-release020-root",
+  "status": "passed",
+  "plannedOutputs": [
+    "C:/Users/felre/Desktop/azrael-window-use-mcp/artifacts/releases/0.2.0-linux-x64-HX02-final"
+  ],
+  "activeReferences": [],
+  "files": [
+    {
+      "name": "WindowUseMCP-0.2.0-linux-x64.tar.gz",
+      "sha256": "47862181c748a76dcb8692b6df79f1c0591d2ef7aba3086892e6d4ae99068b2a",
+      "bytes": 51976901
+    },
+    {
+      "name": "verification.json",
+      "sha256": "6b8476bdd8ff1de71c90828d1575f5667a993a2fb2fa6482859634506bcc52b8",
+      "bytes": 11244
+    }
+  ],
+  "sourceReadersReleased": true
+}

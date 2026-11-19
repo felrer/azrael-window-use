@@ -1,0 +1,360 @@
+{
+  "schema": 1,
+  "task": "HX-01-window-use-tauri",
+  "version": "0.1.1",
+  "status": "implementation_verified_cleanup_pending",
+  "sourceIdentityPolicy": "Selected immutable raw-file inputs; unrelated pre-existing working-tree diagnostic changes preserved",
+  "commits": {
+    "standalone": [
+      {
+        "hash": "9c1f9f34428209df2576b371c7c8bfb0d09ed49a",
+        "title": "Verify and document the Tauri Window Use host"
+      },
+      {
+        "hash": "cceb0e51107fce9cb984430d2ecda56c937f04b8",
+        "title": "Bound cold MCP initialization separately from request and EOF deadlines"
+      },
+      {
+        "hash": "3572e366161b7311b3dbf65749ab57675d0762ad",
+        "title": "Recover Stop shortcut conflicts and isolate window snapshots"
+      },
+      {
+        "hash": "a4f3a900859e81cb4e6c545b72bab30386023872",
+        "title": "Report the packaged Window Use version through MCP"
+      },
+      {
+        "hash": "9a970a60c743ee90987ea708f34d72303282d947",
+        "title": "Retire superseded Electron and C# launch paths after Rust CLI acceptance"
+      },
+      {
+        "hash": "b05e0ba4ac9a7f35e7ed78c9f327e025817f7f6d",
+        "title": "Exercise compiled Tauri host MCP branch through isolated fixture"
+      },
+      {
+        "hash": "5a61dd9d0f02d8200193aa49e558432ba5bab743",
+        "title": "Include macOS bundle staging tool in future frozen package inputs"
+      },
+      {
+        "hash": "e976cb13ce07fcc179d3413626a5b4a48588c443",
+        "title": "Seal staged macOS app before verifying its enclosing code signature"
+      },
+      {
+        "hash": "55f5c8f587fafc6e4164eb80937de5d744db6bf3",
+        "title": "Stage source-pinned Rust hosts as standard macOS application bundles"
+      },
+      {
+        "hash": "4fe09a8291c6992a4b66360d4a18b11910ccd368",
+        "title": "Replace Electron desktop shell with scoped Tauri host"
+      },
+      {
+        "hash": "4cbb29263f27bd517a247031b4c98e3aaf7ff964",
+        "title": "Keep stdio fixture version aligned to avoid unintended service takeover"
+      },
+      {
+        "hash": "30d4711afb7ea9ad3cd357ab47058bb6653da69d",
+        "title": "Resolve npm from official Unix Node installation layouts"
+      },
+      {
+        "hash": "6c60cdc338c7d0592c920ea1c4cca9b6cc3b3882",
+        "title": "Verify prepared dependencies through their startup integrity consumer"
+      },
+      {
+        "hash": "4707953ade4c99741bf8c5d267d5eff267e77c73",
+        "title": "Verify copied Tauri payloads against frozen source inputs"
+      },
+      {
+        "hash": "702000b228265770bb49fc2195fbe0b685733dd5",
+        "title": "Replace Electron packaging with source-pinned Tauri portable payloads"
+      },
+      {
+        "hash": "396b6fcc1f1bb51655736dc94f53667ac5240ad0",
+        "title": "Replace Electron service entry with private Tauri host transport"
+      }
+    ],
+    "azrael": [
+      "5dd15ecc94",
+      "131ef7e48c"
+    ]
+  },
+  "windows": {
+    "target": "win32-x64",
+    "build": {
+      "schema": 1,
+      "status": "passed",
+      "sourceSha256": "c7f98cac8be2414a4afca246a5c44af685afa7d7669ba05190a1ed983b22bd2d",
+      "resourceSha256": "f9d3030c2be74c699abdf3bfa2ed8b959d3333fe4b34b9e8e2c58992f3951fd1",
+      "executableSha256": "658b82f9c58378fe0edd21f1e0da22f89d8858912fbcedd99da17df0ae7b14c2",
+      "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\cargo\\release\\azrael-window-use.exe",
+      "results": [
+        {
+          "step": "rust-tests-t3",
+          "exit": 0,
+          "signal": null,
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\rust-tests-t3.log"
+        },
+        {
+          "step": "rust-build-t3",
+          "exit": 0,
+          "signal": null,
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\rust-build-t3.log"
+        }
+      ],
+      "seconds": 223.325
+    },
+    "ui": {
+      "exitCode": 0,
+      "checks": [
+        {
+          "name": "standard SDK stdio connection and tool discovery"
+        },
+        {
+          "name": "MCP alone launches approval UI; closing denies and releases the renderer without disconnecting"
+        },
+        {
+          "name": "automatic approval popup; denial sends no input"
+        },
+        {
+          "name": "approved real UIA edit and invoke with observed postcondition"
+        },
+        {
+          "name": "ordinary launch forwards settings to the existing private host and exits"
+        },
+        {
+          "name": "settings and approval snapshots remain isolated while both WebViews exist"
+        },
+        {
+          "name": "compact custom-chrome UI renders and switches light/dark"
+        },
+        {
+          "name": "closed settings UI reopens from the host with preserved settings"
+        },
+        {
+          "name": "own settings/approval windows blocked from observation and control in full mode"
+        },
+        {
+          "name": "trusted UI Stop and explicit resume"
+        },
+        {
+          "name": "EOF releases resources and exits"
+        }
+      ],
+      "hotkeyConflict": "Window Use global Stop shortcut unavailable; tray/UI Stop remain available; retrying every 5 seconds: HotKey already registered: HotKey { mods: Modifiers(ALT | CONTROL), key: F12, id: 589995 }"
+    },
+    "javascript": {
+      "exit": 0,
+      "signal": null,
+      "seconds": 98.435,
+      "summary": [
+        "# tests 76",
+        "# pass 71",
+        "# fail 0",
+        "# skipped 5"
+      ],
+      "failures": []
+    },
+    "consumer": {
+      "exit": 0,
+      "verified": true,
+      "buildInfoSha256": "d5572152f32064bc190df181d0f57e460407b17b0855fb181d3b2ab1875a9f16",
+      "version": "0.1.1",
+      "runtime": "tauri",
+      "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\azrael-consumer-t3\\payload\\WindowUseMCP.exe",
+      "candidateFiles": 94,
+      "sourceSha256": "c7f98cac8be2414a4afca246a5c44af685afa7d7669ba05190a1ed983b22bd2d"
+    },
+    "package": {
+      "buildInfoSha256": "d5572152f32064bc190df181d0f57e460407b17b0855fb181d3b2ab1875a9f16",
+      "payloadBytes": 129000524,
+      "zipBytes": 47522434,
+      "zipSha256": "ddd9371df926cd94bb61abe97a0132fa02f1dcf1d219c9939fac62a7ada23ace"
+    },
+    "baseline": {
+      "version": "0.1.0",
+      "payloadBytes": 393184615,
+      "zipBytes": 162317356
+    },
+    "reductionPercent": {
+      "payload": 67.19085155455535,
+      "zip": 70.72251842249082
+    }
+  },
+  "mac": {
+    "schema": 1,
+    "status": "passed",
+    "identity": "HX01-T3",
+    "owner": "/root/tauri_mac_verify",
+    "environment": {
+      "platform": "darwin",
+      "arch": "arm64",
+      "macOS": "26.7.2",
+      "rust": "1.98.0",
+      "node": "24.19.0",
+      "jobs": 4
+    },
+    "sourcePacketSha256": "123436d34f9c4aade921c694342dd9cc2296c28aa29cf8a83830896a521ae83b",
+    "sourceSha256": "4539559563f9a5385100b59f2fc7ebfeaa6ef340fa42f988f25d9508fc52d1de",
+    "resourceSha256": "11adc07a93839078a7e8b17cd97b5f63059b60902d393aa33f17344b4aa42df6",
+    "release": "/Users/felrer/Projects/azrael-window-use/artifacts/releases/0.1.1-tauri-HX01-T3-final",
+    "distribution": "/Users/felrer/Projects/azrael-window-use/artifacts/releases/0.1.1-tauri-HX01-T3-final/WindowUseMCP-darwin-arm64",
+    "buildInfoSha256": "2290d29088e6e0c673c09fd1a73abbe7cf0318db89c8e53669cf71c58b0eccc9",
+    "payloadBytes": 146943820,
+    "payloadFiles": 3719,
+    "hostCompile": {
+      "schema": 1,
+      "status": "passed",
+      "sourceSha256": "4539559563f9a5385100b59f2fc7ebfeaa6ef340fa42f988f25d9508fc52d1de",
+      "resourceSha256": "11adc07a93839078a7e8b17cd97b5f63059b60902d393aa33f17344b4aa42df6",
+      "executableSha256": "c01d004e4764dd3e94cf134621bcff8cfc012e5425853d0519ac99cb88c7d29c",
+      "platform": "darwin",
+      "arch": "arm64",
+      "tests": {
+        "command": "cargo test --locked",
+        "exitCode": 0,
+        "elapsedSeconds": 40,
+        "tests": 4,
+        "passed": 4
+      },
+      "build": {
+        "command": "cargo build --release --locked",
+        "exitCode": 0,
+        "elapsedSeconds": 80
+      }
+    },
+    "nodeRustFixture": {
+      "commit": "b05e0ba",
+      "testSha256": "6a3f49fc002e448b9d150f40bd5cce8970be99c823053be2cb69071f52161fd6",
+      "exitCode": 0,
+      "tests": 5,
+      "passed": 5
+    },
+    "staging": {
+      "toolSha256": "86c52481bac8f250fd09828fb2cb6cac6d0f3642eba0e47f37135ce1b040cd25",
+      "exitCode": 0
+    },
+    "finalPackaging": {
+      "exitCode": 0,
+      "signedExecutableSha256": "daf0b086d597ea4b7bf9179fcb8fe26af7cfc95f1a20ec7f1d08fba89528ab25",
+      "policy": "adhoc-without-notarization",
+      "strictDeepVerified": true,
+      "allStepsPassed": true
+    },
+    "consumer": {
+      "commit": "131ef7e48c",
+      "verifyPackageExit": 0,
+      "stageRuntimeExit": 0,
+      "verifyRuntimeExit": 0,
+      "manifestSha256": "72c56a3d798b3d6ef0b4d24467b6bd268b8b9dbc4ee2ccfcd4262668e43deec5",
+      "candidateFiles": 90
+    },
+    "promotion": {
+      "newOnly": true,
+      "exactDistribution": true,
+      "metadataUnchanged": true,
+      "strictDeepSignatureExit": 0,
+      "finalIdentityRechecked": true
+    },
+    "preparedInputsUnchanged": true,
+    "packagedBehaviorAcceptance": "pending",
+    "unverified": [
+      "macOS GUI/permission/input desktop behavior",
+      "installation"
+    ],
+    "cleanup": {
+      "scratchRemoved": true,
+      "scratchPath": "/Users/felrer/Projects/azrael-window-use/artifacts/build/tauri-HX01",
+      "processAbsenceObserved": true,
+      "oldDeliverableRemoved": true,
+      "finalDeliverable": "awaiting user Mac GUI confirmation"
+    }
+  },
+  "unverified": [
+    "macOS GUI/accessibility/input: explicitly deferred by user",
+    "Linux native build and GUI",
+    "Actual OS shortcut reacquisition after external owner releases Ctrl+Alt+F12"
+  ],
+  "deployment": {
+    "published": false,
+    "installedAppsChanged": false,
+    "existingLegacyProcessesStopped": false
+  },
+  "developmentDependencyRecovery": {
+    "cleanInstall": {
+      "exit": 0,
+      "packages": 97,
+      "electron": false
+    },
+    "rootNpmCi": {
+      "status": "failed",
+      "exit": 4294963214,
+      "code": "EBUSY",
+      "reason": "Existing Electron runtime held by unrelated running processes"
+    },
+    "declaredClosure": {
+      "copied": 944,
+      "matched": 2888,
+      "declaredDependencyClosureRestored": true,
+      "untouchedLockedElectron": true,
+      "sdk": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\node_modules\\@modelcontextprotocol\\sdk\\dist\\cjs\\server\\index.js"
+    },
+    "legacyRuntime": {
+      "restoredMissingFiles": 0,
+      "version": "45.2.3",
+      "source": "Previously cached exact Electron runtime, all surviving files verified",
+      "runningProcessesStopped": 0,
+      "restoredBytes": 0,
+      "existingFilesOverwritten": 0,
+      "existingFilesMatched": 73
+    }
+  },
+  "priorFailures": [
+    {
+      "stage": "Mac prepare",
+      "cause": "Official Unix npm path",
+      "resolvedBy": "30d4711"
+    },
+    {
+      "stage": "Windows ZIP",
+      "cause": "MAX_PATH",
+      "resolvedBy": "Short immutable producer root"
+    },
+    {
+      "stage": "Mac bundle verification",
+      "cause": "Main executable verified before bundle sealing",
+      "resolvedBy": "e976cb1"
+    },
+    {
+      "stage": "Windows startup",
+      "cause": "Global shortcut registration panic",
+      "resolvedBy": "3572e36"
+    },
+    {
+      "stage": "Two WebViews",
+      "cause": "Tauri window.emit broadcasts globally",
+      "resolvedBy": "3572e36"
+    },
+    {
+      "stage": "UI harness",
+      "cause": "WebView2 lifecycle/CDP attach before app target and unsupported context defaults",
+      "resolvedBy": "9c1f9f3"
+    },
+    {
+      "stage": "Node fixture",
+      "cause": "Measured cold initialize 11352ms exceeded 10sec test budget",
+      "resolvedBy": "cceb0e5; initialization-only30sec; otherrequests/EOF10sec; production input limits unchanged"
+    }
+  ],
+  "cleanup": {
+    "resultFile": "work/HX-01-tauri-cleanup-result.json",
+    "protectedOriginalPrepare": {
+      "bytes": 255702053,
+      "group": "tauri-prepare-first-format-complete",
+      "reason": "Reserved lifecycle group overlaps deleted prior same-path claims; supported owner apply refused; no bypass",
+      "paths": [
+        "artifacts/build/package-20261116T132748752Z-3277bff7",
+        "artifacts/tauri-resources",
+        "artifacts/build/tauri-prepare.json"
+      ]
+    },
+    "priorMacWork": "Previous HU01 source ~17.4GiB remains under its earlier separate cleanup limitation; not part of this cleanup selection"
+  }
+}

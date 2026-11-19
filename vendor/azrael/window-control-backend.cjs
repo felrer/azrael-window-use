@@ -7,7 +7,7 @@ const { verifyRuntime } = require('./window-control-runtime.cjs');
 const { windowError } = require('./window-control-errors.cjs');
 const METHODS = new Set(['windowAtPoint', 'actionPoint', 'captureDesktop', 'listWindows', 'status', 'observe', 'inspect', 'restore', 'resize', 'act', 'overlayShow', 'overlayHide', 'approvalNotificationShow', 'approvalNotificationHide']);
 const MUTATIONS = new Set(['act', 'resize', 'restore']);
-function nativeError(payload, method, uncorrelated = false) {
+function nativeError(payload, method, uncorrelated = false, request = {}) {
   const nativeCode = typeof payload?.code === 'string' && /^[a-z][a-z0-9-]{0,127}$/.test(payload.code) ? payload.code : undefined;
   let code = 'unclassified', message;
   if (!uncorrelated) {
@@ -25,7 +25,14 @@ function nativeError(payload, method, uncorrelated = false) {
     else if (method === 'captureDesktop') { code = 'state_changed'; message = 'Desktop capture could not be safely redacted; observe again'; }
     else if (nativeCode === 'uncertain-delivery') { code = 'connection_error'; message = 'Window action delivery could not be confirmed'; }
   }
-  return windowError(code, message, { stage: 'native', nativeCode,
+  // Retain only the exact helper HRESULT envelope, never arbitrary provider content.
+  const hresult = nativeCode === 'native-error' && typeof payload?.message === 'string'
+    ? /^Windows API failed: (0x[0-9a-f]{8})$/i.exec(payload.message)?.[1] : undefined;
+  const diagnostic = { event: 'window_use.native_failure', method, action: request.action,
+    requestId: request.id, timestamp: new Date().toISOString(),
+    elapsedMs: Math.max(0, Math.round(performance.now() - request.startedAt)),
+    responseCorrelated: !uncorrelated, ...(hresult ? { hresult } : {}) };
+  return windowError(code, message, { stage: 'native', nativeCode, diagnostic,
     ...(method === 'act' && !uncorrelated && ['stale-observation', 'stale-target', 'unknown-element', 'stale-element', 'unsupported-action', 'unsupported-key', 'disabled-element', 'readonly-element'].includes(nativeCode) && payload?.mutationOutcome !== 'unknown' ? { actionExecuted: false } : {}),
     ...(code === 'window_minimized' ? { pauseReason: 'minimized', ...(payload?.mutationOutcome === 'unknown' ? {} : { actionExecuted: false }) } : {}),
     ...(payload?.mutationOutcome === 'unknown' || (MUTATIONS.has(method) && !['unsupported_action', 'state_changed', 'invalid_request', 'window_minimized'].includes(code)) ? { mutationOutcome: 'unknown' } : {}) });
@@ -91,13 +98,13 @@ function createBackend(runtime, { spawnChild = spawn, verify = verifyRuntime, ti
             continue;
           }
           if (message.id == null && message.error) {
-            for (const p of pending.values()) { clearTimeout(p.timer); p.reject(nativeError(message.error, p.method, true)); }
+            for (const p of pending.values()) { clearTimeout(p.timer); p.reject(nativeError(message.error, p.method, true, p)); }
             pending.clear(); void reset(); return;
           }
           const p = pending.get(message.id); if (!p) continue;
           pending.delete(message.id); clearTimeout(p.timer);
           if (message.error) {
-            p.reject(nativeError(message.error, p.method));
+            p.reject(nativeError(message.error, p.method, false, p));
             if (message.error.code === 'operation-cancelled') { failPending(transportError('cancelled', 'Window control stopped by the user')); void reset(); return; }
           }
           else if (p.method === 'listWindows') {
@@ -127,7 +134,7 @@ function createBackend(runtime, { spawnChild = spawn, verify = verifyRuntime, ti
     if (pending.size >= 64) throw transportError('connection_error', 'Too many Window backend requests');
     return new Promise((resolve, reject) => {
       const id = randomUUID(); const timer = setTimeout(() => { failPending(transportError('timeout', 'Window backend timed out')); void reset(); }, timeoutMs);
-      pending.set(id, { resolve, reject, timer, method });
+      pending.set(id, { resolve, reject, timer, method, id, startedAt: performance.now(), ...(method === 'act' ? { action: params?.action } : {}) });
       try { active.stdin.write(JSON.stringify({ id, method, params }) + '\n'); } catch { failPending(transportError('connection_error', 'Window backend request delivery failed')); void reset(); }
     });
   }

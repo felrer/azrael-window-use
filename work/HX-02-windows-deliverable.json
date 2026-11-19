@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "owner": "standalone-package",
+  "version": "0.2.0",
+  "status": "promoted-windows-passed",
+  "finalDirectory": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\releases\\0.2.0-tauri-HX02-final",
+  "files": [
+    {
+      "path": "artifacts\\releases\\0.2.0-tauri-HX02-final\\WindowUseMCP-0.2.0-win32-x64.zip",
+      "bytes": 47584620,
+      "sha256": "709997a0b1fca6c218e64c288d1fa4158065858ac8c16889cd76243e083b3c0d"
+    },
+    {
+      "path": "artifacts\\releases\\0.2.0-tauri-HX02-final\\build-info.json",
+      "bytes": 2297814,
+      "sha256": "2ae66a0c93b5547b1e5aadf5c537caf4164e3fa3f6de7b7493765f498a0c86f9"
+    },
+    {
+      "path": "artifacts\\releases\\0.2.0-tauri-HX02-final\\verification.json",
+      "bytes": 49485,
+      "sha256": "a10fc13f76a2cc41757e0ed19f4176c8a8f1198d0757a96b5c26e5b3d41e08c8"
+    },
+    {
+      "path": "artifacts\\releases\\0.2.0-tauri-HX02-final\\SHA256SUMS",
+      "bytes": 265,
+      "sha256": "81b867e740d03f38f3441df2450b6b6362c1aadec0470591dde187d153e499a6"
+    }
+  ],
+  "logicalBytes": 49932184,
+  "rootReaderRelease": "Parent reports all v2/w2 consumers stopped; independent Mac/Linux packet uses no v2/w2 references",
+  "originalRecoveryPreserved": [
+    "artifacts/tauri-resources",
+    "artifacts/build/tauri-prepare.json",
+    "artifacts/build/package-20261116T132748752Z-3277bff7",
+    "artifacts/build/tauri-migration/packaging-handoff.json"
+  ],
+  "disposableRoots": [
+    "artifacts/v2",
+    "artifacts/w2"
+  ],
+  "cleanup": {
+    "group": "tauri-HX02-windows-disposable",
+    "items": [
+      {
+        "error": null,
+        "id": "tauri-HX02-v2-owner",
+        "remaining": false,
+        "status": "deleted"
+      },
+      {
+        "error": null,
+        "id": "tauri-HX02-v2-root",
+        "remaining": false,
+        "status": "deleted"
+      },
+      {
+        "error": null,
+        "id": "tauri-HX02-w2-owner",
+        "remaining": false,
+        "status": "deleted"
+      },
+      {
+        "error": null,
+        "id": "tauri-HX02-w2-root",
+        "remaining": false,
+        "status": "deleted"
+      }
+    ],
+    "logicalBytes": 6420353454,
+    "priorOwnerRefusals": [
+      "entire_directory items require directory verification; exact items require registered or full verification",
+      "group update cannot drop a live member"
+    ],
+    "resolution": "Re-registered unchanged complete group using narrower exact-tree content measurements, then registered review/apply; no dropped member, force or bypass.",
+    "status": "deleted",
+    "actualAbsenceVerified": true
+  }
+}

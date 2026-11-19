@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "groups": [{
+    "id":"hx020-fixture-packets-disposable","kind":"run","owner":"HX-02-release020-root","version":"0.2.0","membership_complete":true,
+    "provenance_ref":"work/HX-02-release020-verification.json","membership_source":"work/HX-02-fixture-cleanup-membership.json",
+    "members":[{"id":"hx020-fixture-packets","path":"artifacts/build/tauri-migration/fixture-portability","kind":"logs","generated":true,"owner":"HX-02-release020-root","protection_known":true,"references":[],"deletion_scope":"entire_directory"}]
+  }]
+}

@@ -1,0 +1,1732 @@
+{
+  "schema": 1,
+  "owner": "HX-02-release020-root",
+  "version": "0.2.0",
+  "commit": "0ff863a",
+  "status": "All requested platform builds and available automated tests passed; awaiting Mac GUI preparation and blocked-log retention decision",
+  "sourcePacket": {
+    "sourceSha256": "cf67a461d433df5d842adf044107e3e336252699f0c1f14d808cefd97023a841",
+    "archive": {
+      "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\acceptance\\v020-source\\source.tar.gz",
+      "exitCode": 0,
+      "stderr": "",
+      "sha256": "aa3ed5e72a043e3a957134dc96e22293af8081807fd610aac28d047f9b64b450"
+    },
+    "files": [
+      {
+        "path": ".gitignore",
+        "bytes": 37,
+        "sha256": "3d0dcf2a464b82b56608232b9cb3c813033f7650a37ba9e3df214a0ce156f1a5"
+      },
+      {
+        "path": "LICENSE",
+        "bytes": 1063,
+        "sha256": "cba52e5d8f0ce6298cb07e7a41d902dc9005948a927b0807510578f3bf1aa2f0"
+      },
+      {
+        "path": "README.md",
+        "bytes": 17788,
+        "sha256": "d9fe68c370d5a2473135249ea7ae0045c6cfe410ac649f9cc0610ebe1e5df321"
+      },
+      {
+        "path": "docs/README.md",
+        "bytes": 438,
+        "sha256": "f3825e55601fa88cf6c17583e741584187ffac19cedf2594f91513afc57e3fd8"
+      },
+      {
+        "path": "docs/architecture.md",
+        "bytes": 18775,
+        "sha256": "3e8e59352bf2da223a8925ecbed4efd9ce0bac841eb29995ba0453579b6cd5df"
+      },
+      {
+        "path": "docs/distribution.md",
+        "bytes": 9364,
+        "sha256": "3db045a12ad36e82b3527ae6926317b97aaf6e55e4a953fc144f45d134112aee"
+      },
+      {
+        "path": "docs/icon-assets.md",
+        "bytes": 2025,
+        "sha256": "5f0660162dc07a5dd4efd6e2667845724a6907de1551d0b450ea2a9fa63cd749"
+      },
+      {
+        "path": "docs/permission-ui.md",
+        "bytes": 3666,
+        "sha256": "c86e1fcca3b1aae5241c4e5f95348a99393c3e8ee6023a7b5c19bc2bea3f464d"
+      },
+      {
+        "path": "docs/platforms.md",
+        "bytes": 4791,
+        "sha256": "3b11e47aacc76a3496cc0f5f9b26286151ec2d64c8c9ab818471449dd15268ed"
+      },
+      {
+        "path": "docs/releases/0.1.0.md",
+        "bytes": 3543,
+        "sha256": "186bce2f694958945b1edec4d5bf1e3315b5a2f0f3478b0fcbe135f80ad801c5"
+      },
+      {
+        "path": "docs/shared-service.md",
+        "bytes": 4950,
+        "sha256": "2e2ccff94afb329b1f684b77d57e9d2577c0df000167c25d16bf1eea87f88397"
+      },
+      {
+        "path": "docs/tauri-host.md",
+        "bytes": 7356,
+        "sha256": "4ddeff4c8e2fe87b2f9d83bbedba5b8fbc004202f256674284b7e7877aef1b6d"
+      },
+      {
+        "path": "docs/visualizations/agent-logo-lab.html",
+        "bytes": 23301,
+        "sha256": "53205fc9ae2fff95d14fb3859df9525415c3faeb591747632ec8cd2953030de8"
+      },
+      {
+        "path": "docs/visualizations/cursor-shape-lab.html",
+        "bytes": 11911,
+        "sha256": "5d84e0b6efe0cbe0d73370d684a9cdad7df7c98f133c7e992e1d5c67cbaa300e"
+      },
+      {
+        "path": "docs/visualizations/curve-preview.html",
+        "bytes": 12607,
+        "sha256": "4e790bfb7599e5a0fc396104a56b50e879e5c99ce616296a5dbdb6e413b592e4"
+      },
+      {
+        "path": "native/linux/linux_backend.py",
+        "bytes": 10584,
+        "sha256": "5f9cf801c256fbb73c6f13b399290f0934006b20373bd64757839b4eec8706e3"
+      },
+      {
+        "path": "native/macos/README.md",
+        "bytes": 4300,
+        "sha256": "1abe1774449b3d7169904335dfc28a5853b1b75a6c80f3fe18a90dc34ef56dbf"
+      },
+      {
+        "path": "native/macos/window-control.swift",
+        "bytes": 26992,
+        "sha256": "70f6b9bd6e904152a901dba9053efb45cc3184e7de17d120caba86157bbaed70"
+      },
+      {
+        "path": "native/multi-pointer/CMakeLists.txt",
+        "bytes": 1149,
+        "sha256": "cd29114d100984cec8c9fa7d6ab9cfe6704b7c8cf4a836ab07ce6a73a4d0be0c"
+      },
+      {
+        "path": "native/multi-pointer/CURSOR-NOTICES.md",
+        "bytes": 3390,
+        "sha256": "26b8260a9749b967e33081c585d9a5bbacfc1da75af5050fbf396a7b1c5e8454"
+      },
+      {
+        "path": "native/multi-pointer/README.md",
+        "bytes": 42415,
+        "sha256": "f7033d7ce43bf327e21f171230d895e491994d12d71e1b9df306543023b9116c"
+      },
+      {
+        "path": "native/multi-pointer/autonomous-startup-selftest.hpp",
+        "bytes": 1857,
+        "sha256": "1af47ade2d3c3687c0378816f76681a96a9a0e73563547552a5397ca24d345e9"
+      },
+      {
+        "path": "native/multi-pointer/batch-input.hpp",
+        "bytes": 3211,
+        "sha256": "e692afeabd01515b0a941d982848e3d4def7a4474da618ac7909d38db46a344e"
+      },
+      {
+        "path": "native/multi-pointer/batch-selftest.hpp",
+        "bytes": 1616,
+        "sha256": "ef34b7f53e61e1647060c53f09fb7c09b46dd76ea10a293685e1539a42d07bd2"
+      },
+      {
+        "path": "native/multi-pointer/broker.hpp",
+        "bytes": 82362,
+        "sha256": "eb6cae4ced50c43c2bb4f70e4b827a9a19153c78303cec97ce6c1ac55ee9b092"
+      },
+      {
+        "path": "native/multi-pointer/cursor-assets.hpp",
+        "bytes": 8093,
+        "sha256": "b9eab1c15996c837868751d2ea7ccf7021d1d45c631bb0670bd441fdc8b4b268"
+      },
+      {
+        "path": "native/multi-pointer/cursor-identity.hpp",
+        "bytes": 2372,
+        "sha256": "7130b919a1b3a81ee1ae61364c734d29db8885dac865eb004357ed2a29ab73e3"
+      },
+      {
+        "path": "native/multi-pointer/cursor-presentation.hpp",
+        "bytes": 3790,
+        "sha256": "62535f1559eef35532c7db0829c551488539dc4b34d02386c72a3a3832f4054d"
+      },
+      {
+        "path": "native/multi-pointer/cursor-render-selftest.hpp",
+        "bytes": 8393,
+        "sha256": "25d42a824e2cd9386cd9bc4a1cac8f52601ded6c13566debd333625fdea6d48f"
+      },
+      {
+        "path": "native/multi-pointer/cursor-renderer.hpp",
+        "bytes": 10781,
+        "sha256": "11574603e171859e3a03bfb50595f764f476c7474797f6a204e352d88300e104"
+      },
+      {
+        "path": "native/multi-pointer/curve-path.hpp",
+        "bytes": 5460,
+        "sha256": "25f779265cc55f0b1156169caa377d97f5edadab82a1fcec776d6bff0cedcc6a"
+      },
+      {
+        "path": "native/multi-pointer/curve-selftest.hpp",
+        "bytes": 3715,
+        "sha256": "34e776c24c12f190fa5159de51a8916ff3aeab0a9eac9e4342df15de1607641b"
+      },
+      {
+        "path": "native/multi-pointer/input-safety.hpp",
+        "bytes": 15540,
+        "sha256": "3085119e7545af5fe16028d8e65057b01fadd9d87fae87ad7561f8192fcdc643"
+      },
+      {
+        "path": "native/multi-pointer/keyboard-interruption-selftest.hpp",
+        "bytes": 2079,
+        "sha256": "7dd410f28cc1917f5652cdc44f68135b94d7d60ad2c2f7cdf0a3caedf859336b"
+      },
+      {
+        "path": "native/multi-pointer/keyboard-reservation-selftest.hpp",
+        "bytes": 17591,
+        "sha256": "d59840bc836a3e1969c5f6b215d94fd647125330e0f7c96b4defec0238fed8ba"
+      },
+      {
+        "path": "native/multi-pointer/keyboard-routing.hpp",
+        "bytes": 9594,
+        "sha256": "63b871f4e2c37cb5ff08d68271e0c1b58ebded93594d9a9b15ce2eabca44a7ae"
+      },
+      {
+        "path": "native/multi-pointer/main.cpp",
+        "bytes": 4186,
+        "sha256": "f56c09c8f06af13555c4ea7a3c16bac31de662d0455cef6c16e15cb9411e2935"
+      },
+      {
+        "path": "native/multi-pointer/mouse-routing.hpp",
+        "bytes": 30721,
+        "sha256": "6ec248fe4768057d5e1699bebac693dabc22dc68e7b37a3429dd3cbd2a898506"
+      },
+      {
+        "path": "native/multi-pointer/operations.hpp",
+        "bytes": 3135,
+        "sha256": "e7099a99a4565d996ceb6e77f86afa9c1643e18d53953a17f57036c2bd03e930"
+      },
+      {
+        "path": "native/multi-pointer/overlay.hpp",
+        "bytes": 32378,
+        "sha256": "1f8c73db25633171eaaf987260be71897739b04e4daee6b1f134d588d9042ef8"
+      },
+      {
+        "path": "native/multi-pointer/platform.hpp",
+        "bytes": 18001,
+        "sha256": "8ac59ab5b61a81ba0cd7d70f4e210c82cf4b60716fd2d9a9cefdc6c9bb06bfd0"
+      },
+      {
+        "path": "native/multi-pointer/raw-origin-selftest.cpp",
+        "bytes": 5605,
+        "sha256": "3ddc0ceb39d07f685faf50687ea2735121cebb1d9be118c323b267ea4747a850"
+      },
+      {
+        "path": "native/multi-pointer/raw-origin.hpp",
+        "bytes": 3997,
+        "sha256": "c268bcc4a094fc16ce091328b846b23465883ab0b3c90b93a7660f6e546b773b"
+      },
+      {
+        "path": "native/multi-pointer/system-cursor.hpp",
+        "bytes": 15989,
+        "sha256": "87a16f5c78ae03ad6df1dd81cd18e2bdfee31ae4322c1306e22d29c2b24571c5"
+      },
+      {
+        "path": "native/vendor/json/LICENSE.MIT",
+        "bytes": 1076,
+        "sha256": "86b998c792894ccb911a1cb7994f7a9652894e7a094c0b5e45be2f553f45cf14"
+      },
+      {
+        "path": "native/vendor/json/single_include/nlohmann/json.hpp",
+        "bytes": 919975,
+        "sha256": "9bea4c8066ef4a1c206b2be5a36302f8926f7fdc6087af5d20b417d0cf103ea6"
+      },
+      {
+        "path": "native/window-control/.gitignore",
+        "bytes": 9,
+        "sha256": "306fd52e74fca6746e12acc750f232de15e71da917756a1270d74c91f5eb7368"
+      },
+      {
+        "path": "native/window-control/Cargo.lock",
+        "bytes": 9245,
+        "sha256": "8b3d45d9c368cc8e8566423928bb9a8aaf65ae6636fb40f213be06317d0e5a44"
+      },
+      {
+        "path": "native/window-control/Cargo.toml",
+        "bytes": 1034,
+        "sha256": "d5fbcf72b34052a64a452e9652986b214c8d4c11258ebacd7669234bcaf54421"
+      },
+      {
+        "path": "native/window-control/README.md",
+        "bytes": 10362,
+        "sha256": "b83f5596b9ec67e3b5db5e9351a28a305ea2ca01260397f7a99eacb8bd0898c0"
+      },
+      {
+        "path": "native/window-control/THIRD_PARTY_NOTICES.md",
+        "bytes": 27625,
+        "sha256": "b17b06661ccc4b6089de39bd0d8ee7a44f536268172f7c040e65f0c913dd8062"
+      },
+      {
+        "path": "native/window-control/src/approval_notification.rs",
+        "bytes": 20785,
+        "sha256": "b124297c4de32a98ba96369d535d1862d11dd3cb6cfbc70446fc6e2e5d81cbb4"
+      },
+      {
+        "path": "native/window-control/src/capture.rs",
+        "bytes": 9627,
+        "sha256": "8cd8b1ddb2dce5a074065d1147e85789dffe539c2b1f18cab1065a04538456df"
+      },
+      {
+        "path": "native/window-control/src/desktop_capture.rs",
+        "bytes": 17957,
+        "sha256": "9208ff47a0b7dab6feea49e6e77d3f96e3f7c3569010e3d7ce64f4d2e2b37e36"
+      },
+      {
+        "path": "native/window-control/src/lifetime.rs",
+        "bytes": 4980,
+        "sha256": "c4e486f5f464f75cc4f28e1bf852d1d647191e8c899e3be3d367a3ec76c7c740"
+      },
+      {
+        "path": "native/window-control/src/linux_backend.py",
+        "bytes": 42090,
+        "sha256": "780c6ca2dff4d99d82594159f0628f6cd554e31ad5ebbced2496c28251ae290d"
+      },
+      {
+        "path": "native/window-control/src/main.rs",
+        "bytes": 6534,
+        "sha256": "053baca1d35b407ca8a51c84f3f81a549e7e8f536d4d4ba818b10c640150480f"
+      },
+      {
+        "path": "native/window-control/src/overlay.rs",
+        "bytes": 61934,
+        "sha256": "157f203900a7d9f1979fe1cf916f330ba42067ad6bcd35542c11cb256ae25bd5"
+      },
+      {
+        "path": "native/window-control/src/protocol.rs",
+        "bytes": 18034,
+        "sha256": "71faf71a6a36b7ce11cb42ecdb448cec4b87d6bf8dcd17c99d3cf3da20e66f75"
+      },
+      {
+        "path": "native/window-control/src/uia.rs",
+        "bytes": 27179,
+        "sha256": "46af97e845cd79c3c11fdc0472b82c5a4a01842702efd402bc25c600ad8737de"
+      },
+      {
+        "path": "native/window-control/src/windows_backend.rs",
+        "bytes": 40963,
+        "sha256": "8cdb14a5d5069bafc683732a2bb85e4b0ee606fa196a165ad5df01729bc99c45"
+      },
+      {
+        "path": "package-lock.json",
+        "bytes": 44086,
+        "sha256": "a47e39ce6bf9298444aef405ea8368f58b809d1bf161ceb0a57421f1b7716484"
+      },
+      {
+        "path": "package.json",
+        "bytes": 589,
+        "sha256": "64477699c14313d30c7f268c0e2301566e5abc0122429dcde8ee2267f7e88610"
+      },
+      {
+        "path": "project-maintenance.json",
+        "bytes": 473,
+        "sha256": "5c991b5ce7cfde2268143ed4b74860aa8f90006f3ab37d48abd70e5147346ba7"
+      },
+      {
+        "path": "scripts/build-linux.cjs",
+        "bytes": 3565,
+        "sha256": "3cbc6bdf4e392449b1990406fcd0e9fee65f951c8585f547e9956a45b78c00cb"
+      },
+      {
+        "path": "scripts/build-macos.cjs",
+        "bytes": 2210,
+        "sha256": "aa3d955be480f02dbbb8f463505eb1786d8a16f393ba8cb46106eeb22be18e7d"
+      },
+      {
+        "path": "scripts/build-native.cjs",
+        "bytes": 10842,
+        "sha256": "a4b36308e8e7ddf65b6f4461fd70eb7294f9fd275a8808e2722d6d6016a11996"
+      },
+      {
+        "path": "scripts/generate-cursor-assets.cjs",
+        "bytes": 2208,
+        "sha256": "970469825b1bd82c5a505cff31a4ba2c2269b37a5679e5c46979addf0e92646e"
+      },
+      {
+        "path": "scripts/launch.cjs",
+        "bytes": 1436,
+        "sha256": "6452ee12d4493c45ce616bd416a01908571665ceb6cfb2fdb60b952cc4f9fbff"
+      },
+      {
+        "path": "scripts/package-archive.cjs",
+        "bytes": 3191,
+        "sha256": "5fe134746d16242861100b7a5f2d40e4b5bedf67c42c5445c9004847887acd62"
+      },
+      {
+        "path": "scripts/package-inventory.cjs",
+        "bytes": 4491,
+        "sha256": "c488871ba40a7b3c59916f590a066d304485d3a921528fc2aa71bf1f004878a9"
+      },
+      {
+        "path": "scripts/package-unix.cjs",
+        "bytes": 539,
+        "sha256": "1659d7d133f80dfce6c26cfa04e1dc85bd12a53962f25fa45691913311b1aeb1"
+      },
+      {
+        "path": "scripts/package.cjs",
+        "bytes": 20752,
+        "sha256": "5efc3af6ab12d237000a7d86fd27a9b48463a95b0faf13134605b749184aeebe"
+      },
+      {
+        "path": "scripts/render-app-icon.cjs",
+        "bytes": 2171,
+        "sha256": "2f5798773a18826df814bdd519f3e1ef0d6c98ad1cb6a18f4184cad76aa05cbc"
+      },
+      {
+        "path": "scripts/stage-tauri-macos.cjs",
+        "bytes": 7773,
+        "sha256": "86c52481bac8f250fd09828fb2cb6cac6d0f3642eba0e47f37135ce1b040cd25"
+      },
+      {
+        "path": "scripts/verify-curve-input.cjs",
+        "bytes": 10735,
+        "sha256": "55818388a288957c470622ee8506caaa5dbcba70dd5d33d507b36ad73cf914d7"
+      },
+      {
+        "path": "scripts/verify-macos-native.cjs",
+        "bytes": 2820,
+        "sha256": "0d7e76349197636a034848c3cb64a03981c009a4762df33cbfe7ee560423181a"
+      },
+      {
+        "path": "scripts/verify-virtualized-input.cjs",
+        "bytes": 10853,
+        "sha256": "381aba01fe5d8ffd5c3dade9261ae961ab50572e933d1298e1d687b3169ab59e"
+      },
+      {
+        "path": "scripts/verify-windows.cjs",
+        "bytes": 20220,
+        "sha256": "dfd4412e063f9131690385b878886cd95467e67e7cc0f097abb1b3ddef47e998"
+      },
+      {
+        "path": "scripts/window-fixture.cs",
+        "bytes": 5081,
+        "sha256": "990cf6d80a4779454ce471124dba88a905456f5be2a876fbdb93d7a64d77613f"
+      },
+      {
+        "path": "src-tauri/.gitignore",
+        "bytes": 43,
+        "sha256": "ea52fc188f0137076aba07669fcf807135602e26d756584dbb1681787d6c07c2"
+      },
+      {
+        "path": "src-tauri/Cargo.lock",
+        "bytes": 122173,
+        "sha256": "bc6917bd07fd15edb5e46e9562c8461329f87eadd92c205aef9ee46b9bcba1a5"
+      },
+      {
+        "path": "src-tauri/Cargo.toml",
+        "bytes": 754,
+        "sha256": "4fdcc7d790d6c132240ca920f1d513233e2460069333ef34b34a7809139a09a5"
+      },
+      {
+        "path": "src-tauri/build.rs",
+        "bytes": 301,
+        "sha256": "0eacc6c901c1505383649d0beef34dc5033a911a90468e0ea5e9a057d71b6c19"
+      },
+      {
+        "path": "src-tauri/capabilities/window-use-ui.json",
+        "bytes": 329,
+        "sha256": "ef465650516ef735ceba701408868072d67b0a9b416ca5a89bc0cbc47134d233"
+      },
+      {
+        "path": "src-tauri/permissions/window-use.toml",
+        "bytes": 201,
+        "sha256": "70fe816401b72316b78e56155e7a9f9d36fd1e83193af63ab0e198876e607f7c"
+      },
+      {
+        "path": "src-tauri/src/desktop.rs",
+        "bytes": 19005,
+        "sha256": "c4e93576fea3b5b871ee7fe2d25335ef93e076a8379d38bb466599129a579f22"
+      },
+      {
+        "path": "src-tauri/src/layout.rs",
+        "bytes": 4105,
+        "sha256": "2fec84fb97fea058c9dec3fd4f886f747e0716ea22f40780bdf18ea4d778ee6b"
+      },
+      {
+        "path": "src-tauri/src/main.rs",
+        "bytes": 787,
+        "sha256": "11c4d5f50c23f63e4f37e642adb0a925f2d21948ca5f293bc173a4cb8fdb025a"
+      },
+      {
+        "path": "src-tauri/src/native.rs",
+        "bytes": 3808,
+        "sha256": "68a515ccbf548f35a317c3c77db6eb3d66d5cebe8bc551edea1d41e3ee3fd2ec"
+      },
+      {
+        "path": "src-tauri/src/overlay.html",
+        "bytes": 1681,
+        "sha256": "dde5096bf618410bfd828156477850237d4317d82a6683f6f36347a2f6be9875"
+      },
+      {
+        "path": "src-tauri/src/overlay.rs",
+        "bytes": 10274,
+        "sha256": "9012a150d85640ecbde68ceaa80bccd5aab3b91d83f60ea887cbc532842fbbb7"
+      },
+      {
+        "path": "src-tauri/src/worker.rs",
+        "bytes": 5559,
+        "sha256": "08fdc562dcd05625e10af7a2273f228301285cf4818952199539db3ca681253c"
+      },
+      {
+        "path": "src-tauri/tauri.conf.json",
+        "bytes": 804,
+        "sha256": "dcfdfb40b8a72e8bc203e11e8a05799266e7a4c70b8bfefa0e47c80afd9af9ca"
+      },
+      {
+        "path": "src/adapter.cjs",
+        "bytes": 2233,
+        "sha256": "76b822aa5eed15b2f8b40c57b395cbf01cbc289703dea592105c619db2b76a97"
+      },
+      {
+        "path": "src/agent-overlay.cjs",
+        "bytes": 644,
+        "sha256": "1aef6486503fda17edae447424db000b1d9a6445d7ba21da30c1088139114ef2"
+      },
+      {
+        "path": "src/app-icons.cjs",
+        "bytes": 5270,
+        "sha256": "57113ebc530695b8a497d21df8ccf8d00f890eb434712e9cc78dac875020e0d1"
+      },
+      {
+        "path": "src/assets/app-icon-128.png",
+        "bytes": 5097,
+        "sha256": "b1a4339e455bf5d975886e4ae8cf4d44261b59782d0f275acdeb11c75f4288c4"
+      },
+      {
+        "path": "src/assets/app-icon-16.png",
+        "bytes": 524,
+        "sha256": "53e647e4dd1221b5cf1e9b52f44f96eae28b0a6f17f9a33de9bec27005f97919"
+      },
+      {
+        "path": "src/assets/app-icon-20.png",
+        "bytes": 698,
+        "sha256": "0651c0ebe0917acfad2f4fe88a7b65652ee18c3816db4678dd221daa717f737c"
+      },
+      {
+        "path": "src/assets/app-icon-24.png",
+        "bytes": 803,
+        "sha256": "7bb697c021d5da26a0522128a71c25f98347711e0d1fa6e62cfcbd668878a054"
+      },
+      {
+        "path": "src/assets/app-icon-256.png",
+        "bytes": 11316,
+        "sha256": "8f0671649a4f2924ad8c38be83553d9918d75b821d5931b49f54a102a3ac0e40"
+      },
+      {
+        "path": "src/assets/app-icon-32.png",
+        "bytes": 1092,
+        "sha256": "44576b92df6c9d1a6639af089c890a0f04b943daca565c30a8addf94bf0c5ed0"
+      },
+      {
+        "path": "src/assets/app-icon-40.png",
+        "bytes": 1451,
+        "sha256": "b8fc2349f84451c98c5b5b4c5e09677b85664e26e3c1e39a82a25a7fc23aa4fe"
+      },
+      {
+        "path": "src/assets/app-icon-48.png",
+        "bytes": 1767,
+        "sha256": "477bb6c1543390d14b48c02d872165670233712627d1e63baeeb9bb5524ad54d"
+      },
+      {
+        "path": "src/assets/app-icon-64.png",
+        "bytes": 2432,
+        "sha256": "6a50a8b323632e9e46ac190a766133d829192c4758fd870025de67b379d86b9d"
+      },
+      {
+        "path": "src/assets/app-icon.ico",
+        "bytes": 25330,
+        "sha256": "635c0e0681e9f2f3ae63a5b5806ba4dbd6b367f9522f9b9a68a653c0ea290379"
+      },
+      {
+        "path": "src/assets/app-icon.svg",
+        "bytes": 6254,
+        "sha256": "6540226c5dec30512e6ba36d7c77f764620817b0e84681008b9a74413029b380"
+      },
+      {
+        "path": "src/assets/cursor-geometry.cjs",
+        "bytes": 2642,
+        "sha256": "95487b7466192322f2f2018d76d636bcfa0d0750f0f8561ed7918f4140425deb"
+      },
+      {
+        "path": "src/assets/settings.svg",
+        "bytes": 416,
+        "sha256": "20c23497bca2572e448a5a9483c435e20e3d062554b03209f754de38adfcc50d"
+      },
+      {
+        "path": "src/dependency-integrity.cjs",
+        "bytes": 2018,
+        "sha256": "477d9906078e3dbb9912e97b828ae07ef03f605273c25613cae8a70917c49ca0"
+      },
+      {
+        "path": "src/host-config.cjs",
+        "bytes": 2016,
+        "sha256": "df5729e80d17984daae15e970e040794638325942778ebb2f91480eff6fd34f3"
+      },
+      {
+        "path": "src/host-transport.cjs",
+        "bytes": 3139,
+        "sha256": "87ca881388558f355c7f13ec356d5c64fc4902a43745eca9384e5a9dc32b3450"
+      },
+      {
+        "path": "src/logger.cjs",
+        "bytes": 1351,
+        "sha256": "a1dd4df72be9d63caff2f91405e4f68cb8ff2d645e091a1a4212a87ac317ff04"
+      },
+      {
+        "path": "src/main.cjs",
+        "bytes": 9941,
+        "sha256": "812ee94e19372f530c6ce8b3c1399600c3cbd307c61f7e4738237e6896b3ebbb"
+      },
+      {
+        "path": "src/mcp.cjs",
+        "bytes": 3551,
+        "sha256": "35a27e9d183f888e330a84191ee6b3b51dca807f4382b8790bd1ddaebc165512"
+      },
+      {
+        "path": "src/permissions.cjs",
+        "bytes": 11860,
+        "sha256": "a75120e2ec5c23d877c6b6bab94ad47a7222426d791e9f6b3eda0175603e28c0"
+      },
+      {
+        "path": "src/platform-backend.cjs",
+        "bytes": 7304,
+        "sha256": "8db3c5e431c234b0d10c5024c72bedcefc3f95c32ffa4b689bfe9d000c5a50c6"
+      },
+      {
+        "path": "src/platform-paths.cjs",
+        "bytes": 706,
+        "sha256": "4a51d76f6ec129781044e7522cb38b993adcab6fcb46568a6127ae803803752e"
+      },
+      {
+        "path": "src/runtime.cjs",
+        "bytes": 16103,
+        "sha256": "4582f8b47d25cfaa18e90733817da7c25bac8d32cf0ee1911152feb5affdaeb9"
+      },
+      {
+        "path": "src/service-candidate.cjs",
+        "bytes": 1975,
+        "sha256": "3f3fa710290c8087fba1d64ada19619402d35850fd7bcd5a9a4d852dfa65bcbf"
+      },
+      {
+        "path": "src/service-registry.cjs",
+        "bytes": 13880,
+        "sha256": "12b1402c1691616fa30bf48b372ac9e16a6557ef5d49903b59e3b35c1e769282"
+      },
+      {
+        "path": "src/shared-client.cjs",
+        "bytes": 9334,
+        "sha256": "779ea0f6e2b91729d927a0feb9f3764c6e7c2a95979fe1b57ddb32a454b13e56"
+      },
+      {
+        "path": "src/shared-service.cjs",
+        "bytes": 12282,
+        "sha256": "a1e0a4678a1f4dd46783acd5734f6e2a3a146651d3e2c8ff84851b8fef9306e4"
+      },
+      {
+        "path": "src/tauri-bridge.js",
+        "bytes": 2181,
+        "sha256": "595d75754f837f5a080c9b56e3626d643d4c09e7057fb17924cc058c94683bd3"
+      },
+      {
+        "path": "src/ui/index.html",
+        "bytes": 1806,
+        "sha256": "9bdf30fd63835cdc39dc9717b924cb4664b3ef553273d1d7f3203cf145674206"
+      },
+      {
+        "path": "src/ui/renderer.cjs",
+        "bytes": 15271,
+        "sha256": "5c29c9df43d41f47366e9a61c4ea47a6fc10380035bbd83a13a61ce5335bb222"
+      },
+      {
+        "path": "src/ui/styles.css",
+        "bytes": 10545,
+        "sha256": "aa3b84ff07d4ee852f2583ae88c9acd1f10b56263f6ec64db68bef9c7bfe0300"
+      },
+      {
+        "path": "tests/app-icons.test.cjs",
+        "bytes": 4449,
+        "sha256": "fa69fd776d99cd43f1e0653ac3803e34f0379ede7fa13e3b52a7afdc23bfba0f"
+      },
+      {
+        "path": "tests/cursor-assets.test.cjs",
+        "bytes": 2428,
+        "sha256": "da03998e1e4928caa47f3aac5838471a17428250e99d47d4114f5321d999c249"
+      },
+      {
+        "path": "tests/host-transport.test.cjs",
+        "bytes": 11139,
+        "sha256": "9034df8190476cd275e8290e44ae47ef0e1652c29c3d53296d2ffbca137ad509"
+      },
+      {
+        "path": "tests/image-input.test.cjs",
+        "bytes": 6610,
+        "sha256": "65d28835870c563fc0d44de6428987e831a3dc07ca230bf3169081060c96a082"
+      },
+      {
+        "path": "tests/linux-backend.test.cjs",
+        "bytes": 4918,
+        "sha256": "39545f09bac4654e0a84af2386370cdc821f0ded0ed32688ca284a4894e0535a"
+      },
+      {
+        "path": "tests/macos-backend.test.cjs",
+        "bytes": 986,
+        "sha256": "cc18153158317cc2147b05e94c1b85c5046e884c47c799b994eba5f5a3ef3af2"
+      },
+      {
+        "path": "tests/permissions.test.cjs",
+        "bytes": 10485,
+        "sha256": "e2def4b2a03fce28f2781e19f2b89ccc27872bde682f43be73f6eafdfee2177b"
+      },
+      {
+        "path": "tests/platform-runtime.test.cjs",
+        "bytes": 2051,
+        "sha256": "ebcc96540e613164ca8f7cf2338b39e73026ccb41795da2154e389b72685e68f"
+      },
+      {
+        "path": "tests/prebuilt-inventory.test.cjs",
+        "bytes": 1807,
+        "sha256": "23d1ba3b3da9d9cae1d53ccbd80f379e7e874d93eb5876db8c75c62453c83599"
+      },
+      {
+        "path": "tests/runtime.test.cjs",
+        "bytes": 7201,
+        "sha256": "3fe3ca0f294b24c2fea0b38f945a630cb7b79a02f71d94afe4b536254b9c8e37"
+      },
+      {
+        "path": "tests/shared-runtime.test.cjs",
+        "bytes": 5114,
+        "sha256": "73813fd418e91ff416091a525fda8c822cf9c044e957aa907909aa1685ec9f03"
+      },
+      {
+        "path": "tests/shared-service.test.cjs",
+        "bytes": 12225,
+        "sha256": "c8738fce015e0a61b087d9b3e5ffed879f1307a67c626975d660e1512c6a0ced"
+      },
+      {
+        "path": "tests/switched-default.test.cjs",
+        "bytes": 12390,
+        "sha256": "303ad3ade1ed34a872cbadd72305d9c2e8fdc0c13157f53fad10a78d68fb4244"
+      },
+      {
+        "path": "tests/tauri-package.test.cjs",
+        "bytes": 5063,
+        "sha256": "ed6246ef89adbcf6be5032964940f43d2cc963635f2d0da9d12b105011502747"
+      },
+      {
+        "path": "tests/uia-cursor.test.cjs",
+        "bytes": 5060,
+        "sha256": "c634db8be7384213a82589bce43ab6e5afbcdd77603e853215ce12a51c3fede6"
+      },
+      {
+        "path": "tests/unix-launch.test.cjs",
+        "bytes": 3005,
+        "sha256": "cbc1a503312864d3dbcae6b686c14a7a9754fd9b1726d799c29f2f1e15818cf3"
+      },
+      {
+        "path": "tests/unix-package.test.cjs",
+        "bytes": 3777,
+        "sha256": "9af86793e4ecf16b2222767b7e29168b08978316fe908c5e2190895bebc7305a"
+      },
+      {
+        "path": "tests/unix-runtime-live.test.cjs",
+        "bytes": 2836,
+        "sha256": "8b633ca4bd077a67e8631236416491cecd7fbe569a610637b67d3579847ae660"
+      },
+      {
+        "path": "tests/virtualization.test.cjs",
+        "bytes": 4306,
+        "sha256": "20af67ed90c05ee4a86b4c17fb4434cde39dc13d648b67581a6012e88a5147d7"
+      },
+      {
+        "path": "vendor/azrael/PATCHES.md",
+        "bytes": 4001,
+        "sha256": "c3dccd756f3da1b7c502b32ddf38a575c176f9c082f33095f4018d1ece3ae4ef"
+      },
+      {
+        "path": "vendor/azrael/SOURCE.json",
+        "bytes": 12130,
+        "sha256": "7fa8ee40fe172a2a8edc535b09487542c536b7d70c010165791e2fdd56be0a06"
+      },
+      {
+        "path": "vendor/azrael/SOURCE.md",
+        "bytes": 1206,
+        "sha256": "ce7759a03df69eed405f85b2ee71410202639189b1e647a93727d5b87dd6bd55"
+      },
+      {
+        "path": "vendor/azrael/multi-pointer-mcp.cjs",
+        "bytes": 16656,
+        "sha256": "87dfa45f70fcbac57bad7fc2911102f900b14101b8da365e32d367557a3dd090"
+      },
+      {
+        "path": "vendor/azrael/use-control-settings.cjs",
+        "bytes": 5726,
+        "sha256": "6724f4cb4a5011d620d9da4670a2456bc6851c691efda29530f2728169a1511b"
+      },
+      {
+        "path": "vendor/azrael/window-control-backend.cjs",
+        "bytes": 16636,
+        "sha256": "28bdbd7b87a26d2b2d2ea8b1382d4b3916f118cbd8ce68928891e46f5a00ce04"
+      },
+      {
+        "path": "vendor/azrael/window-control-errors.cjs",
+        "bytes": 11449,
+        "sha256": "51380d175ad017fa37fd4b8e843b51381f538c47e6cc7a912e2e04aa6da9d233"
+      },
+      {
+        "path": "vendor/azrael/window-control-mcp.cjs",
+        "bytes": 27385,
+        "sha256": "e8e40aafe24fc9317b8d257637d496b376b7ae458d7b9654b83977be3af02a48"
+      },
+      {
+        "path": "vendor/azrael/window-control-occupancy.cjs",
+        "bytes": 10373,
+        "sha256": "bbdb7464470addf14c21758b112c3683da1395c843a4f4a36b4caf9cbe8b5af3"
+      },
+      {
+        "path": "vendor/azrael/window-control-policy.cjs",
+        "bytes": 51595,
+        "sha256": "7dd8bb2916e616276a6badcf75c99bff21ffd6cd4eb77961fb827f7df310160b"
+      },
+      {
+        "path": "vendor/azrael/window-control-runtime.cjs",
+        "bytes": 2540,
+        "sha256": "23c87f13732b7069a42a56cb9f9f89aab6088b089ed85bd782278db494d5ab3b"
+      },
+      {
+        "path": "vendor/azrael/window-input-coordinates.cjs",
+        "bytes": 3713,
+        "sha256": "bf9b842383e6788816711069ab1ec20def7468b7750190da871bb282e55ccd72"
+      },
+      {
+        "path": "vendor/azrael/window-input-guidance.cjs",
+        "bytes": 1256,
+        "sha256": "22c3f5efb6924fd8c3d9d52b5161194e88a400b6e84162ef90b5179aed5c667f"
+      },
+      {
+        "path": "vendor/azrael/window-switched-input.cjs",
+        "bytes": 16711,
+        "sha256": "388f0bbf8d0a6f3700d7402ad8317be83c13c0ce7d74080d8525c2528ef9e62a"
+      },
+      {
+        "path": "vendor/azrael/window-task-macros.cjs",
+        "bytes": 15139,
+        "sha256": "72cdc1a97c18f33e7ddd65ce84c295b6b379fa7ba515eecc9afb064f90620ff2"
+      },
+      {
+        "path": "vendor/azrael/window-use-approvals.cjs",
+        "bytes": 11054,
+        "sha256": "ae7c9ef5f840c35f2ad29dbca1383408e0a32d89ce2639ee001d813bd1651ad2"
+      }
+    ]
+  },
+  "windows": {
+    "native": {
+      "sourceSha256": "abf12acab1a80d8ede496b6d2e8bc4ccb2d63107e62df8db2408b289c27710e7",
+      "proof": {
+        "receipt": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-receipt.json",
+        "sourceSha256": "abf12acab1a80d8ede496b6d2e8bc4ccb2d63107e62df8db2408b289c27710e7",
+        "steps": [
+          {
+            "name": "cargo-release",
+            "exitCode": 0,
+            "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\cargo-release.log"
+          },
+          {
+            "name": "cmake-configure",
+            "exitCode": 0,
+            "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\cmake-configure.log"
+          },
+          {
+            "name": "cmake-release",
+            "exitCode": 0,
+            "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\cmake-release.log"
+          },
+          {
+            "name": "raw-origin-selftest",
+            "exitCode": 0,
+            "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\raw-origin-selftest.log"
+          },
+          {
+            "name": "keyboard-interruption-selftest",
+            "exitCode": 0,
+            "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\keyboard-interruption-selftest.log"
+          },
+          {
+            "name": "keyboard-reservation-selftest",
+            "exitCode": 0,
+            "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\keyboard-reservation-selftest.log"
+          },
+          {
+            "name": "input-safety-live-selftest",
+            "exitCode": 0,
+            "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\input-safety-live-selftest.log"
+          },
+          {
+            "name": "batch-selftest",
+            "exitCode": 0,
+            "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\batch-selftest.log"
+          },
+          {
+            "name": "curve-selftest",
+            "exitCode": 0,
+            "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\curve-selftest.log"
+          },
+          {
+            "name": "autonomous-startup-selftest",
+            "exitCode": 0,
+            "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\autonomous-startup-selftest.log"
+          },
+          {
+            "name": "cursor-guard-selftest",
+            "exitCode": 0,
+            "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\cursor-guard-selftest.log"
+          }
+        ],
+        "exactCurrentNativeAndVendorAndBuilder": true,
+        "oldRuntimeCopied": false,
+        "oldReceiptCopied": false,
+        "windowControl": {
+          "directory": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\runtime\\window-control",
+          "manifestSha256": "c0121e31b1f2465c6118fb87f296220cc0211ef4e190da1e13f5e20fe7f0394b"
+        },
+        "multiPointer": {
+          "directory": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\runtime\\multi-pointer",
+          "manifestSha256": "41f5c60e3aa896b965a3e5f23468bc44adb15845b532ad60ea7e1a85e221bc1b",
+          "modulePath": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\vendor\\azrael\\multi-pointer-mcp.cjs"
+        }
+      },
+      "steps": [
+        {
+          "name": "cargo-release",
+          "executable": "C:\\WINDOWS\\system32\\cmd.exe",
+          "args": [
+            "/d",
+            "/c",
+            "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4\\cargo-build.cmd"
+          ],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\cargo-release.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 47572
+        },
+        {
+          "name": "cmake-configure",
+          "executable": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe",
+          "args": [
+            "-S",
+            "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4\\inputs\\native\\multi-pointer",
+            "-B",
+            "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4\\multi-pointer-build",
+            "-G",
+            "Visual Studio 18 2026",
+            "-A",
+            "x64"
+          ],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\cmake-configure.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 3746
+        },
+        {
+          "name": "cmake-release",
+          "executable": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe",
+          "args": [
+            "--build",
+            "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4\\multi-pointer-build",
+            "--config",
+            "Release",
+            "--target",
+            "azrael-multi-pointer",
+            "azrael-multi-pointer-raw-origin-selftest"
+          ],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\cmake-release.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 11379
+        },
+        {
+          "name": "raw-origin-selftest",
+          "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4\\multi-pointer-build\\Release\\azrael-multi-pointer-raw-origin-selftest.exe",
+          "args": [],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\raw-origin-selftest.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 38
+        },
+        {
+          "name": "keyboard-interruption-selftest",
+          "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4\\multi-pointer-build\\Release\\azrael-multi-pointer.exe",
+          "args": [
+            "--keyboard-interruption-selftest"
+          ],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\keyboard-interruption-selftest.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 52
+        },
+        {
+          "name": "keyboard-reservation-selftest",
+          "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4\\multi-pointer-build\\Release\\azrael-multi-pointer.exe",
+          "args": [
+            "--keyboard-reservation-selftest"
+          ],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\keyboard-reservation-selftest.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 20
+        },
+        {
+          "name": "input-safety-live-selftest",
+          "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4\\multi-pointer-build\\Release\\azrael-multi-pointer.exe",
+          "args": [
+            "--input-safety-live-selftest"
+          ],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\input-safety-live-selftest.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 13632
+        },
+        {
+          "name": "batch-selftest",
+          "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4\\multi-pointer-build\\Release\\azrael-multi-pointer.exe",
+          "args": [
+            "--batch-selftest"
+          ],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\batch-selftest.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 21
+        },
+        {
+          "name": "curve-selftest",
+          "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4\\multi-pointer-build\\Release\\azrael-multi-pointer.exe",
+          "args": [
+            "--curve-selftest"
+          ],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\curve-selftest.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 20
+        },
+        {
+          "name": "autonomous-startup-selftest",
+          "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4\\multi-pointer-build\\Release\\azrael-multi-pointer.exe",
+          "args": [
+            "--autonomous-startup-selftest"
+          ],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\autonomous-startup-selftest.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 22
+        },
+        {
+          "name": "cursor-guard-selftest",
+          "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4\\multi-pointer-build\\Release\\azrael-multi-pointer.exe",
+          "args": [
+            "--cursor-guard-selftest"
+          ],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\native-mwjg4ru4",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\logs\\native-mwjg4ru4\\cursor-guard-selftest.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 2243
+        }
+      ],
+      "windowControl": {
+        "directory": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\runtime\\window-control",
+        "manifestSha256": "c0121e31b1f2465c6118fb87f296220cc0211ef4e190da1e13f5e20fe7f0394b"
+      },
+      "multiPointer": {
+        "directory": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\runtime\\multi-pointer",
+        "manifestSha256": "41f5c60e3aa896b965a3e5f23468bc44adb15845b532ad60ea7e1a85e221bc1b",
+        "modulePath": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\vendor\\azrael\\multi-pointer-mcp.cjs"
+      }
+    },
+    "sourceSha256": "abb7666f29a50e152a9957a7ca86aaa563a871c584f1c1f0a0885025c8f86891",
+    "resourceSha256": "77dabe2480276366d812cd9f3c98058a8cc7a686ec45adddc4c90efddf633145",
+    "rust": {
+      "status": "passed",
+      "testsPassed": 4,
+      "results": [
+        {
+          "step": "rust-tests",
+          "executable": "C:\\Users\\felre\\.cargo\\bin\\cargo.exe",
+          "args": [
+            "test",
+            "--locked",
+            "--target",
+            "x86_64-pc-windows-msvc",
+            "--manifest-path",
+            "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\compile\\src-tauri\\Cargo.toml"
+          ],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\compile",
+          "script": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\rust-tests.cmd",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\rust-tests.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 16478
+        },
+        {
+          "step": "rust-release",
+          "executable": "C:\\Users\\felre\\.cargo\\bin\\cargo.exe",
+          "args": [
+            "build",
+            "--release",
+            "--locked",
+            "--target",
+            "x86_64-pc-windows-msvc",
+            "--manifest-path",
+            "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\compile\\src-tauri\\Cargo.toml"
+          ],
+          "cwd": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\compile",
+          "script": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\rust-release.cmd",
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\rust-release.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 115676
+        }
+      ],
+      "elapsedMs": 144811,
+      "tools": {
+        "cargo": {
+          "path": "C:\\Users\\felre\\.cargo\\bin\\cargo.exe",
+          "version": "cargo 1.98.0 (797e8a9bc 2026-08-05)"
+        },
+        "rustc": {
+          "path": "C:\\Users\\felre\\.cargo\\bin\\rustc.exe",
+          "version": "rustc 1.98.0 (88d9e12ae 2026-08-18)\nbinary: rustc\ncommit-hash: 88d9e12ae178fab0fb5cc050a94da85685d449ea\ncommit-date: 2026-08-18\nhost: x86_64-pc-windows-msvc\nrelease: 1.98.0\nLLVM version: 22.1.8"
+        },
+        "visualStudio": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community",
+        "vcvars": "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat",
+        "buildJobs": 4
+      }
+    },
+    "executableSha256": "f05d9a4d023fb47888aff537da9877861808f72a0ffc73b1ffa27c7c75bee785",
+    "deliverable": {
+      "release": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\releases\\0.2.0-20261116T160423552Z-b2405ee8",
+      "zip": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\releases\\0.2.0-20261116T160423552Z-b2405ee8\\WindowUseMCP-0.2.0-win32-x64.zip",
+      "zipBytes": 47584620,
+      "zipSha256": "709997a0b1fca6c218e64c288d1fa4158065858ac8c16889cd76243e083b3c0d",
+      "buildInfo": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\releases\\0.2.0-20261116T160423552Z-b2405ee8\\build-info.json",
+      "buildInfoSha256": "2ae66a0c93b5547b1e5aadf5c537caf4164e3fa3f6de7b7493765f498a0c86f9",
+      "executable": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\releases\\0.2.0-20261116T160423552Z-b2405ee8\\WindowUseMCP-win32-x64\\WindowUseMCP.exe",
+      "executableSha256": "f05d9a4d023fb47888aff537da9877861808f72a0ffc73b1ffa27c7c75bee785",
+      "packageReport": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\w2\\artifacts\\build\\package-20261116T160423552Z-b2405ee8\\package-report.json"
+    },
+    "acceptance": {
+      "steps": [
+        {
+          "name": "ui",
+          "args": [
+            "scripts/verify-windows.cjs",
+            "--executable",
+            "C:/Users/felre/Desktop/azrael-window-use-mcp/artifacts/w2/artifacts/releases/0.2.0-20261116T160423552Z-b2405ee8/WindowUseMCP-win32-x64/WindowUseMCP.exe",
+            "--run-dir",
+            "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\acceptance\\v020-fresh\\ui"
+          ],
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\acceptance\\v020-fresh\\ui.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 18763
+        },
+        {
+          "name": "js",
+          "args": [
+            "--test",
+            "--test-concurrency=1",
+            "tests/app-icons.test.cjs",
+            "tests/cursor-assets.test.cjs",
+            "tests/host-transport.test.cjs",
+            "tests/image-input.test.cjs",
+            "tests/linux-backend.test.cjs",
+            "tests/macos-backend.test.cjs",
+            "tests/permissions.test.cjs",
+            "tests/platform-runtime.test.cjs",
+            "tests/prebuilt-inventory.test.cjs",
+            "tests/runtime.test.cjs",
+            "tests/shared-runtime.test.cjs",
+            "tests/shared-service.test.cjs",
+            "tests/switched-default.test.cjs",
+            "tests/tauri-package.test.cjs",
+            "tests/uia-cursor.test.cjs",
+            "tests/unix-launch.test.cjs",
+            "tests/unix-package.test.cjs",
+            "tests/unix-runtime-live.test.cjs",
+            "tests/virtualization.test.cjs"
+          ],
+          "log": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\acceptance\\v020-fresh\\js.log",
+          "exitCode": 0,
+          "signal": null,
+          "elapsedMs": 31526
+        }
+      ],
+      "checks": [
+        {
+          "name": "standard SDK stdio connection and tool discovery"
+        },
+        {
+          "name": "MCP alone launches approval UI; closing denies and releases the renderer without disconnecting"
+        },
+        {
+          "name": "automatic approval popup; denial sends no input"
+        },
+        {
+          "name": "approved real UIA edit and invoke with observed postcondition"
+        },
+        {
+          "name": "ordinary launch forwards settings to the existing private host and exits"
+        },
+        {
+          "name": "settings and approval snapshots remain isolated while both WebViews exist"
+        },
+        {
+          "name": "compact custom-chrome UI renders and switches light/dark"
+        },
+        {
+          "name": "closed settings UI reopens from the host with preserved settings"
+        },
+        {
+          "name": "own settings/approval windows blocked from observation and control in full mode"
+        },
+        {
+          "name": "native desktop capture masks own UI",
+          "maskedWindowCount": 2
+        },
+        {
+          "name": "real coordinate input reaches owned fixture with observed postcondition",
+          "attempts": 1
+        },
+        {
+          "name": "trusted UI Stop and explicit resume"
+        },
+        {
+          "name": "EOF releases resources and exits"
+        }
+      ],
+      "exitCode": 0,
+      "js": {
+        "total": 76,
+        "passed": 71,
+        "failed": 0,
+        "skipped": 5
+      }
+    },
+    "initialFailure": {
+      "exitCode": 1,
+      "nativeCode": "capability_pending",
+      "phase": "awaiting_relative_motion",
+      "cause": "Accepted manifest identity was incorrectly treated as current native-source equivalence; full native receipt differed from current source",
+      "resolution": "Fresh current native/vendor/builder build; receipt equality checked against actual source before and after packaging; all native and actual coordinate tests passed"
+    },
+    "finalDelivery": {
+      "schema": 1,
+      "owner": "standalone-package",
+      "version": "0.2.0",
+      "status": "promoted-windows-passed",
+      "finalDirectory": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\releases\\0.2.0-tauri-HX02-final",
+      "files": [
+        {
+          "path": "artifacts\\releases\\0.2.0-tauri-HX02-final\\WindowUseMCP-0.2.0-win32-x64.zip",
+          "bytes": 47584620,
+          "sha256": "709997a0b1fca6c218e64c288d1fa4158065858ac8c16889cd76243e083b3c0d"
+        },
+        {
+          "path": "artifacts\\releases\\0.2.0-tauri-HX02-final\\build-info.json",
+          "bytes": 2297814,
+          "sha256": "2ae66a0c93b5547b1e5aadf5c537caf4164e3fa3f6de7b7493765f498a0c86f9"
+        },
+        {
+          "path": "artifacts\\releases\\0.2.0-tauri-HX02-final\\verification.json",
+          "bytes": 49485,
+          "sha256": "a10fc13f76a2cc41757e0ed19f4176c8a8f1198d0757a96b5c26e5b3d41e08c8"
+        },
+        {
+          "path": "artifacts\\releases\\0.2.0-tauri-HX02-final\\SHA256SUMS",
+          "bytes": 265,
+          "sha256": "81b867e740d03f38f3441df2450b6b6362c1aadec0470591dde187d153e499a6"
+        }
+      ],
+      "logicalBytes": 49932184,
+      "rootReaderRelease": "Parent reports all v2/w2 consumers stopped; independent Mac/Linux packet uses no v2/w2 references",
+      "originalRecoveryPreserved": [
+        "artifacts/tauri-resources",
+        "artifacts/build/tauri-prepare.json",
+        "artifacts/build/package-20261116T132748752Z-3277bff7",
+        "artifacts/build/tauri-migration/packaging-handoff.json"
+      ],
+      "disposableRoots": [
+        "artifacts/v2",
+        "artifacts/w2"
+      ],
+      "cleanup": {
+        "group": "tauri-HX02-windows-disposable",
+        "items": [
+          {
+            "error": null,
+            "id": "tauri-HX02-v2-owner",
+            "remaining": false,
+            "status": "deleted"
+          },
+          {
+            "error": null,
+            "id": "tauri-HX02-v2-root",
+            "remaining": false,
+            "status": "deleted"
+          },
+          {
+            "error": null,
+            "id": "tauri-HX02-w2-owner",
+            "remaining": false,
+            "status": "deleted"
+          },
+          {
+            "error": null,
+            "id": "tauri-HX02-w2-root",
+            "remaining": false,
+            "status": "deleted"
+          }
+        ],
+        "logicalBytes": 6420353454,
+        "priorOwnerRefusals": [
+          "entire_directory items require directory verification; exact items require registered or full verification",
+          "group update cannot drop a live member"
+        ],
+        "resolution": "Re-registered unchanged complete group using narrower exact-tree content measurements, then registered review/apply; no dropped member, force or bypass.",
+        "status": "deleted",
+        "actualAbsenceVerified": true
+      }
+    }
+  },
+  "mac": {
+    "schema": 1,
+    "status": "passed-nonGUI",
+    "identity": "release020",
+    "owner": "/root/tauri_mac_verify",
+    "version": "0.2.0",
+    "environment": {
+      "platform": "darwin",
+      "arch": "arm64",
+      "macOS": "26.7.2",
+      "node": "24.19.0",
+      "rust": "1.98.0",
+      "cargoJobs": 4
+    },
+    "sourcePacketSha256": "aa3ed5e72a043e3a957134dc96e22293af8081807fd610aac28d047f9b64b450",
+    "fullSourceAuditSha256": "cf67a461d433df5d842adf044107e3e336252699f0c1f14d808cefd97023a841",
+    "sourceSha256": "a751fae646018a92c0db5f7806fa8c0a87bf2f42a5fa4b6303032c44c5dda866",
+    "resourceSha256": "f4a3c2466fc01b5b6b71ceb1befa516f548a5bdc01c9606dec56a78336d6bdc1",
+    "native": {
+      "freshBuild": true,
+      "exitCode": 0,
+      "sourceSha256": "70f6b9bd6e904152a901dba9053efb45cc3184e7de17d120caba86157bbaed70",
+      "verification": {
+        "passed": true,
+        "checks": 7,
+        "capabilities": {
+          "accessibilityTrusted": true,
+          "actionVisualization": true,
+          "coordinateInput": false,
+          "desktopCapture": false,
+          "guiSessionAvailable": false,
+          "platform": "darwin",
+          "screenCaptureAllowed": false,
+          "selectedWindowCapture": true
+        },
+        "guiValidated": false
+      }
+    },
+    "hostCompile": {
+      "schema": 1,
+      "status": "passed",
+      "sourceSha256": "a751fae646018a92c0db5f7806fa8c0a87bf2f42a5fa4b6303032c44c5dda866",
+      "resourceSha256": "f4a3c2466fc01b5b6b71ceb1befa516f548a5bdc01c9606dec56a78336d6bdc1",
+      "executableSha256": "07778a520ce5d295091e2c1f5d5fdf27312b74f0ff08cf50e34266ccfb762eda",
+      "platform": "darwin",
+      "arch": "arm64",
+      "tests": {
+        "command": "cargo test --locked",
+        "exitCode": 0,
+        "elapsedSeconds": 38,
+        "tests": 4,
+        "passed": 4
+      },
+      "build": {
+        "command": "cargo build --release --locked",
+        "exitCode": 0,
+        "elapsedSeconds": 83
+      }
+    },
+    "compiledMCP": {
+      "exitCode": 0,
+      "tests": 5,
+      "passed": 5,
+      "serverVersion": "0.2.0"
+    },
+    "fullJSInitial": {
+      "command": "node --test tests/*.test.cjs",
+      "exitCode": 1,
+      "elapsedSeconds": 10,
+      "tests": 76,
+      "passed": 57,
+      "failed": 17,
+      "cancelled": 1,
+      "skipped": 1,
+      "cause": "Windows-only executable fixtures and PE-specific binary message expectation; test-only owner correction pending"
+    },
+    "packaging": {
+      "exitCode": 0,
+      "signedExecutableSha256": "3be7526b050f9ca7fb3eb63c37edcfaa1bb32fafba9dfa7f695baff42f5e1ebd",
+      "signing": "adhoc-without-notarization",
+      "strictDeepVerified": true,
+      "allStepsPassed": true
+    },
+    "consumer": {
+      "commit": "131ef7e48c",
+      "verifyPackageExit": 0,
+      "stageRuntimeExit": 0,
+      "verifyRuntimeExit": 0,
+      "manifestSha256": "9b7ebe89eb4ea1f2a727a26d727a66ea5872476289530e60b4bc62f333fae151",
+      "candidateFiles": 90
+    },
+    "release": "/Users/felrer/Projects/azrael-window-use/artifacts/releases/0.2.0-tauri-release020-final",
+    "distribution": "/Users/felrer/Projects/azrael-window-use/artifacts/releases/0.2.0-tauri-release020-final/WindowUseMCP-darwin-arm64",
+    "buildInfoSha256": "693ba62fa0bb6d32e21087557be536296f1bf0b9daca16e79d84144ef5c44cf2",
+    "payloadBytes": 146943820,
+    "payloadFiles": 3719,
+    "promotion": {
+      "newOnly": true,
+      "exactDistribution": true,
+      "strictDeepSignatureExit": 0
+    },
+    "unverified": [
+      "macOS same-user GUI screenshot/semantic delivery",
+      "installation"
+    ],
+    "cleanup": {
+      "scratchRemoved": true,
+      "scratchPath": "/Users/felrer/Projects/azrael-window-use/artifacts/build/release020",
+      "processAbsenceObserved": true,
+      "oldFinalReleaseUnchanged": true,
+      "finalDeliverable": "awaiting user Mac GUI confirmation"
+    },
+    "fullJS": {
+      "command": "node --test tests/*.test.cjs",
+      "exitCode": 0,
+      "elapsedSeconds": 3,
+      "tests": 76,
+      "passed": 75,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 1,
+      "skipReason": "macOS build rejection test targets non-macOS hosts",
+      "testOnlyCommit": "16f6ea8",
+      "testPacketSha256": "09985262c32967ffaad3bb085da3e90a8c029b122ca0c8415320cf5f577dcd9e",
+      "overlayFiles": [
+        "tests/app-icons.test.cjs",
+        "tests/fixture-paths.cjs",
+        "tests/image-input.test.cjs",
+        "tests/permissions.test.cjs",
+        "tests/runtime.test.cjs",
+        "tests/shared-runtime.test.cjs",
+        "tests/tauri-package.test.cjs",
+        "tests/uia-cursor.test.cjs"
+      ],
+      "unchangedFrozenProductVerified": true
+    }
+  },
+  "linux": {
+    "schema": 1,
+    "owner": "release020_linux",
+    "status": "passed",
+    "version": "0.2.0",
+    "platform": "linux",
+    "arch": "x64",
+    "environment": "WSL ktcloud-ubuntu-24.04 Ubuntu24.04 x86_64 (no desktop acceptance)",
+    "productSourcePacketSha256": "aa3ed5e72a043e3a957134dc96e22293af8081807fd610aac28d047f9b64b450",
+    "productSourceManifestSha256": "cf67a461d433df5d842adf044107e3e336252699f0c1f14d808cefd97023a841",
+    "frozenFilesVerified": 163,
+    "testOverlay": {
+      "commit": "46d2b82",
+      "sha256": "3670db3599692ac2afeca03218d6252de1bf3ccf155bb8f7b52110821c4797c0",
+      "productCopyChanged": false
+    },
+    "tools": {
+      "node": "24.19.0",
+      "rust": "1.98.0"
+    },
+    "hostSha256": "49f1bfd48bed93ac4bd0161e52621aeca4fe991d489d1bda34e5f2a519fb43ae",
+    "preparedSourceSha256": "2986066c7f202ce96c54847a4e59603f3a8d9fbfa98559c1a4766c15ca0609fb",
+    "preparedResourceSha256": "7669df7f35eddae0adb8d89d70e05d8dbc882b7adafbe93d810b1bea56905dff",
+    "checks": [
+      {
+        "command": "node scripts/build-linux.cjs --check; then staging",
+        "exitCode": 0,
+        "outcome": "Python3 GI AT-SPI2 GTK3 Pillow prerequisites passed; native manifest staged"
+      },
+      {
+        "command": "cargo test --manifest-path src-tauri/Cargo.toml --locked",
+        "exitCode": 0,
+        "passed": 4,
+        "logTail": "   Compiling azrael-window-use v0.2.0 (/root/az-window-use-release020/source/src-tauri)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.53s\n     Running unittests src/main.rs (src-tauri/target/debug/deps/azrael_window_use-04f6468d1a1c3037)\n\nrunning 4 tests\ntest desktop::tests::only_packaged_ui_document_is_trusted ... ok\ntest layout::tests::mcp_modes_skip_desktop_bootstrap ... ok\ntest native::tests::icons_reject_nonlocal_paths_without_querying_the_system ... ok\ntest overlay::tests::logical_points_map_to_target_display_pixels_and_clamp ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n"
+      },
+      {
+        "command": "cargo build --manifest-path src-tauri/Cargo.toml --release --locked",
+        "exitCode": 0,
+        "logTail": "   Compiling base64 v0.22.1\n   Compiling file_icon_provider v1.0.2\n    Finished `release` profile [optimized] target(s) in 2m 41s"
+      },
+      {
+        "command": "node --test tests/*.test.cjs (test-only overlay independent copy)",
+        "exitCode": 0,
+        "passed": 74,
+        "skipped": 2,
+        "failed": 0,
+        "logTail": "ℹ tests 76\nℹ suites 0\nℹ pass 74\nℹ fail 0\nℹ cancelled 0\nℹ skipped 2\nℹ todo 0\nℹ duration_ms 15601.580126"
+      },
+      {
+        "command": "node --test tests/host-transport.test.cjs AZ_WINDOW_USE_TEST_HOST=releasehost (development layout frozen source)",
+        "exitCode": 0,
+        "passed": 5,
+        "logTail": "✔ Tauri worker action checks preserve settings and approval authority without native input (1380.698172ms)\n✔ compiled Rust host --mcp uses SDK stdio exclusively and closes its shared session on EOF (1823.055635ms)\nℹ MCP initialize completed in 1487ms; host=/root/az-window-use-release020/source/src-tauri/target/release/azrael-window-use\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3286.518854"
+      },
+      {
+        "command": "node scripts/package.cjs --host releasehost --host-report host-report.json",
+        "exitCode": 0,
+        "outcome": "exact final payload inventory/source/resource/host identities verified",
+        "inventoryEntries": 3716
+      },
+      {
+        "command": "node --test disposable packaged-mode adaptation of host-transport.test.cjs",
+        "exitCode": 0,
+        "passed": 5,
+        "logTail": "✔ Tauri worker action checks preserve settings and approval authority without native input (1265.523462ms)\n✔ compiled Rust host --mcp uses SDK stdio exclusively and closes its shared session on EOF (2709.933445ms)\nℹ MCP initialize completed in 2394ms; host=/root/az-window-use-release020/source/artifacts/releases/0.2.0-20261116T162158464Z-16f048b1/WindowUseMCP-linux-x64/WindowUseMCP\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 4052.195202",
+        "adaptation": "remove explicit development-root environment and development-only --runtime-directory argument; actual distribution executable loads bundled Node/application/resources; private fake shared-service fixture; no GUI"
+      },
+      {
+        "command": "readelf -d releasehost; ldd releasehost with tasklocal LD_LIBRARY_PATH",
+        "exitCode": 0,
+        "rpath": null,
+        "runpath": null,
+        "missingLibraries": [],
+        "dynamicTable": "\nDynamic section at offset 0x637500 contains 41 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libgio-2.0.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libgobject-2.0.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libglib-2.0.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libgdk-3.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libgdk_pixbuf-2.0.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libcairo.so.2]\n 0x0000000000000001 (NEEDED)             Shared library: [libdbus-1.so.3]\n 0x0000000000000001 (NEEDED)             Shared library: [libwebkit2gtk-4.1.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libgtk-3.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libsoup-3.0.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libjavascriptcoregtk-4.1.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libgcc_s.so.1]\n 0x0000000000000001 (NEEDED)             Shared library: [libm.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [ld-linux-x86-64.so.2]\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW PIE\n 0x0000000000000015 (DEBUG)              0x0\n 0x0000000000000007 (RELA)               0x7b30\n 0x0000000000000008 (RELASZ)             242496 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffff9 (RELACOUNT)          9504\n 0x0000000000000017 (JMPREL)             0x42e70\n 0x0000000000000002 (PLTRELSZ)           48 (bytes)\n 0x0000000000000003 (PLTGOT)             0x63ce68\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000006 (SYMTAB)             0x340\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000005 (STRTAB)             0x425c\n 0x000000000000000a (STRSZ)              14548 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x4240\n 0x0000000000000019 (INIT_ARRAY)         0x617130\n 0x000000000000001b (INIT_ARRAYSZ)       24 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x617128\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000000000000c (INIT)               0x616030\n 0x000000000000000d (FINI)               0x61604c\n 0x000000006ffffff0 (VERSYM)             0x3bc8\n 0x000000006ffffffe (VERNEED)            0x4080\n 0x000000006fffffff (VERNEEDNUM)         5\n 0x0000000000000000 (NULL)               0x0\n"
+      },
+      {
+        "command": "tar.gz full file SHA256 inventory compared to complete release directory",
+        "exitCode": 0,
+        "verifiedRegularFiles": 3719
+      }
+    ],
+    "archive": {
+      "file": "WindowUseMCP-0.2.0-linux-x64.tar.gz",
+      "bytes": 51976901,
+      "sha256": "47862181c748a76dcb8692b6df79f1c0591d2ef7aba3086892e6d4ae99068b2a",
+      "exactReleaseContents": true
+    },
+    "runtimeConditions": {
+      "testLibraries": "LD_LIBRARY_PATH points at task-extracted Ubuntu .deb sysroot plus copied installed library files. System packages were not installed. -rpath-link used only at link time; no task prefix embedded in ELF runtime paths.",
+      "requiredOnUserHost": [
+        "Ubuntu24.04 x86_64-compatible glibc/GTK3/WebKitGTK4.1/libsoup3/GLib and transitive runtime libraries",
+        "System /usr/bin/python3, PyGObject GI Atspi2/Gtk3 typelibs, Pillow",
+        "For desktop semantics: real user GUI session/accessibility bus; X11 window capture also requires libX11/libXcomposite"
+      ],
+      "bundled": "Node24.19.0 and production npm dependency closure; Node installation not required",
+      "GUIAcceptance": "not performed or claimed"
+    },
+    "derivedBuildOutputs": {
+      "derivation": "tauri-build from frozen src-tauri/build.rs",
+      "buildRsSha256": "0eacc6c901c1505383649d0beef34dc5033a911a90468e0ea5e9a057d71b6c19",
+      "compilerStopped": true,
+      "files": [
+        {
+          "path": "src-tauri/permissions/autogenerated/command.toml",
+          "bytes": 342,
+          "sha256": "ed17ae1c6b6447e91cd1bf04d98d35aaffb654f44aa9102e258b9883e6ac3957"
+        },
+        {
+          "path": "src-tauri/permissions/autogenerated/snapshot.toml",
+          "bytes": 348,
+          "sha256": "8319753d7e129f2f39c2930e3fda68336d9cb6464d2d3a543ab1051b473de900"
+        },
+        {
+          "path": "src-tauri/permissions/autogenerated/start_dragging.toml",
+          "bytes": 384,
+          "sha256": "aae60bc528bd49c0e43c292af8010e90e854c7b6a981fbc74c70db8ac8dac4b8"
+        },
+        {
+          "path": "src-tauri/permissions/autogenerated/ui_health.toml",
+          "bytes": 354,
+          "sha256": "16557f9655d70656dc0a0505799226bae4beae3dc3fe2fc42c233daf3cd5c336"
+        }
+      ],
+      "cleanup": "ordinary unlink after compiler exit; original selected-input inventory restored"
+    },
+    "initialFailures": [
+      {
+        "stage": "apt metadata",
+        "outcome": "stale shared apt indexes yielded404; stopped stale downloader, refreshed only tasklocal indexes. Default update hooks discovered afterward; possible apt-news/esm-cache start unverified. Known command-not-found/AppStream DB mtimes predated run, no confirmed DB refresh; subsequent task-only apt config disables hooks. No system package installation or shared config edits."
+      },
+      {
+        "stage": "Rust dependency relocation",
+        "outcome": "first attempt interrupted after pkgconf multiarch prefix issue; tasklocal .pc relocated explicitly. Final link initially failed on dangling extracted dev-library symlinks; copied matching installed runtime library files into contained tasklocal targets and supplied local linker search path. Final tests/build passed."
+      },
+      {
+        "stage": "full JS initial overlay16f6ea8",
+        "outcome": "69pass5fail2skip; long Linux fixture socket paths. Corrected test-only46d2b82 passes74/2/0; product107byte guard retained."
+      },
+      {
+        "stage": "package initial guard",
+        "output": "Selected source inputs changed\n",
+        "outcome": "four deterministic generated Tauri permission TOMLs recorded then ordinarily removed after compiler stopped, restoring frozen selectedInputs; final package passed"
+      },
+      {
+        "stage": "packaged-mode harness initial adaptation",
+        "outcome": "correctly rejected development-only --runtime-directory; disposable harness removed that argument, final packaged-mode5/5 passed"
+      }
+    ],
+    "cleanup": {
+      "producerEnded": true,
+      "root": "/root/az-window-use-release020",
+      "removed": true,
+      "absenceVerified": true,
+      "ownerReportedExitCode": 0,
+      "finalWindowsDelivery": "artifacts/releases/0.2.0-linux-x64-HX02-final"
+    }
+  },
+  "cleanup": {
+    "windowsBuildAndCache": "deleted and actual absence verified by package owner",
+    "macTaskScratch": "deleted and actual absence verified by Mac owner",
+    "linuxTaskRoot": "deleted and actual absence verified by Linux owner",
+    "fixturePackets": "deleted remaining false by native maintenance owner",
+    "rootRetained": {
+      "schema": 1,
+      "owner": "HX-02-release020-root",
+      "status": "cleanup blocked; user retention decision pending",
+      "reason": "Native owner rejected matching whole-group apply: new member claim overlaps a reserved lifecycle group",
+      "attempts": [
+        "Initial overlapping lifecycle-group protection",
+        "Whole-group review required common directory mode",
+        "Current replaced roots re-registered with original ownership preserved; no guard bypass",
+        "All overlapping groups received matching delete decisions; native reserved-claim guard refused apply"
+      ],
+      "retained": [
+        {
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\acceptance",
+          "presence": "present",
+          "bytes": 23762788,
+          "files": 576,
+          "dirs": 186,
+          "links": 0,
+          "targetsNotFollowed": true
+        },
+        {
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\mac-transport",
+          "presence": "present",
+          "bytes": 4412,
+          "files": 1,
+          "dirs": 0,
+          "links": 0,
+          "targetsNotFollowed": true
+        }
+      ],
+      "disposableProducersAndConsumersEnded": true,
+      "requiredDeliverablesOutsideTargets": true,
+      "physicalBytesReclaimed": null,
+      "previousReserved255702053BytesUntouched": true,
+      "retainedBytes": 23767200
+    },
+    "priorReservedGroup": "tauri-prepare-first-format-complete",
+    "priorReservedBytes": 255702053
+  },
+  "testOverlay": {
+    "commit": "16f6ea8",
+    "archive": "artifacts/build/tauri-migration/fixture-portability/tests-16f6ea8.tar",
+    "sha256": "09985262c32967ffaad3bb085da3e90a8c029b122ca0c8415320cf5f577dcd9e",
+    "scope": "Seven existing tests and platform path helper only; product and frozen build inputs unchanged",
+    "windows": {
+      "affectedPassed": 24,
+      "fullSuite": {
+        "total": 76,
+        "passed": 71,
+        "skipped": 5,
+        "failed": 0,
+        "exitCode": 0
+      }
+    },
+    "mac": {
+      "total": 76,
+      "passed": 75,
+      "skipped": 1,
+      "failed": 0,
+      "cancelled": 0,
+      "exitCode": 0
+    },
+    "linux": {
+      "commit": "46d2b82",
+      "packetSha256": "3670db3599692ac2afeca03218d6252de1bf3ccf155bb8f7b52110821c4797c0",
+      "scope": "Linux-only short temporary socket fixture; Mac/Windows branches unchanged",
+      "total": 76,
+      "passed": 74,
+      "skipped": 2,
+      "failed": 0,
+      "exitCode": 0,
+      "windowsAffected": {
+        "passed": 6,
+        "skipped": 1,
+        "failed": 0,
+        "exitCode": 0
+      }
+    }
+  },
+  "linuxDelivery": {
+    "schema": 1,
+    "owner": "HX-02-release020-root",
+    "status": "passed",
+    "plannedOutputs": [
+      "C:/Users/felre/Desktop/azrael-window-use-mcp/artifacts/releases/0.2.0-linux-x64-HX02-final"
+    ],
+    "activeReferences": [],
+    "files": [
+      {
+        "name": "WindowUseMCP-0.2.0-linux-x64.tar.gz",
+        "sha256": "47862181c748a76dcb8692b6df79f1c0591d2ef7aba3086892e6d4ae99068b2a",
+        "bytes": 51976901
+      },
+      {
+        "name": "verification.json",
+        "sha256": "6b8476bdd8ff1de71c90828d1575f5667a993a2fb2fa6482859634506bcc52b8",
+        "bytes": 11244
+      }
+    ],
+    "sourceReadersReleased": true
+  },
+  "commits": {
+    "version": "0ff863a",
+    "portableFixtures": "16f6ea8",
+    "linuxSocketFixture": "46d2b82",
+    "validationDocs": "3f25afa"
+  },
+  "pendingUserDecisions": [
+    "Mac same-user GUI preparation and Screen Recording permission; no GUI action performed",
+    "Permission to retain cleanup-owner reservation-blocked 23767200-byte root verification material until supported recovery"
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "schema": 1,
+  "owner": "HX-02-release020-root",
+  "reason": "Refresh replaced mac-transport directory physical identity while preserving registered group ownership, kind and complete membership. Other ten historical members are absent; original deletion outcomes remain history.",
+  "groups": [
+    {
+      "id": "hx-tauri-root-directories-20261116",
+      "owner": "HX-01-window-use-tauri-root",
+      "version": "0.2.0",
+      "kind": "run",
+      "membership_complete": true,
+      "provenance_ref": "work/HX-02-release020-verification.json",
+      "membership_source": "work/HX-02-mac-transport-alias-cleanup-membership.json",
+      "members": [
+        {
+          "id": "hx-tauri-dir-azrael-consumer",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\azrael-consumer",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-azrael-consumer-t3",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\azrael-consumer-t3",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-cargo",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\cargo",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-clean-deps",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\clean-deps",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-compile-root",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\compile-root",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-compile-root-final",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\compile-root-final",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-compile-root-t3",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\compile-root-t3",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-mac-transport",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\mac-transport",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-npm-cache-final",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\npm-cache-final",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-ui-acceptance",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\ui-acceptance",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-ui-host",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\ui-host",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        }
+      ]
+    }
+  ]
+}

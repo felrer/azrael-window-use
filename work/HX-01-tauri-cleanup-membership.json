@@ -1,0 +1,466 @@
+{
+  "schema": 1,
+  "owner": "HX-01-window-use-tauri-root",
+  "producerOutcome": "all terminal; Windows UI/MCP/JS/consumer and native builds passed; independent verification retained",
+  "roots": [
+    "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration"
+  ],
+  "groups": [
+    {
+      "id": "hx-tauri-root-directories-20261116",
+      "owner": "HX-01-window-use-tauri-root",
+      "version": "0.1.1",
+      "kind": "run",
+      "membership_complete": true,
+      "provenance_ref": "work/HX-01-tauri-verification.json",
+      "membership_source": "work/HX-01-tauri-cleanup-membership.json",
+      "members": [
+        {
+          "id": "hx-tauri-dir-azrael-consumer",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\azrael-consumer",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-azrael-consumer-t3",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\azrael-consumer-t3",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-cargo",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\cargo",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-clean-deps",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\clean-deps",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-compile-root",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\compile-root",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-compile-root-final",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\compile-root-final",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-compile-root-t3",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\compile-root-t3",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-mac-transport",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\mac-transport",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-npm-cache-final",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\npm-cache-final",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-ui-acceptance",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\ui-acceptance",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        },
+        {
+          "id": "hx-tauri-dir-ui-host",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\ui-host",
+          "kind": "build",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": [],
+          "deletion_scope": "entire_directory"
+        }
+      ]
+    },
+    {
+      "id": "hx-tauri-root-files-20261116",
+      "owner": "HX-01-window-use-tauri-root",
+      "version": "0.1.1",
+      "kind": "run",
+      "membership_complete": true,
+      "provenance_ref": "work/HX-01-tauri-verification.json",
+      "membership_source": "work/HX-01-tauri-cleanup-membership.json",
+      "members": [
+        {
+          "id": "hx-tauri-file-azrael-consumer-result-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\azrael-consumer-result.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-azrael-consumer-t3-result-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\azrael-consumer-t3-result.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-build-final-cjs",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\build-final.cjs",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-build-t3-cjs",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\build-t3.cjs",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-cargo-fetch-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\cargo-fetch.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-clean-deps-install-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\clean-deps-install.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-dependency-restoration-result-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\dependency-restoration-result.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-electron-runtime-recovery-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\electron-runtime-recovery.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-final-prepare-handoff-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\final-prepare-handoff.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-host-report-final-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\host-report-final.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-host-report-t3-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\host-report-t3.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-host-report-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\host-report.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-js-test-result-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\js-test-result.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-js-test-retry-result-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\js-test-retry-result.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-js-tests-accepted-result-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\js-tests-accepted-result.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-js-tests-accepted-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\js-tests-accepted.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-js-tests-final-result-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\js-tests-final-result.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-js-tests-final-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\js-tests-final.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-js-tests-retry-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\js-tests-retry.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-js-tests-serial-result-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\js-tests-serial-result.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-js-tests-serial-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\js-tests-serial.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-js-tests-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\js-tests.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-native-result-final-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\native-result-final.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-native-result-t3-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\native-result-t3.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-native-result-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\native-result.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-node-LICENSE",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\node-LICENSE",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-npm-ci-final-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\npm-ci-final.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-owner-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\owner.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-packaging-handoff-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\packaging-handoff.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-rust-build-final-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\rust-build-final.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-rust-build-t3-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\rust-build-t3.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-rust-build-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\rust-build.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-rust-tests-final-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\rust-tests-final.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-rust-tests-t3-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\rust-tests-t3.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-rust-tests-log",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\rust-tests.log",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        },
+        {
+          "id": "hx-tauri-file-t3-prepare-handoff-json",
+          "path": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\artifacts\\build\\tauri-migration\\t3-prepare-handoff.json",
+          "kind": "logs",
+          "generated": true,
+          "owner": "HX-01-window-use-tauri-root",
+          "protection_known": true,
+          "references": []
+        }
+      ]
+    }
+  ]
+}

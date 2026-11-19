@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "kind": "azrael-window-control",
+  "platform": "win32",
+  "arch": "x64",
+  "source": {
+    "directory": "C:\\Users\\felre\\Desktop\\azrael-window-use-mcp\\native\\window-control",
+    "sourceSha256": "2ea88edc0bb7644618f7641565eab48ea2e7bc73537718e04b711b4f9e6c37ce",
+    "executableSha256": "b12a67e23d8495a91f3700861f46ae2bb347ee9931ca40605ca87f3b79c1d5fa",
+    "builder": "cargo --locked --release"
+  },
+  "files": [
+    {
+      "path": "azrael-window-control.exe",
+      "bytes": 1189376,
+      "sha256": "b12a67e23d8495a91f3700861f46ae2bb347ee9931ca40605ca87f3b79c1d5fa"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "bytes": 27625,
+      "sha256": "b17b06661ccc4b6089de39bd0d8ee7a44f536268172f7c040e65f0c913dd8062"
+    }
+  ]
+}
