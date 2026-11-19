@@ -515,6 +515,13 @@ Failed activation, occlusion, target disappearance, desktop change or short
 attach input threads, with mandatory detach. No `SetKeyboardState`, PostMessage
 input, or APIs in a target process are used.
 
+A keyboard step after a batch click waits for the exact child HWND hit before
+the click to receive focus. Standalone text requires the child HWND at its input
+point to be focused; it does not implicitly click. The broker revalidates the hit
+and focus around insertion. If the hit is only a root or a shared Chromium render
+window, this path cannot prove control focus and rejects keyboard delivery.
+Application-level verification still requires observing the result separately.
+
 WH_MOUSE_LL / WH_KEYBOARD_LL run in this EXE on the original responsive message
 thread. With collaboration off, callbacks pass physical input through; explicit
 collaboration suppression is described above. A per-process `dwExtraInfo` marker is

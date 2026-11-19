@@ -53,14 +53,18 @@ class KeyboardReservation {
         require(IsWindow(focus) && thread==focusThread && pid==origin.pid &&
             GetAncestor(focus,GA_ROOT)==origin.hwnd,"keyboard_restore","Original focused window identity changed");
     }
+    bool hasDestinationFocus() const {
+        GUITHREADINFO info{sizeof(info)};
+        return GetForegroundWindow()==origin.hwnd && GetGUIThreadInfo(origin.thread,&info) && info.hwndFocus==focus;
+    }
     void requireDestination() {
         validateOrigin();
-        GUITHREADINFO info{sizeof(info)};
-        require(GetForegroundWindow()==origin.hwnd && GetGUIThreadInfo(origin.thread,&info) && info.hwndFocus==focus,
+        require(hasDestinationFocus(),
             "keyboard_restore","Original keyboard focus is not restored; buffered input remains pending");
     }
     void restoreFocus() {
         validateOrigin();
+        if (hasDestinationFocus()) { restored=true; return; }
         const DWORD self=GetCurrentThreadId();
         const bool attach=self!=origin.thread;
         require(!attach || AttachThreadInput(self,origin.thread,TRUE),"keyboard_restore","Cannot attach original input thread");

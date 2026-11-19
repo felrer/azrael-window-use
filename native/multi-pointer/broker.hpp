@@ -9,6 +9,8 @@
 #include <fstream>
 #include <map>
 #include <mutex>
+#include <optional>
+#include <string_view>
 #include <thread>
 
 namespace mp {
@@ -87,6 +89,8 @@ class Broker {
     bool batchActive = false, batchPrepared = false, reservationOwned = false;
     uint64_t reservationDeadline = 0;
     HWND keyboardFocus = nullptr;
+    struct ClickFocus { POINT point{}; HWND window=nullptr; HWND root=nullptr; DWORD thread=0; };
+    std::optional<ClickFocus> batchClickFocus;
     json batchResult = nullptr, keyboardResult = nullptr;
     std::atomic<bool> finishReader{false};
     std::thread reader;
@@ -264,25 +268,50 @@ class Broker {
         catch (...) { keyboardResult=ui.keyboardReservationState(); return false; }
         return released;
     }
-    void requireKeyboardFocus(Pointer& p) {
+    ClickFocus keyboardHit(Pointer& p) {
+        checkHit(p,p.position);
+        const auto hit=Target::observeHit(p.position);
+        require(hit.pid==target(p).pid && hit.thread && hit.visible && hit.enabled &&
+            target(p).surface(hit.root).accepted,"focus_target_changed","Keyboard target changed during hit testing");
+        return {p.position,hit.hwnd,hit.root,hit.thread};
+    }
+    void requireKeyboardFocus(Pointer& p, const ClickFocus* expected, bool wait) {
         const auto deadline=GetTickCount64()+100;
+        if (expected) {
+            wchar_t name[128]{};
+            require(expected->window!=expected->root && GetClassNameW(expected->window,name,128)>0 &&
+                std::wstring_view(name)!=L"Chrome_RenderWidgetHostHWND",
+                "focus_target_unverified","Keyboard input needs a distinct focused control; shared window focus is insufficient");
+        }
         for (;;) {
             boundary(); target(p).validate();
+            if (expected) {
+                const auto hit=Target::observeHit(expected->point);
+                require(hit.hwnd==expected->window && hit.thread==expected->thread && hit.pid==target(p).pid &&
+                    hit.root==expected->root && hit.visible && hit.enabled && target(p).surface(hit.root).accepted,
+                    "focus_target_changed","Keyboard target changed after the click");
+            }
             HWND foreground=GetForegroundWindow();
             GUITHREADINFO info{}; info.cbSize=sizeof(info);
             const DWORD thread=GetWindowThreadProcessId(foreground,nullptr);
             if (thread && GetGUIThreadInfo(thread,&info) && info.hwndFocus &&
                 target(p).surface(GetAncestor(foreground,GA_ROOT)).accepted &&
-                target(p).surface(GetAncestor(info.hwndFocus,GA_ROOT)).accepted) {
+                target(p).surface(GetAncestor(info.hwndFocus,GA_ROOT)).accepted &&
+                (!expected || (thread==expected->thread && info.hwndFocus==expected->window))) {
                 require(!keyboardFocus || keyboardFocus==info.hwndFocus,"focus_changed","Keyboard focus changed inside the reserved operation; no replay");
                 keyboardFocus=info.hwndFocus; return;
             }
-            require(GetTickCount64()<deadline,"focus_pending","Target keyboard focus was not observed within 100ms");
+            require(wait && GetTickCount64()<deadline,"focus_pending","Expected keyboard control did not have focus");
             std::this_thread::sleep_for(std::chrono::milliseconds(2));
         }
     }
-    void sendKeyboard(Pointer& p, const std::vector<INPUT>& inputs) {
-        checkHit(p,p.position); requireKeyboardFocus(p); ui.requireSystemCursor(); boundary();
+    void sendKeyboard(Pointer& p, const std::vector<INPUT>& inputs, bool text=false) {
+        std::optional<ClickFocus> expected=batchClickFocus;
+        if (!expected && text) expected=keyboardHit(p);
+        const auto* focus=expected ? &*expected : nullptr;
+        checkHit(p,p.position); requireKeyboardFocus(p,focus,true); ui.requireSystemCursor();
+        // Validate again after cursor IPC and immediately before admission.
+        requireKeyboardFocus(p,focus,false);
         const auto before=signals.ownKeyboard.load();
         // One Windows insertion keeps a chord/text packet contiguous and avoids
         // a UI round-trip for every UTF-16 unit. This does not prove app effect.
@@ -300,7 +329,7 @@ class Broker {
         }
         require(sent==inputs.size(),"send_input","Keyboard packet was not fully delivered; partial input is not replayed");
         requireHookObservation(false,before+sent-1);
-        boundary(); requireKeyboardFocus(p);
+        boundary(); requireKeyboardFocus(p,focus,false);
     }
     void checkHit(Pointer& p, POINT point) { boundary(); physicalGate(); target(p).hit(point); boundary(); }
     void send(Pointer& p, INPUT e, POINT point) {
@@ -872,6 +901,7 @@ class Broker {
             require(b >= 0, "invalid_params", "Unsupported mouse button");
             if (signals.collaborationRequested.load()) beginKeyboard(1000);
             prepare(p); require(!heldButtons[static_cast<size_t>(b)], "held_state", "Button already synthetically held");
+            if (batchActive) batchClickFocus=keyboardHit(p);
             send(p,mouseInput(downFlags[b]),p.position); heldButtons[static_cast<size_t>(b)]=true;
             send(p,mouseInput(upFlags[b]),p.position); heldButtons[static_cast<size_t>(b)]=false;
         } else if (method == "drag") {
@@ -959,7 +989,7 @@ class Broker {
                 inputs.push_back(e);
                 e.ki.dwFlags|=KEYEVENTF_KEYUP; inputs.push_back(e);
             }
-            sendKeyboard(p,inputs);
+            sendKeyboard(p,inputs,true);
         } else throw Failure("method_not_found","Unsupported method");
         boundary(); return state();
     }
@@ -990,7 +1020,7 @@ class Broker {
         executingInput=false;
         observationTurn=false;
         visualTurn=false;
-        batchActive=false; batchPrepared=false; keyboardFocus=nullptr;
+        batchActive=false; batchPrepared=false; keyboardFocus=nullptr; batchClickFocus.reset();
         batchResult=nullptr; keyboardResult=nullptr;
         delivered=0; activationDelivered=0; activationPath="none"; actionExecuted=false; foregroundAttempted=false;
         baseline = signals.epoch.load();

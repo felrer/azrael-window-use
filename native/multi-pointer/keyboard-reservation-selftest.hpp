@@ -165,10 +165,12 @@ inline int keyboardReservationLiveSelftest() {
                 input.ki.dwFlags=KEYEVENTF_KEYUP; input.ki.dwExtraInfo=tag;
                 SendInput(1,&input,sizeof(input));
             }
+            // Try the exact original focus while the fixture can still own
+            // foreground; destroying the foreground first loses that ability.
+            restore();
             if (first && IsWindow(first)) DestroyWindow(first);
             if (second && IsWindow(second)) DestroyWindow(second);
             if (classRegistered) UnregisterClassW(L"AzraelKeyboardReservationFixture",GetModuleHandleW(nullptr));
-            restore();
         }
     } fixture;
     auto pump=[] {
@@ -225,9 +227,10 @@ inline int keyboardReservationLiveSelftest() {
         SetFocus(edit); pump();
         require(GetForegroundWindow()==root && GetFocus()==edit,"selftest","Cannot activate owned fixture or establish its edit focus");
     };
-    auto queued=[](KeyboardReservation& reservation,DWORD vk) {
+    auto queued=[](KeyboardReservation& reservation,DWORD vk,unsigned repeat=1) {
         KBDLLHOOKSTRUCT event{}; event.vkCode=vk;
-        require(reservation.intercept(event),"selftest","Fixture key down was not buffered");
+        for(unsigned i=0;i<repeat;++i)
+            require(reservation.intercept(event),"selftest","Fixture key down or repeat was not buffered");
         event.flags=LLKHF_UP;
         require(reservation.intercept(event),"selftest","Fixture key up was not buffered");
     };
@@ -238,12 +241,12 @@ inline int keyboardReservationLiveSelftest() {
     available(fixture.first,"plain begin");
     reservation.begin(1000);
     activate(fixture.second,secondEdit);
-    queued(reservation,'A'); available(fixture.first,"plain end"); reservation.end(); pump();
+    queued(reservation,'A',3); available(fixture.first,"plain end"); reservation.end(); pump();
     wchar_t text[16]{}; GetWindowTextW(firstEdit,text,16);
-    require(GetForegroundWindow()==fixture.first && GetFocus()==firstEdit && std::wstring(text)==L"xaz",
-        "selftest","Replay must restore original EDIT and insert A at original caret (Latin input required)");
+    require(GetForegroundWindow()==fixture.first && GetFocus()==firstEdit && std::wstring(text)==L"xaaaz",
+        "selftest","Replay must restore original EDIT and insert all repeats at original caret (Latin input required)");
     require(GetWindowTextLengthW(secondEdit)==0,"selftest","Model fixture must receive no buffered key");
-    require(reservation.status().at("replayedEvents")==2 && !reservation.status().at("pending").get<bool>(),
+    require(reservation.status().at("replayedEvents")==4 && !reservation.status().at("pending").get<bool>(),
         "selftest","Successful replay must account for every buffered edge");
     require(reservation.buffer.events[0].vk==0 && reservation.buffer.events[1].flags==0,
         "selftest","Consumed key contents must be zeroized without losing statistics");
@@ -267,7 +270,6 @@ inline int keyboardReservationLiveSelftest() {
     pump();
     require(rejected && GetWindowTextLengthW(secondEdit)==0 && reservation.status().at("pending")==true,
         "selftest","Destroyed original must reject restoration without sending buffered keys elsewhere");
-    DestroyWindow(fixture.second); fixture.second=nullptr;
     require(fixture.restore(),"selftest","Pre-test foreground/focus restoration failed");
     return 0;
 }
