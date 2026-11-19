@@ -122,7 +122,7 @@ public:
     void begin(unsigned maxMs) {
         require(!active(),"keyboard_reservation","A keyboard reservation is already active");
         require(!deliveryUncertain && !buffer.overflow && buffer.delivered==buffer.count,"keyboard_reservation","Undelivered keyboard input prevents a new reservation");
-        // Public batches remain capped at 1000ms. Mouse drags can run for 2000ms
+        // Public batches are capped at 2000ms. Mouse drags can run for 2000ms
         // and additionally need their bounded foreground-preparation allowance.
         require(maxMs>0 && maxMs<=3000,"invalid_params","Keyboard reservation must be between 1 and 3000 ms");
         checkDesktop();

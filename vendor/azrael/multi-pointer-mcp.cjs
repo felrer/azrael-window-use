@@ -12,7 +12,8 @@ function tool(name,description,properties={},required=Object.keys(properties)){r
 function batchStepSchema(){return {oneOf:[
  tool('click','',{action:field('string',{enum:['click']}),...xy(),button:field('string',{enum:['left','right','middle']})},['action','button']).inputSchema,
  tool('text','',{action:field('string',{enum:['text']}),text:field('string',{minLength:1,maxLength:1024})}).inputSchema,
- tool('press','',{action:field('string',{enum:['press']}),keys:field('array',{minItems:1,maxItems:8,uniqueItems:true,items:field('integer',{minimum:8,maximum:254})})}).inputSchema
+ tool('press','',{action:field('string',{enum:['press']}),keys:field('array',{minItems:1,maxItems:8,uniqueItems:true,items:field('integer',{minimum:8,maximum:254})})}).inputSchema,
+ tool('wait','',{action:field('string',{enum:['wait']}),durationMs:field('integer',{minimum:1,maximum:1000})}).inputSchema
 ]};}
 function toolDefinitions(){return [
  tool('status','Observe allowed targets, separate virtual cursors, shared physical cursor and foreground. No input.'),
@@ -27,7 +28,7 @@ function toolDefinitions(){return [
  tool('key','Send a concrete Windows virtual-key down/up. Use left/right Shift or Ctrl; Alt, Windows and shell-switch shortcuts are unsupported. Release held keys before switching pointer.',{...pointer(),vk:field('integer',{minimum:8,maximum:254}),down:field('boolean')}),
  tool('press','Send one atomic key chord, releasing all keys before another participant runs. Keys are concrete Windows virtual keys in press order.',{...pointer(),keys:field('array',{minItems:1,maxItems:8,uniqueItems:true,items:field('integer',{minimum:8,maximum:254})})}),
  tool('text','Send Unicode text through Windows input to the activated allowed target. This does not perform IME composition.',{...pointer(),text:field('string',{minLength:1,maxLength:1024})}),
- tool('batch','Run 1..16 click, text or atomic press steps as one FIFO operation on this pointer/target without replay. Physical keyboard input is buffered until original focus is restored. Budget defaults to 750ms; inspect partial completion before continuing.',{...pointer(),steps:field('array',{minItems:1,maxItems:16,items:batchStepSchema()}),maxMs:field('integer',{minimum:100,maximum:1000,default:750})},['pointerId','steps']),
+ tool('batch','Run 1..16 click, text, atomic press or wait steps as one FIFO operation on this pointer/target without replay. Physical keyboard input is buffered until original focus is restored. Waits count against maxMs (default 750ms); leave time for input.',{...pointer(),steps:field('array',{minItems:1,maxItems:16,items:batchStepSchema()}),maxMs:field('integer',{minimum:100,maximum:2000,default:750})},['pointerId','steps']),
  tool('remove_pointer','Release this pointer and remove its overlay.',pointer()),
  tool('stop','Release synthetic held input and remove all virtual cursors. This does not close user apps.')
 ].map(def=>{if(ACTUATION.has(def.name)){def.inputSchema.properties.operationId=field('integer',{minimum:1,maximum:Number.MAX_SAFE_INTEGER,description:'Stable identity of this intended operation. Reuse for a duplicate request; never change it to replay uncertain input. Omit for a new operation.'});}if(def.name==='drag')def.inputSchema.oneOf=[{required:['x','y'],not:{required:['points']}},{required:['points'],not:{anyOf:[{required:['x']},{required:['y']}]}}];return def;});}
@@ -50,7 +51,10 @@ function validateArguments(def,args){
   if(d.enum&&!d.enum.includes(v)||d.minimum!==undefined&&v<d.minimum||d.maximum!==undefined&&v>d.maximum||d.minLength!==undefined&&v.length<d.minLength||d.maxLength!==undefined&&v.length>d.maxLength||d.pattern&&!new RegExp(d.pattern).test(v))throw Error('Invalid '+k+' value');
  }
  validate(def.inputSchema,args,'tool');
- if(Array.isArray(args.steps)&&args.steps.reduce((total,step)=>total+(step.action==='text'?step.text.length:0),0)>1024)throw Error('Batch text exceeds 1024 UTF-16 units');
+ if(Array.isArray(args.steps)){
+  if(args.steps.reduce((total,step)=>total+(step.action==='text'?step.text.length:0),0)>1024)throw Error('Batch text exceeds 1024 UTF-16 units');
+  if(args.steps.reduce((total,step)=>total+(step.action==='wait'?step.durationMs:0),0)>=(args.maxMs??750))throw Error('Total wait time must be less than the batch budget');
+ }
  return args;
 }
 function plainFile(file){

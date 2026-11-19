@@ -132,9 +132,12 @@ test('batch schema validates every strict step before any broker mutation',async
   assert.ok(desktopInputSchema().oneOf.some(s=>s.properties.action.enum.includes('batch')));
   const tails=[{action:'click',button:'left',x:1},{action:'click',button:'left',operationId:3},
     {action:'text',text:'x',pointerId:'other'},{action:'batch',steps:[]},{action:'press',keys:[65,65]},
-    {action:'press',keys:[7]},{action:'press',keys:[65],targetId:'other'},{action:'click',x:1,y:2},null];
+    {action:'press',keys:[7]},{action:'press',keys:[65],targetId:'other'},{action:'click',x:1,y:2},
+    {action:'wait'},{action:'wait',durationMs:0},{action:'wait',durationMs:1001},{action:'wait',durationMs:1.5},
+    {action:'wait',durationMs:1,x:10,y:20},{action:'wait',durationMs:750},null];
   for(const tail of tails)await assert.rejects(provider.input('thread',target,{...base,steps:[...base.steps,tail]}),{code:'invalid_request'});
-  for(const invalid of [{...base,steps:[]},{...base,steps:Array(17).fill(base.steps[0])},{...base,maxMs:99},{...base,maxMs:1001},{...base,maxMs:750.5},
+  for(const invalid of [{...base,steps:[]},{...base,steps:Array(17).fill(base.steps[0])},{...base,maxMs:99},{...base,maxMs:2001},{...base,maxMs:750.5},
+    {...base,steps:[...base.steps,{action:'wait',durationMs:400},{action:'wait',durationMs:350}]},
     {...base,steps:[{action:'text',text:'a'.repeat(1024)},{action:'text',text:'b'}]}, {...base,steps:[{action:'text',text:'😀'.repeat(513)}]}])
     await assert.rejects(provider.input('thread',target,invalid),{code:'invalid_request'});
   assert.deepEqual(calls,[]);
@@ -142,15 +145,16 @@ test('batch schema validates every strict step before any broker mutation',async
   assert.deepEqual(native.validateArguments(native.toolDefinitions().find(d=>d.name==='press'),{pointerId:'model',keys:[162,65]}).keys,[162,65]);
 });
 test('batch is one native operation with intact steps, identity and post-call guard',async t=>{
-  const {provider,calls}=fixture(t),steps=[{action:'click',button:'right',x:31,y:42},{action:'text',text:'hello'},{action:'press',keys:[13]}];
+  const {provider,calls}=fixture(t),steps=[{action:'click',button:'right',x:31,y:42},{action:'wait',durationMs:1000},{action:'text',text:'hello'},{action:'press',keys:[13]}];
   let checks=0;
-  await provider.input('thread',target,{action:'batch',x:10,y:20,steps,maxMs:900,operationId:41},async()=>{checks++;});
+  await provider.input('thread',target,{action:'batch',x:10,y:20,steps,maxMs:2000,operationId:41},async()=>{checks++;});
   assert.deepEqual(calls.map(c=>c.method),['collaboration','create_pointer','batch']);
-  assert.deepEqual(calls.at(-1).args,{steps,maxMs:900,operationId:41,pointerId:'model'});
+  assert.deepEqual(calls.at(-1).args,{steps,maxMs:2000,operationId:41,pointerId:'model'});
   assert.equal(checks,7);
   calls.length=0;
-  await provider.input('thread',target,{action:'batch',steps});
-  assert.deepEqual(calls,[{method:'batch',args:{steps,pointerId:'model',operationId:42}}]);
+  const shortSteps=steps.map(step=>step.action==='wait'?{...step,durationMs:1}:step);
+  await provider.input('thread',target,{action:'batch',steps:shortSteps});
+  assert.deepEqual(calls,[{method:'batch',args:{steps:shortSteps,pointerId:'model',operationId:42}}]);
 });
 test('desktop batch pins only its selected initial target before one native batch',async t=>{
   const {provider,calls}=fixture(t),steps=[{action:'click',button:'left',x:30,y:40},{action:'text',text:'ok'}];

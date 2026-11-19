@@ -11,9 +11,17 @@ inline int batchSelftest() {
     auto bad=valid; bad["steps"][2]["keys"]=json::array({VK_CONTROL}); rejects(bad);
     bad=valid; bad["steps"][2]["operationId"]=3; rejects(bad);
     bad=valid; bad["steps"][0].erase("y"); rejects(bad);
-    bad=valid; bad["maxMs"]=1001; rejects(bad);
+    bad=valid; bad["maxMs"]=2001; rejects(bad);
     bad=valid; bad["steps"][1]["text"]=std::string(1025,'a'); rejects(bad);
     bad=valid; bad["steps"].push_back(json{{"action","batch"},{"steps",json::array()}}); rejects(bad);
+    auto delayed=valid; delayed["maxMs"]=2000;
+    delayed["steps"].push_back(json{{"action","wait"},{"durationMs",1000}});
+    require(validateBatch(delayed,key)==2000,"selftest","A 1000ms wait must fit an explicit 2000ms reservation");
+    bad=delayed; bad.erase("maxMs"); rejects(bad);
+    bad=delayed; bad["steps"].push_back(delayed["steps"].back()); rejects(bad);
+    for (const auto& duration : {json(0),json(1001),json(1.5)}) {
+        bad=delayed; bad["steps"].back()["durationMs"]=duration; rejects(bad);
+    }
     Operations ledger;
     auto operation=ledger.admit("batch",valid,1);
     require(operation.second,"selftest","Batch must admit as one operation");

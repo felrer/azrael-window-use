@@ -883,9 +883,13 @@ class Broker {
                 boundary();
                 const auto& step=params.at("steps").at(index);
                 const auto action=step.at("action").get<std::string>();
-                if (step.contains("x")) dispatch("move",{{"pointerId",id},{"x",step.at("x")},{"y",step.at("y")}},shutdown);
-                json args=step; args.erase("action"); args.erase("x"); args.erase("y"); args["pointerId"]=id;
-                dispatch(action,args,shutdown);
+                if (action=="wait") {
+                    waitUntil(std::chrono::steady_clock::now()+std::chrono::milliseconds(step.at("durationMs").get<int>()));
+                } else {
+                    if (step.contains("x")) dispatch("move",{{"pointerId",id},{"x",step.at("x")},{"y",step.at("y")}},shutdown);
+                    json args=step; args.erase("action"); args.erase("x"); args.erase("y"); args["pointerId"]=id;
+                    dispatch(action,args,shutdown);
+                }
                 batchResult["completedSteps"]=index+1;
             }
             batchResult["failedStep"]=nullptr; batchResult["completed"]=true;

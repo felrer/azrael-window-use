@@ -7,16 +7,18 @@ namespace mp {
 inline unsigned validateBatch(const json& params, const std::function<void(int)>& validateKey) {
     require(params.contains("steps") && params.at("steps").is_array() &&
         !params.at("steps").empty() && params.at("steps").size()<=16,
-        "invalid_params","Batch requires 1-16 click/text/press steps");
-    const unsigned budget=params.contains("maxMs") ? integer(params,"maxMs",100,1000) : 750;
+        "invalid_params","Batch requires 1-16 click/text/press/wait steps");
+    const unsigned budget=params.contains("maxMs") ? integer(params,"maxMs",100,2000) : 750;
+    unsigned waitMs=0;
     size_t textUnits=0;
     for (const auto& step : params.at("steps")) {
         require(step.is_object() && step.contains("action") && step.at("action").is_string(),"invalid_params","Batch step action is required");
         const auto action=step.at("action").get<std::string>();
-        require(action=="click" || action=="press" || action=="text","invalid_params","Unsupported batch step action");
+        require(action=="click" || action=="press" || action=="text" || action=="wait","invalid_params","Unsupported batch step action");
         for (auto i=step.begin();i!=step.end();++i)
             require(i.key()=="action" || (action=="click" && (i.key()=="x" || i.key()=="y" || i.key()=="button")) ||
-                (action=="text" && i.key()=="text") || (action=="press" && i.key()=="keys"),"invalid_params","Unexpected batch step field");
+                (action=="text" && i.key()=="text") || (action=="press" && i.key()=="keys") ||
+                (action=="wait" && i.key()=="durationMs"),"invalid_params","Unexpected batch step field");
         if (action=="click") {
             require(step.contains("button") && step.at("button").is_string(),"invalid_params","Batch click button required");
             const auto button=step.at("button").get<std::string>();
@@ -29,6 +31,9 @@ inline unsigned validateBatch(const json& params, const std::function<void(int)>
             require(!value.empty() && value.size()<=4096,"invalid_params","Batch text exceeds UTF-8 limit");
             textUnits+=wide(value).size();
             require(textUnits<=1024,"invalid_params","Batch total text exceeds 1024 UTF-16 units");
+        } else if (action=="wait") {
+            waitMs+=integer(step,"durationMs",1,1000);
+            require(waitMs<budget,"invalid_params","Total wait time must be less than the batch budget");
         } else {
             require(step.contains("keys") && step.at("keys").is_array() && !step.at("keys").empty() && step.at("keys").size()<=8,
                 "invalid_params","Batch press requires 1-8 concrete keys");

@@ -307,13 +307,15 @@ runs when no key arrived. Batch steps share their outer reservation and do not
 restart or extend its deadline. Explicitly disabled collaboration does not reserve.
 DOM focus, caret selection and IME composition are not separately snapshotted.
 
-`batch({pointerId,steps,maxMs?,operationId?})` executes 1–16 `click`, `text` or
-`press` steps against one pointer/target under a single operation identity.
+`batch({pointerId,steps,maxMs?,operationId?})` executes 1–16 `click`, `text`,
+`press` or `wait` steps against one pointer/target under a single operation identity.
 Click steps require `button` and may provide paired screen `x`/`y`; text steps
-require `text`, press steps require existing concrete `keys`. All fields and
+require `text`, press steps require existing concrete `keys`, and wait steps
+require `durationMs` (integer 1–1000). All fields and
 coordinates are validated before reserving. Total text is at most 1024 UTF-16
-units. No nested batches, per-step IDs, target switches or arbitrary sleeps.
-The reservation defaults to 750ms and accepts 100–1000ms. Other queued gestures
+units. No nested batches, per-step IDs or target switches.
+The reservation defaults to 750ms and accepts 100–2000ms. The sum of waits must
+be less than that budget, and waiting still observes Stop and reservation expiry. Other queued gestures
 and logical moves cannot run between steps. Each chord/text is inserted in one
 SendInput call; target focus is observed for up to 100ms and pinned for the packet.
 App effects and clicked-element semantics still need independent observation.

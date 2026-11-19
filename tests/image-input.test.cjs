@@ -47,8 +47,8 @@ test('runtime converts capture image coordinates once, including batch steps, an
   await send(o,{points:[[10,20]]});assert.deepEqual(delivered[0],{action:'click',button:'left',x:-290,y:240});
   await assert.rejects(send(o,{points:[[10,20]]}),{code:'state_changed'});
   o=await capture();await send(o,{points:[[10,20],[100,80]],durationMs:500});assert.deepEqual(delivered[1],{action:'drag',points:[[-290,240],[-200,300]],durationMs:500});
-  o=await capture();await send(o,{action:'batch',points:[[10,20]],steps:[{action:'click',points:[[30,40]],button:'left'},{action:'text',text:'ok'}]});
-  assert.deepEqual(delivered[2],{action:'batch',x:-290,y:240,steps:[{action:'click',x:-270,y:260,button:'left'},{action:'text',text:'ok'}]});
+  o=await capture();await send(o,{action:'batch',points:[[10,20]],steps:[{action:'click',points:[[30,40]],button:'left'},{action:'wait',durationMs:300},{action:'text',text:'ok'}]});
+  assert.deepEqual(delivered[2],{action:'batch',x:-290,y:240,steps:[{action:'click',x:-270,y:260,button:'left'},{action:'wait',durationMs:300},{action:'text',text:'ok'}]});
   o=await capture();await assert.rejects(send(o,{points:[[200,0]]}),{code:'invalid_request',actionExecuted:false});assert.equal(delivered.length,3);
   for(const change of [{originX:-280},{widthPx:201},{dpi:192}]) {
     o=await capture();geometry={...geometry,...change};await assert.rejects(send(o,{points:[[10,20]]}),{code:'state_changed',actionExecuted:false,observationRequired:true});assert.equal(delivered.length,3);
